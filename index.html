@@ -216,6 +216,85 @@ function applyTheme(){
 }
 applyTheme();
 renderPattern();
+  // =========================
+// BREATHING 4–4–4–4
+// =========================
+const breathCircle = document.getElementById("breathCircle");
+const breathText   = document.getElementById("breathText");
+
+let breathTimer = null;
+let breathPhaseIndex = 0;
+let breathSecond = 0;
+
+const BREATH = [
+  { label: "Вдох",   action: "in",  duration: 4 },
+  { label: "Пауза",  action: "hold",duration: 4 },
+  { label: "Выдох",  action: "out", duration: 4 },
+  { label: "Пауза",  action: "hold",duration: 4 }
+];
+
+function applyBreathVisual(action){
+  if(action === "in"){
+    breathCircle.style.transition = "transform 4s ease-in-out";
+    breathCircle.style.transform  = "scale(1)";
+  }
+  if(action === "out"){
+    breathCircle.style.transition = "transform 4s ease-in-out";
+    breathCircle.style.transform  = "scale(0.7)";
+  }
+  if(action === "hold"){
+    breathCircle.style.transition = "none";
+  }
+}
+
+function startBreathing(){
+  stopBreathing();
+
+  breathPhaseIndex = 0;
+  breathSecond = 0;
+
+  const step = () => {
+    const phase = BREATH[breathPhaseIndex];
+
+    // визуал
+    applyBreathVisual(phase.action);
+
+    // текст + счёт
+    breathCircle.textContent = phase.label;
+    breathText.textContent =
+      `${phase.label} · ${breathSecond + 1} / ${phase.duration}`;
+
+    breathSecond++;
+
+    if(breathSecond >= phase.duration){
+      breathSecond = 0;
+      breathPhaseIndex = (breathPhaseIndex + 1) % BREATH.length;
+    }
+  };
+
+  step();
+  breathTimer = setInterval(step, 1000);
+}
+
+function stopBreathing(){
+  if(breathTimer){
+    clearInterval(breathTimer);
+    breathTimer = null;
+  }
+}
+
+// запуск при открытии вкладки
+document.querySelector("[data-tab='breath']").addEventListener("click", () => {
+  startBreathing();
+});
+
+// остановка при уходе
+document.querySelectorAll("[data-tab]").forEach(btn=>{
+  if(btn.dataset.tab !== "breath"){
+    btn.addEventListener("click", stopBreathing);
+  }
+});
+
 </script>
 
 </body>
