@@ -41,14 +41,7 @@ body{
 }
 .fade{animation:fade .25s ease}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
-.pulse{
-  animation:pulse 4s ease-in-out infinite;
-}
-@keyframes pulse{
-  0%{transform:scale(.85)}
-  50%{transform:scale(1)}
-  100%{transform:scale(.85)}
-}
+
 </style>
 </head>
 
@@ -216,64 +209,59 @@ function applyTheme(){
 }
 applyTheme();
 renderPattern();
-  // =========================
-// BREATHING 4–4–4–4
+ // =========================
+// BREATHING 4–4–4–4 (FIXED)
 // =========================
 const breathCircle = document.getElementById("breathCircle");
 const breathText   = document.getElementById("breathText");
 
 let breathTimer = null;
-let breathPhaseIndex = 0;
-let breathSecond = 0;
+let phaseIndex = 0;
+let secondInPhase = 0;
 
-const BREATH = [
-  { label: "Вдох",   action: "in",  duration: 4 },
-  { label: "Пауза",  action: "hold",duration: 4 },
-  { label: "Выдох",  action: "out", duration: 4 },
-  { label: "Пауза",  action: "hold",duration: 4 }
+const BREATH_PHASES = [
+  { label: "Вдох",   type: "in",   duration: 4, scaleFrom: 0.75, scaleTo: 1.0 },
+  { label: "Пауза",  type: "hold", duration: 4, scaleFrom: 1.0,  scaleTo: 1.0 },
+  { label: "Выдох",  type: "out",  duration: 4, scaleFrom: 1.0,  scaleTo: 0.75 },
+  { label: "Пауза",  type: "hold", duration: 4, scaleFrom: 0.75, scaleTo: 0.75 }
 ];
 
-function applyBreathVisual(action){
-  if(action === "in"){
-    breathCircle.style.transition = "transform 4s ease-in-out";
-    breathCircle.style.transform  = "scale(1)";
-  }
-  if(action === "out"){
-    breathCircle.style.transition = "transform 4s ease-in-out";
-    breathCircle.style.transform  = "scale(0.7)";
-  }
-  if(action === "hold"){
-    breathCircle.style.transition = "none";
-  }
+function setScale(scale, smooth = true){
+  breathCircle.style.transition = smooth ? "transform 1s linear" : "none";
+  breathCircle.style.transform  = `scale(${scale})`;
 }
 
 function startBreathing(){
   stopBreathing();
 
-  breathPhaseIndex = 0;
-  breathSecond = 0;
+  phaseIndex = 0;
+  secondInPhase = 0;
 
-  const step = () => {
-    const phase = BREATH[breathPhaseIndex];
+  // начальное состояние
+  setScale(0.75, false);
 
-    // визуал
-    applyBreathVisual(phase.action);
+  breathTimer = setInterval(() => {
+    const phase = BREATH_PHASES[phaseIndex];
 
-    // текст + счёт
+    // вычисляем прогресс внутри фазы
+    const progress = secondInPhase / phase.duration;
+    const scale =
+      phase.scaleFrom +
+      (phase.scaleTo - phase.scaleFrom) * progress;
+
+    // применяем визуал
+    setScale(scale);
     breathCircle.textContent = phase.label;
-    breathText.textContent =
-      `${phase.label} · ${breathSecond + 1} / ${phase.duration}`;
+    breathText.textContent = `${phase.label} · ${secondInPhase + 1} / ${phase.duration}`;
 
-    breathSecond++;
+    secondInPhase++;
 
-    if(breathSecond >= phase.duration){
-      breathSecond = 0;
-      breathPhaseIndex = (breathPhaseIndex + 1) % BREATH.length;
+    // переход к следующей фазе
+    if(secondInPhase >= phase.duration){
+      secondInPhase = 0;
+      phaseIndex = (phaseIndex + 1) % BREATH_PHASES.length;
     }
-  };
-
-  step();
-  breathTimer = setInterval(step, 1000);
+  }, 1000);
 }
 
 function stopBreathing(){
@@ -283,12 +271,12 @@ function stopBreathing(){
   }
 }
 
-// запуск при открытии вкладки
+// запуск при открытии вкладки "Дыхание"
 document.querySelector("[data-tab='breath']").addEventListener("click", () => {
   startBreathing();
 });
 
-// остановка при уходе
+// остановка при уходе с вкладки
 document.querySelectorAll("[data-tab]").forEach(btn=>{
   if(btn.dataset.tab !== "breath"){
     btn.addEventListener("click", stopBreathing);
