@@ -16,7 +16,7 @@
   --muted:#6b6b6f;
   --green:#3cb371;
   --red:#e46a6a;
-  --accent:#3a7afe;
+  --accent:#6bbf9a;
   --radius:24px;
 }
 
@@ -30,38 +30,52 @@
 body{
   background:var(--bg);
   color:var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+  font-family: system-ui,-apple-system,BlinkMacSystemFont;
 }
 
-.card{ background:var(--card); border-radius:var(--radius); }
-.btn{ border-radius:20px; }
-.fade{ animation:fade .25s ease }
-@keyframes fade{ from{opacity:0;transform:translateY(6px)} to{opacity:1} }
+.card{background:var(--card);border-radius:var(--radius);}
+.btn{border-radius:999px;}
+.fade{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 
+.theme-switch{
+  display:flex;
+  background:rgba(0,0,0,.05);
+  border-radius:999px;
+  padding:4px;
+  gap:4px;
+}
+.theme-btn{
+  flex:1;
+  padding:10px 0;
+  border-radius:999px;
+  font-size:14px;
+  color:var(--muted);
+}
+.theme-btn.active{
+  background:var(--accent);
+  color:white;
+}
+
+/* breathing */
 #breathCircle{
-  background: radial-gradient(
-    circle at 30% 30%,
-    rgba(255,255,255,0.35),
-    rgba(58,122,254,0.9) 45%,
-    rgba(40,90,200,1) 75%
-  );
+  transition:transform 1s linear, background 1s linear;
+  background:radial-gradient(circle at 30% 30%, #8be3b2, #3cb371);
 }
 </style>
 </head>
 
 <body class="min-h-screen px-4 pb-28">
+
 <div class="max-w-md mx-auto">
 
+<!-- HEADER -->
 <header class="flex items-center gap-3 pt-6 pb-4">
-  <div class="w-9 h-9 rounded-full bg-[var(--green)]"></div>
+  <div class="w-10 h-10 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-lg">🌿</div>
   <h1 class="text-xl font-semibold">Тихая Гавань</h1>
 </header>
 
-<section id="onboarding" class="card p-5 mb-4 fade">
-  <p class="text-sm text-[var(--muted)]">Я рядом. Просто отмечай.</p>
-  <button id="hideOnboarding" class="text-sm text-[var(--accent)] mt-3">Понятно</button>
-</section>
-
+<!-- TABS -->
 <nav class="flex gap-2 mb-4">
   <button data-tab="log" class="tab btn px-4 py-2 bg-[var(--accent)] text-white">Баланс</button>
   <button data-tab="summary" class="tab btn px-4 py-2 bg-[var(--card)]">Итоги</button>
@@ -69,31 +83,27 @@ body{
   <button data-tab="settings" class="tab btn px-4 py-2 bg-[var(--card)]">⚙️</button>
 </nav>
 
-<!-- БАЛАНС -->
-<section id="tab-log" class="fade">
+<!-- LOG -->
+<section id="tab-log">
   <div class="grid gap-4">
-    <button id="btnGood" class="card p-6 text-left border border-green-200">
-      <div class="text-lg font-semibold text-[var(--green)]">В копилку</div>
-      <div class="text-sm text-[var(--muted)]">Полезное действие</div>
+    <button id="btnGood" class="card p-6 border border-green-200">
+      <div class="text-lg font-semibold text-[var(--green)]">🟢 В копилку</div>
     </button>
-
-    <button id="btnBad" class="card p-6 text-left border border-red-200">
-      <div class="text-lg font-semibold text-[var(--red)]">На паузе</div>
-      <div class="text-sm text-[var(--muted)]">Шаг в сторону</div>
+    <button id="btnBad" class="card p-6 border border-red-200">
+      <div class="text-lg font-semibold text-[var(--red)]">🔴 На паузе</div>
     </button>
-
     <div class="card p-4">
-      <div class="flex justify-between items-center mb-2">
-        <span class="font-medium">Твой узор сегодня</span>
+      <div class="flex justify-between mb-2">
+        <span>Сегодня</span>
         <button id="clearDay" class="text-sm text-[var(--accent)]">Очистить</button>
       </div>
-      <div id="pattern" class="text-xl"></div>
+      <div id="pattern" class="text-xl">—</div>
     </div>
   </div>
 </section>
 
-<!-- ИТОГИ -->
-<section id="tab-summary" class="hidden fade">
+<!-- SUMMARY -->
+<section id="tab-summary" class="hidden">
   <div class="card p-4 mb-4">
     <pre id="dailySummary" class="text-sm whitespace-pre-wrap"></pre>
   </div>
@@ -102,24 +112,24 @@ body{
   </div>
 </section>
 
-<!-- ДЫХАНИЕ -->
-<section id="tab-breath" class="hidden fade text-center">
+<!-- BREATH -->
+<section id="tab-breath" class="hidden text-center">
   <div class="card p-6">
     <div id="breathCircle" class="mx-auto w-40 h-40 rounded-full flex items-center justify-center text-white text-lg">
       Вдох
     </div>
-    <p id="breathText" class="mt-4 text-sm text-[var(--muted)]">Готовимся…</p>
+    <p id="breathText" class="mt-4 text-sm text-[var(--muted)]">4 • 4 • 4 • 4</p>
   </div>
 </section>
 
-<!-- НАСТРОЙКИ -->
-<section id="tab-settings" class="hidden fade">
+<!-- SETTINGS -->
+<section id="tab-settings" class="hidden">
   <div class="card p-4">
     <p class="text-sm mb-2">Тема</p>
-    <div class="flex gap-2">
-      <button data-theme="light" class="btn px-4 py-2 bg-[var(--card)]">Светлая</button>
-      <button data-theme="dark" class="btn px-4 py-2 bg-[var(--card)]">Тёмная</button>
-      <button data-theme="system" class="btn px-4 py-2 bg-[var(--card)]">Системная</button>
+    <div class="theme-switch">
+      <button data-theme="light" class="theme-btn">☀️</button>
+      <button data-theme="dark" class="theme-btn">🌙</button>
+      <button data-theme="system" class="theme-btn">⚙️</button>
     </div>
   </div>
 </section>
@@ -127,88 +137,77 @@ body{
 </div>
 
 <script>
-const STORAGE="harbor_final";
-let state=JSON.parse(localStorage.getItem(STORAGE))||{hideOnboarding:false,theme:"system",events:[]};
+const STORAGE="harbor_v3";
+const state=JSON.parse(localStorage.getItem(STORAGE))||{theme:"system",events:[]};
 const save=()=>localStorage.setItem(STORAGE,JSON.stringify(state));
 const today=()=>new Date().toISOString().slice(0,10);
 
-if(state.hideOnboarding)document.getElementById("onboarding")?.remove();
-hideOnboarding.onclick=()=>{state.hideOnboarding=true;save();location.reload();};
-
 const pattern=document.getElementById("pattern");
-function renderPattern(){
-  const e=state.events.filter(x=>x.date===today());
-  pattern.textContent=e.map(x=>x.type==="good"?"🟢":"🔴").join("")||"—";
-}
-renderPattern();
 
-btnGood.onclick=()=>{state.events.push({date:today(),type:"good"});save();renderPattern();};
-btnBad.onclick=()=>{state.events.push({date:today(),type:"bad"});save();renderPattern();};
-clearDay.onclick=()=>{state.events=state.events.filter(x=>x.date!==today());save();renderPattern();};
+function render(){
+  const t=state.events.filter(e=>e.date===today());
+  pattern.textContent=t.map(e=>e.type==="good"?"🟢":"🔴").join("")||"—";
+
+  document.getElementById("dailySummary").textContent=
+`🌙 Итоги дня
+${pattern.textContent}
+Баланс: ${t.filter(e=>e.type==="good").length - t.filter(e=>e.type==="bad").length}`;
+
+  document.getElementById("weeklySummary").textContent=
+`✨ Итоги недели
+Всего отметок: ${state.events.length}`;
+}
+
+document.getElementById("btnGood").onclick=()=>{state.events.push({date:today(),type:"good"});save();render();}
+document.getElementById("btnBad").onclick=()=>{state.events.push({date:today(),type:"bad"});save();render();}
+document.getElementById("clearDay").onclick=()=>{state.events=state.events.filter(e=>e.date!==today());save();render();}
 
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll("section[id^='tab']").forEach(s=>s.classList.add("hidden"));
     document.getElementById("tab-"+btn.dataset.tab).classList.remove("hidden");
-    if(btn.dataset.tab==="summary")renderSummaries();
-    if(btn.dataset.tab==="breath")startBreathing(); else stopBreathing();
   };
 });
 
-function renderSummaries(){
-  const todayEvents=state.events.filter(e=>e.date===today());
-  const g=todayEvents.filter(e=>e.type==="good").length;
-  const r=todayEvents.filter(e=>e.type==="bad").length;
-  const pattern=todayEvents.map(e=>e.type==="good"?"🟢":"🔴").join("");
-
-  dailySummary.textContent=
-    todayEvents.length===0
-    ? "🌙 Тихий день\nСегодня ты ничего не отмечал(а)."
-    : `🌙 Итоги дня\n\nТвой узор:\n${pattern}\n\nБаланс: ${g-r}\n\n${g>=r?"Сегодня было много заботы о себе.":"День был непростым, но ты его увидел(а)."}`;
-
-  const days=[...Array(7)].map((_,i)=>{
-    const d=new Date();d.setDate(d.getDate()-i);
-    return d.toISOString().slice(0,10);
-  }).reverse();
-
-  let wg=0,wr=0;
-  const lines=days.map(d=>{
-    const ev=state.events.filter(e=>e.date===d);
-    if(ev.length===0)return "—";
-    const g=ev.filter(e=>e.type==="good").length;
-    const r=ev.filter(e=>e.type==="bad").length;
-    wg+=g;wr+=r;
-    return ev.map(e=>e.type==="good"?"🟢":"🔴").join("");
-  });
-
-  weeklySummary.textContent=
-`✨ Твоя неделя
-
-Полезных шагов: ${wg} 🌿
-Моментов на паузе: ${wr} 🍂
-Баланс: ${wg-wr}
-
-${lines.join("\n")}`;
+/* theme */
+function applyTheme(){
+  document.querySelectorAll(".theme-btn").forEach(b=>b.classList.toggle("active",b.dataset.theme===state.theme));
+  state.theme==="system"?document.documentElement.removeAttribute("data-theme"):
+  document.documentElement.setAttribute("data-theme",state.theme);
 }
+document.querySelectorAll(".theme-btn").forEach(b=>b.onclick=()=>{state.theme=b.dataset.theme;save();applyTheme();});
+applyTheme();
 
-let timer=null,total=0,phase=0,sec=0;
-const phases=[["Вдох",0.75,1],["Пауза",1,1],["Выдох",1,0.75],["Пауза",0.75,0.75]];
+/* breathing */
+const circle=document.getElementById("breathCircle");
+const text=document.getElementById("breathText");
+const phases=[
+  ["Вдох",4,0.75,1],
+  ["Пауза",4,1,1],
+  ["Выдох",4,1,0.75],
+  ["Пауза",4,0.75,0.75]
+];
+let timer=null,sec=0,p=0,total=0;
 
-function startBreathing(){
-  stopBreathing();total=0;phase=0;sec=0;
+function startBreath(){
+  stopBreath();sec=0;p=0;total=0;
   timer=setInterval(()=>{
-    const [label,from,to]=phases[phase];
-    const scale=from+(to-from)*(sec/4);
-    breathCircle.style.transform=`scale(${scale})`;
-    breathCircle.style.transition="transform 1s linear";
-    breathCircle.textContent=label;
-    breathText.textContent=`${label} ${sec+1}/4`;
+    const [label,dur,from,to]=phases[p];
+    const k=sec/dur;
+    circle.style.transform=`scale(${from+(to-from)*k})`;
+    circle.textContent=label;
+    text.textContent=`${label} ${sec+1}/4`;
     sec++;total++;
-    if(sec>=4){sec=0;phase=(phase+1)%4;}
-    if(total>=60){stopBreathing();breathCircle.textContent="Готово";breathText.textContent="Можно идти дальше 🌿";}
+    if(sec>=dur){sec=0;p=(p+1)%4;}
+    if(total>=60)stopBreath();
   },1000);
 }
-function stopBreathing(){if(timer){clearInterval(timer);timer=null;}}
+function stopBreath(){if(timer)clearInterval(timer);timer=null;}
+
+document.querySelector("[data-tab='breath']").onclick=startBreath;
+document.querySelectorAll("[data-tab]").forEach(b=>b.dataset.tab!=="breath"&&b.addEventListener("click",stopBreath));
+
+render();
 </script>
 
 </body>
