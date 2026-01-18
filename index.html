@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Баланс — Тихая Гавань</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+	:root{
+	  --bg0: #0b1220;
+	  --bg1: #0e1a2b;
+	  --card: rgba(255,255,255,.06);
+	  --card2: rgba(255,255,255,.08);
+	  --stroke: rgba(255,255,255,.10);
+	  --text: rgba(255,255,255,.92);
+	  --muted: rgba(255,255,255,.70);
+	  --muted2: rgba(255,255,255,.55);
+	  --good: #34d399; /* emerald-400 */
+	  --bad: #fb7185;  /* rose-400 */
+	  --accent: #a78bfa; /* violet-400 */
+	  --shadow: 0 20px 60px rgba(0,0,0,.35);
+	  --radius: 22px;
+	  --safe-top: env(safe-area-inset-top, 0px);
+	  --safe-bottom: env(safe-area-inset-bottom, 0px);
+	}
+
+	/* Subtle grain */
+	.grain:before{
+	  content:"";
+	  position:fixed;
+	  inset:0;
+	  pointer-events:none;
+	  background-image: url("https://source.unsplash.com/1200x800/?paper,texture");
+	  opacity:.06;
+	  mix-blend-mode: overlay;
+	  filter: blur(0.2px) contrast(1.05);
+	  z-index:0;
+	}
+
+	.glass{
+	  background: linear-gradient(180deg, var(--card), rgba(255,255,255,.04));
+	  border: 1px solid var(--stroke);
+	  box-shadow: var(--shadow);
+	  border-radius: var(--radius);
+	  backdrop-filter: blur(12px);
+	  -webkit-backdrop-filter: blur(12px);
+	}
+
+	.soft-ring{
+	  box-shadow:
+		0 0 0 1px rgba(255,255,255,.08) inset,
+		0 16px 40px rgba(0,0,0,.35);
+	}
+
+	.btn{
+	  border-radius: 18px;
+	  border: 1px solid rgba(255,255,255,.12);
+	  transition: transform .08s ease, filter .08s ease, background .2s ease;
+	}
+	.btn:active{
+	  transform: translateY(1px) scale(.99);
+	  filter: brightness(0.98);
+	}
+
+	.pill{
+	  border: 1px solid rgba(255,255,255,.12);
+	  background: rgba(255,255,255,.05);
+	  border-radius: 999px;
+	}
+
+	.fade-in{
+	  animation: fadeIn .25s ease-out both;
+	}
+	@keyframes fadeIn{
+	  from{ opacity:0; transform: translateY(6px); }
+	  to{ opacity:1; transform: translateY(0); }
+	}
+
+	/* Nice scrollbar for desktop preview */
+	::-webkit-scrollbar{ height: 10px; width: 10px; }
+	::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.14); border-radius: 999px; }
+	::-webkit-scrollbar-track{ background: rgba(255,255,255,.04); }
+
+	/* Prevent selection to keep "app" feel (still copyable in code area) */
+	.no-select{ user-select:none; -webkit-user-select:none; }
+
+	/* Telegram safe areas */
+	.safe-top{ padding-top: calc(14px + var(--safe-top)); }
+	.safe-bottom{ padding-bottom: calc(14px + var(--safe-bottom)); }
+  </style>
+</head>
+
+<body class="min-h-screen text-white overflow-x-hidden grain" style="background: radial-gradient(1200px 600px at 30% 10%, rgba(167,139,250,.22), transparent 55%), radial-gradient(900px 500px at 80% 20%, rgba(52,211,153,.14), transparent 60%), linear-gradient(180deg, var(--bg0), var(--bg1)); color: var(--text);">
+
+  <div class="relative z-10 max-w-md mx-auto safe-top safe-bottom px-4 pb-24">
+	<!-- Header -->
+	<header class="flex items-center justify-between gap-3 mb-4">
+	  <div class="flex items-center gap-3">
+		<div class="w-10 h-10 rounded-2xl overflow-hidden soft-ring">
+		  <img class="w-full h-full object-cover" alt="cover" src="https://source.unsplash.com/200x200/?calm,ocean" />
+		</div>
+		<div>
+		  <div class="text-base font-semibold tracking-tight" id="appTitle">Баланс</div>
+		  <div class="text-xs" style="color: var(--muted2);">Тихая гавань для твоих отметок</div>
+		</div>
+	  </div>
+
+	  <button id="btnTelegram" class="pill px-3 py-2 text-xs flex items-center gap-2 hover:bg-white/10 active:opacity-90">
+		<span class="inline-block w-2 h-2 rounded-full bg-white/50" id="tgDot"></span>
+		<span id="tgLabel">Web</span>
+	  </button>
+	</header>
+
+	<!-- Hero card -->
+	<section class="glass p-5 mb-4">
+	  <div class="flex items-start gap-4">
+		<div class="w-12 h-12 rounded-2xl overflow-hidden soft-ring">
+		  <img class="w-full h-full object-cover" alt="avatar" src="https://source.unsplash.com/200x200/?soft,portrait" />
+		</div>
+		<div class="flex-1">
+		  <h1 class="text-lg font-semibold leading-tight mb-2">Привет. Я рядом 🌿</h1>
+		  <p class="text-sm leading-relaxed" style="color: var(--muted);">
+			Без оценок, без вины и без давления.
+			Если сделаешь что-то полезное для себя — нажми <span class="font-semibold" style="color: var(--good);">зелёную</span>.
+			Если чувствуешь, что свернул(а) не туда — нажми <span class="font-semibold" style="color: var(--bad);">красную</span>.
+			Я всё бережно сохраню.
+		  </p>
+
+		  <div class="flex flex-wrap gap-2 mt-3">
+			<span class="pill px-3 py-1 text-xs" style="color: var(--muted);">🫶 безопасное пространство</span>
+			<span class="pill px-3 py-1 text-xs" style="color: var(--muted);">🧠 меньше тревоги</span>
+			<span class="pill px-3 py-1 text-xs" style="color: var(--muted);">🌙 итоги дня и недели</span>
+		  </div>
+		</div>
+	  </div>
+	</section>
+
+	<!-- Tabs -->
+	<nav class="flex gap-2 mb-3 no-select">
+	  <button data-tab="log" class="tab btn px-4 py-2 text-sm bg-white/10">Отметки</button>
+	  <button data-tab="summary" class="tab btn px-4 py-2 text-sm bg-white/5">Итоги</button>
+	  <button data-tab="settings" class="tab btn px-4 py-2 text-sm bg-white/5">Настройки</button>
+	</nav>
+
+	<!-- Content -->
+	<main>
+	  <!-- Log tab -->
+	  <section id="tab-log" class="fade-in">
+		<div class="grid grid-cols-1 gap-3">
+
+		  <!-- Big buttons -->
+		  <div class="glass p-4">
+			<div class="flex items-center justify-between mb-3">
+			  <div>
+				<div class="text-sm font-semibold">Отметить момент</div>
+				<div class="text-xs" style="color: var(--muted2);">Это займёт секунду — и даст ясность</div>
+			  </div>
+			  <div class="pill px-3 py-1 text-xs" id="todayBalancePill">Сегодня: …</div>
+			</div>
+
+			<div class="grid grid-cols-2 gap-3">
+			  <button id="btnGood" class="btn p-4 text-left bg-emerald-400/15 hover:bg-emerald-400/20">
+				<div class="text-2xl mb-1">🟢</div>
+				<div class="font-semibold">В копилку</div>
+				<div class="text-xs mt-1" style="color: var(--muted);">забота о себе</div>
+			  </button>
+
+			  <button id="btnBad" class="btn p-4 text-left bg-rose-400/15 hover:bg-rose-400/20">
+				<div class="text-2xl mb-1">🔴</div>
+				<div class="font-semibold">На паузе</div>
+				<div class="text-xs mt-1" style="color: var(--muted);">шаг в сторону</div>
+			  </button>
+			</div>
+
+			<div class="mt-3 flex items-center justify-between gap-3">
+			  <div class="text-xs" style="color: var(--muted2);" id="microCopy">Давай попробуем? Твой баланс начинается прямо сейчас.</div>
+			  <button id="btnUndo" class="pill px-3 py-2 text-xs hover:bg-white/10 active:opacity-90">
+				Отменить последнюю
+			  </button>
+			</div>
+		  </div>
+
+		  <!-- Pattern -->
+		  <div class="glass p-4">
+			<div class="flex items-center justify-between mb-2">
+			  <div class="text-sm font-semibold">Твой узор сегодня</div>
+			  <button id="btnClearToday" class="pill px-3 py-2 text-xs hover:bg-white/10 active:opacity-90">Очистить день</button>
+			</div>
+
+			<div id="patternRow" class="flex flex-wrap gap-2 text-xl leading-none min-h-[40px]"></div>
+
+			<div class="mt-3 text-xs leading-relaxed" style="color: var(--muted);">
+			  Тут нет “плохо/хорошо”. Есть честность. И она уже помогает 💛
+			</div>
+		  </div>
+
+		  <!-- Notes (optional) -->
+		  <div class="glass p-4">
+			<div class="flex items-center justify-between mb-2">
+			  <div class="text-sm font-semibold">Нежная заметка (не обязательно)</div>
+			  <span class="text-xs" style="color: var(--muted2);" id="noteHint">для себя, в пару слов</span>
+			</div>
+			<textarea id="noteInput" rows="3"
+			  class="w-full rounded-2xl p-3 bg-white/5 border border-white/10 outline-none focus:border-white/20 text-sm"
+			  placeholder="Например: “сделала паузу, выпила воды, вышла на воздух”…"></textarea>
+			<div class="mt-2 flex items-center justify-between">
+			  <button id="btnSaveNote" class="btn px-4 py-2 text-sm bg-white/10 hover:bg-white/15">Сохранить заметку</button>
+			  <div class="text-xs" style="color: var(--muted2);" id="noteSavedAt"></div>
+			</div>
+		  </div>
+
+		</div>
+	  </section>
+
+	  <!-- Summary tab -->
+	  <section id="tab-summary" class="hidden fade-in">
+		<div class="grid gap-3">
+
+		  <div class="glass p-4">
+			<div class="flex items-center justify-between mb-2">
+			  <div>
+				<div class="text-sm font-semibold">🌙 Итоги дня</div>
+				<div class="text-xs" style="color: var(--muted2);">по текущему дню</div>
+			  </div>
+			  <button id="btnGenerateDaily" class="btn px-4 py-2 text-sm bg-white/10 hover:bg-white/15">Сгенерировать</button>
+			</div>
+
+			<pre id="dailyText" class="whitespace-pre-wrap text-sm leading-relaxed bg-white/5 border border-white/10 rounded-2xl p-3 min-h-[96px]" style="color: var(--text);"></pre>
+
+			<div class="mt-2 flex items-center justify-between gap-2">
+			  <button id="btnSendDaily" class="pill px-3 py-2 text-xs hover:bg-white/10 active:opacity-90">Отправить в бот</button>
+			  <span class="text-xs" style="color: var(--muted2);">бот может прислать это тебе в чат</span>
+			</div>
+		  </div>
+
+		  <div class="glass p-4">
+			<div class="flex items-center justify-between mb-2">
+			  <div>
+				<div class="text-sm font-semibold">✨ Твоя неделя</div>
+				<div class="text-xs" style="color: var(--muted2);">последние 7 дней</div>
+			  </div>
+			  <button id="btnGenerateWeekly" class="btn px-4 py-2 text-sm bg-white/10 hover:bg-white/15">Сгенерировать</button>
+			</div>
+
+			<pre id="weeklyText" class="whitespace-pre-wrap text-sm leading-relaxed bg-white/5 border border-white/10 rounded-2xl p-3 min-h-[140px]" style="color: var(--text);"></pre>
+
+			<div class="mt-2 flex items-center justify-between gap-2">
+			  <button id="btnSendWeekly" class="pill px-3 py-2 text-xs hover:bg-white/10 active:opacity-90">Отправить в бот</button>
+			  <span class="text-xs" style="color: var(--muted2);">а бот — пришлёт по воскресеньям</span>
+			</div>
+		  </div>
+
+		  <div class="glass p-4">
+			<div class="text-sm font-semibold mb-2">Как это работает</div>
+			<ul class="text-sm leading-relaxed list-disc pl-5" style="color: var(--muted);">
+			  <li>Отметки сохраняются <b>локально</b> (в Telegram — на устройстве).</li>
+			  <li>Нажмёшь “Отправить в бот” — приложение передаст JSON через <code>sendData</code>.</li>
+			  <li>Дальше бот может хранить это в базе и присылать сводки <b>автоматически</b>.</li>
+			</ul>
+		  </div>
+
+		</div>
+	  </section>
+
+	  <!-- Settings tab -->
+	  <section id="tab-settings" class="hidden fade-in">
+		<div class="grid gap-3">
+		  <div class="glass p-4">
+			<div class="text-sm font-semibold mb-2">Название и тон</div>
+			<div class="grid gap-2">
+			  <label class="text-xs" style="color: var(--muted2);">Название</label>
+			  <input id="titleInput" class="w-full rounded-2xl p-3 bg-white/5 border border-white/10 outline-none focus:border-white/20 text-sm" placeholder="Баланс / Тихая Гавань" />
+			  <div class="flex gap-2">
+				<button id="btnSetBalance" class="btn px-4 py-2 text-sm bg-white/10 hover:bg-white/15">Баланс</button>
+				<button id="btnSetHarbor" class="btn px-4 py-2 text-sm bg-white/10 hover:bg-white/15">Тихая Гавань</button>
+			  </div>
+			  <div class="text-xs" style="color: var(--muted2);">
+				Приложение говорит мягко и коротко — чтобы поддерживать, а не отвлекать.
+			  </div>
+			</div>
+		  </div>
+
+		  <div class="glass p-4">
+			<div class="text-sm font-semibold mb-2">Данные</div>
+			<div class="text-sm" style="color: var(--muted);">
+			  Если хочешь начать с чистого листа — можно стереть историю (это удалит всё локально).
+			</div>
+			<div class="mt-3 flex gap-2">
+			  <button id="btnExport" class="btn px-4 py-2 text-sm bg-white/10 hover:bg-white/15">Экспорт JSON</button>
+			  <button id="btnReset" class="btn px-4 py-2 text-sm bg-rose-400/20 hover:bg-rose-400/25">Стереть всё</button>
+			</div>
+			<pre id="exportBox" class="mt-3 hidden whitespace-pre-wrap text-xs leading-relaxed bg-white/5 border border-white/10 rounded-2xl p-3"></pre>
+		  </div>
+
+		  <div class="glass p-4">
+			<div class="text-sm font-semibold mb-2">Подсказка для BotFather</div>
+			<div class="text-sm" style="color: var(--muted);">
+			  URL Web App будет твоей ссылкой GitHub Pages (мы сделаем это на ЭТАПЕ 3).
+			</div>
+			<div class="mt-2 text-xs" style="color: var(--muted2);">
+			  А чтобы бот слал итоги в 21:00 и по воскресеньям — нужен небольшой backend/бот-скрипт (я могу накидать и его, когда скажешь).
+			</div>
+		  </div>
+		</div>
+	  </section>
+	</main>
+
+	<!-- Bottom persistent bar -->
+	<footer class="fixed left-0 right-0 bottom-0 z-20">
+	  <div class="max-w-md mx-auto px-4 pb-[calc(10px+var(--safe-bottom))]">
+		<div class="glass px-3 py-3 flex items-center justify-between gap-2">
+		  <button class="btn px-4 py-3 text-sm bg-emerald-400/15 hover:bg-emerald-400/20 flex-1" id="quickGood">
+			🟢 В копилку
+		  </button>
+		  <button class="btn px-4 py-3 text-sm bg-rose-400/15 hover:bg-rose-400/20 flex-1" id="quickBad">
+			🔴 На паузе
+		  </button>
+		  <button class="pill px-3 py-3 text-sm hover:bg-white/10" id="quickHome" title="Вверх">
+			⤴︎
+		  </button>
+		</div>
+	  </div>
+	</footer>
+
+	<!-- Toast -->
+	<div id="toast" class="fixed left-1/2 -translate-x-1/2 bottom-24 z-30 hidden">
+	  <div class="glass px-4 py-3 text-sm max-w-md">
+		<div class="flex items-start gap-3">
+		  <div class="text-xl" id="toastIcon">🌿</div>
+		  <div class="flex-1">
+			<div class="font-semibold" id="toastTitle">Записала.</div>
+			<div class="text-xs mt-0.5" style="color: var(--muted);" id="toastBody">Это ценно.</div>
+		  </div>
+		  <button class="pill px-3 py-2 text-xs hover:bg-white/10" id="toastClose">Ок</button>
+		</div>
+	  </div>
+	</div>
+  </div>
+
+  <script>
+	;(() => {
+	  // -----------------------------
+	  // Storage model
+	  // -----------------------------
+	  const STORAGE_KEY = "balance_twa_v1";
+	  const todayKey = () => new Date().toISOString().slice(0,10); // YYYY-MM-DD (local-ish, but good enough for UI)
+	  const nowISO = () => new Date().toISOString();
+
+	  const defaultState = () => ({
+		title: "Баланс",
+		note: { text: "", savedAt: null },
+		events: [
+		  // { ts: ISO, date: YYYY-MM-DD, type: "good"|"bad" }
+		],
+		lastSent: { daily: null, weekly: null }
+	  });
+
+	  function loadState(){
+		try{
+		  const raw = localStorage.getItem(STORAGE_KEY);
+		  if(!raw) return defaultState();
+		  const parsed = JSON.parse(raw);
+		  return { ...defaultState(), ...parsed };
+		}catch(e){
+		  return defaultState();
+		}
+	  }
+
+	  function saveState(){
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+	  }
+
+	  let state = loadState();
+
+	  // -----------------------------
+	  // Copy tone lists
+	  // -----------------------------
+	  const goodReplies = [
+		"Записала. Это ценно.",
+		"Светлый момент сохранён.",
+		"В копилку твоей силы.",
+		"Отлично, шаг засчитан."
+	  ];
+
+	  const badReplies = [
+		"Я рядом. Просто отметим это.",
+		"Принято. Дыши глубже.",
+		"Это просто часть пути. Идём дальше.",
+		"Учтено. Всё поправимо."
+	  ];
+
+	  // -----------------------------
+	  // Telegram integration (optional)
+	  // -----------------------------
+	  let tg = null;
+	  function initTelegram(){
+		try{
+		  if(window.Telegram && window.Telegram.WebApp){
+			tg = window.Telegram.WebApp;
+			tg.ready?.();
+			tg.expand?.();
+
+			// Apply Telegram theme if available
+			const tp = tg.themeParams || {};
+			// Use safe mapping, keep aesthetics
+			const bg = tp.bg_color || null;
+			const text = tp.text_color || null;
+			const hint = tp.hint_color || null;
+			const accent = tp.button_color || null;
+
+			// Minimal theme adaptation: if Telegram provides light theme bg, switch to lighter surfaces
+			if(bg && isLight(bg)){
+			  document.documentElement.style.setProperty("--bg0", "#f6f7fb");
+			  document.documentElement.style.setProperty("--bg1", "#eef1f8");
+			  document.documentElement.style.setProperty("--card", "rgba(0,0,0,.045)");
+			  document.documentElement.style.setProperty("--card2", "rgba(0,0,0,.06)");
+			  document.documentElement.style.setProperty("--stroke", "rgba(0,0,0,.08)");
+			  document.documentElement.style.setProperty("--text", "rgba(10,15,25,.92)");
+			  document.documentElement.style.setProperty("--muted", "rgba(10,15,25,.72)");
+			  document.documentElement.style.setProperty("--muted2", "rgba(10,15,25,.55)");
+			  document.body.classList.remove("text-white");
+			}
+
+			if(text) document.documentElement.style.setProperty("--text", hexToRgba(text, .92));
+			if(hint) {
+			  document.documentElement.style.setProperty("--muted", hexToRgba(hint, .90));
+			  document.documentElement.style.setProperty("--muted2", hexToRgba(hint, .75));
+			}
+			if(accent) document.documentElement.style.setProperty("--accent", accent);
+
+			// Update UI badge
+			$("#tgDot").className = "inline-block w-2 h-2 rounded-full bg-emerald-400";
+			$("#tgLabel").textContent = "Telegram";
+
+			// Haptic on taps if available
+		  } else {
+			$("#tgDot").className = "inline-block w-2 h-2 rounded-full bg-white/50";
+			$("#tgLabel").textContent = "Web";
+		  }
+		}catch(e){
+		  // ignore
+		}
+	  }
+
+	  // Helpers for theme
+	  function isLight(hex){
+		try{
+		  const {r,g,b} = hexToRgb(hex);
+		  // Perceived luminance
+		  const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+		  return lum > 0.6;
+		}catch(e){ return false; }
+	  }
+	  function hexToRgb(hex){
+		const h = hex.replace("#","").trim();
+		const full = h.length === 3 ? h.split("").map(x=>x+x).join("") : h;
+		const n = parseInt(full, 16);
+		return { r: (n>>16)&255, g: (n>>8)&255, b: n&255 };
+	  }
+	  function hexToRgba(hex, a){
+		const {r,g,b} = hexToRgb(hex);
+		return `rgba(${r},${g},${b},${a})`;
+	  }
+
+	  // -----------------------------
+	  // DOM helpers
+	  // -----------------------------
+	  function $(sel){ return document.querySelector(sel); }
+	  function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
+
+	  function pick(arr){
+		return arr[Math.floor(Math.random() * arr.length)];
+	  }
+
+	  function toast(icon, title, body){
+		$("#toastIcon").textContent = icon;
+		$("#toastTitle").textContent = title;
+		$("#toastBody").textContent = body;
+
+		$("#toast").classList.remove("hidden");
+		$("#toast").classList.add("fade-in");
+
+		// Auto-hide
+		window.clearTimeout(toast._t);
+		toast._t = window.setTimeout(() => {
+		  $("#toast").classList.add("hidden");
+		}, 2200);
+	  }
+
+	  function haptic(kind="light"){
+		try{
+		  if(tg && tg.HapticFeedback){
+			if(kind === "success") tg.HapticFeedback.notificationOccurred("success");
+			else if(kind === "error") tg.HapticFeedback.notificationOccurred("error");
+			else tg.HapticFeedback.impactOccurred("light");
+		  }
+		}catch(e){}
+	  }
+
+	  // -----------------------------
+	  // Data operations
+	  // -----------------------------
+	  function addEvent(type){
+		const d = todayKey();
+		state.events.push({ ts: nowISO(), date: d, type });
+		saveState();
+
+		const reply = (type === "good") ? pick(goodReplies) : pick(badReplies);
+		const icon  = (type === "good") ? "🟢" : "🔴";
+		toast(icon, "Записала.", reply);
+
+		haptic(type === "good" ? "success" : "light");
+
+		renderAll();
+	  }
+
+	  function undoLast(){
+		if(state.events.length === 0){
+		  toast("🫧", "Нечего отменять", "Пока нет отметок — и это тоже нормально.");
+		  haptic("light");
+		  return;
+		}
+		const last = state.events[state.events.length - 1];
+		state.events.pop();
+		saveState();
+		toast("↩️", "Отменено", last.type === "good" ? "Зелёную отметку убрала." : "Красную отметку убрала.");
+		haptic("light");
+		renderAll();
+	  }
+
+	  function clearToday(){
+		const d = todayKey();
+		const before = state.events.length;
+		state.events = state.events.filter(e => e.date !== d);
+		const removed = before - state.events.length;
+		saveState();
+		toast("🧹", "Очищено", removed ? "Сегодняшние отметки убраны. Новый лист — мягко." : "Сегодня ещё не было отметок.");
+		haptic("light");
+		renderAll();
+	  }
+
+	  function saveNote(){
+		const text = ($("#noteInput").value || "").trim();
+		state.note = { text, savedAt: text ? nowISO() : null };
+		saveState();
+		toast("📝", "Сохранено", text ? "Нежная заметка рядом с тобой." : "Заметка очищена.");
+		haptic("success");
+		renderAll();
+	  }
+
+	  function countForDate(d){
+		const events = state.events.filter(e => e.date === d);
+		const g = events.filter(e => e.type === "good").length;
+		const r = events.filter(e => e.type === "bad").length;
+		return { g, r, total: events.length, events };
+	  }
+
+	  function lastNDaysKeys(n){
+		const out = [];
+		const t = new Date();
+		// Use local date keys
+		for(let i=0; i<n; i++){
+		  const d = new Date(t);
+		  d.setDate(t.getDate() - i);
+		  out.push(d.toISOString().slice(0,10));
+		}
+		return out.reverse();
+	  }
+
+	  function generateDailyText(){
+		const d = todayKey();
+		const { g, r, events } = countForDate(d);
+
+		if(events.length === 0){
+		  return `🌙 Тихий день
+Сегодня ты ничего не отмечал(а). Надеюсь, у тебя всё в порядке.
+Если захочешь вернуться к записям — я здесь, кнопки под рукой.
+Доброй ночи.`;
+		}
+
+		const pattern = events.map(e => e.type === "good" ? "🟢" : "🔴").join("");
+		const balance = g - r;
+
+		if(balance > 0){
+		  return `🌙 Итоги дня
+Твой узор сегодня:
+${pattern}
+Баланс: +${balance} в твою пользу.
+
+Сегодня ты много сделал(а) для себя. Пусть это чувство тепла останется с тобой до утра. Отдыхай.`;
+		} else {
+		  return `🌙 Итоги дня
+Твой узор сегодня:
+${pattern}
+Баланс: ${balance}.
+
+День был непростым, но ты честен(на) с собой, и это главное. Завтра будет новый лист и новые силы. Я буду ждать тебя там.`;
+		}
+	  }
+
+	  function generateWeeklyText(){
+		const days = lastNDaysKeys(7);
+		let gSum = 0, rSum = 0;
+
+		const lines = days.map(d => {
+		  const { g, r, events } = countForDate(d);
+		  gSum += g; rSum += r;
+
+		  if(events.length === 0) return `${fmtDay(d)}: —`;
+		  const pattern = events.map(e => e.type === "good" ? "🟢" : "🔴").join("");
+		  return `${fmtDay(d)}: ${pattern}`;
+		});
+
+		const balance = gSum - rSum;
+
+		const header = `✨ Твоя неделя
+Давай посмотрим, как это было.
+Полезных действий: ${gSum} 🌿
+Моментов "на паузе": ${rSum} 🍂
+Общий баланс: ${balance >= 0 ? "+"+balance : balance}
+
+График настроения:
+${lines.join("\n")}`;
+
+		const footer = (balance >= 0)
+		  ? `\n\nТвоя неделя была наполнена заботой о себе. Это фундамент, на котором строится всё остальное. Спасибо, что доверяешь мне этот путь.`
+		  : `\n\nНеделя принесла свои уроки. Помни, что рост не всегда идёт по прямой линии. Важно, что ты продолжаешь наблюдать. С новой недели начнём с чистого листа. ✨`;
+
+		return header + footer;
+	  }
+
+	  function fmtDay(isoDate){
+		// isoDate: YYYY-MM-DD
+		const d = new Date(isoDate + "T00:00:00");
+		const map = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+		return map[d.getDay()];
+	  }
+
+	  // -----------------------------
+	  // Send data to bot
+	  // -----------------------------
+	  function sendToBot(kind, text){
+		const payload = {
+		  kind, // "daily" | "weekly"
+		  text,
+		  title: state.title,
+		  date: todayKey(),
+		  ts: nowISO(),
+		  // minimal stats for bot
+		  stats: kind === "daily" ? countForDate(todayKey()) : null
+		};
+
+		if(tg && tg.sendData){
+		  tg.sendData(JSON.stringify(payload));
+		  toast("📨", "Отправлено", "Я отдала это боту. Он может прислать тебе сообщение в чат.");
+		  haptic("success");
+		} else {
+		  // fallback: copy to clipboard
+		  navigator.clipboard?.writeText(text).catch(()=>{});
+		  toast("📋", "Скопировано", "Открой Telegram и вставь в чат — если хочешь.");
+		  haptic("light");
+		}
+
+		state.lastSent[kind] = payload.ts;
+		saveState();
+	  }
+
+	  // -----------------------------
+	  // Rendering
+	  // -----------------------------
+	  function renderTitle(){
+		$("#appTitle").textContent = state.title || "Баланс";
+		$("#titleInput").value = state.title || "";
+	  }
+
+	  function renderPattern(){
+		const { events } = countForDate(todayKey());
+		const row = $("#patternRow");
+		row.innerHTML = "";
+
+		if(events.length === 0){
+		  const empty = document.createElement("div");
+		  empty.className = "text-sm";
+		  empty.style.color = "var(--muted2)";
+		  empty.textContent = "Пока пусто. И это не повод давить на себя.";
+		  row.appendChild(empty);
+		  return;
+		}
+
+		events.slice(-36).forEach(e => {
+		  const span = document.createElement("span");
+		  span.textContent = e.type === "good" ? "🟢" : "🔴";
+		  span.className = "text-2xl";
+		  row.appendChild(span);
+		});
+	  }
+
+	  function renderTodayBalance(){
+		const { g, r } = countForDate(todayKey());
+		const bal = g - r;
+
+		const pill = $("#todayBalancePill");
+		const label = (g + r) === 0
+		  ? "Сегодня: тихо"
+		  : `Сегодня: ${bal >= 0 ? "+"+bal : bal} (${g}🟢 / ${r}🔴)`;
+
+		pill.textContent = label;
+
+		if((g + r) === 0){
+		  pill.style.color = "var(--muted)";
+		  pill.style.borderColor = "rgba(255,255,255,.12)";
+		  pill.style.background = "rgba(255,255,255,.05)";
+		} else if(bal >= 0){
+		  pill.style.color = "rgba(52,211,153,.95)";
+		  pill.style.borderColor = "rgba(52,211,153,.25)";
+		  pill.style.background = "rgba(52,211,153,.10)";
+		} else {
+		  pill.style.color = "rgba(251,113,133,.95)";
+		  pill.style.borderColor = "rgba(251,113,133,.25)";
+		  pill.style.background = "rgba(251,113,133,.10)";
+		}
+	  }
+
+	  function renderNote(){
+		$("#noteInput").value = state.note?.text || "";
+		const savedAt = state.note?.savedAt;
+		$("#noteSavedAt").textContent = savedAt ? `Сохранено: ${new Date(savedAt).toLocaleString()}` : "";
+	  }
+
+	  function renderSummaries(){
+		// keep text boxes populated with latest generation (but don't overwrite if user edited? we keep simple)
+		if(!$("#dailyText").textContent.trim()){
+		  $("#dailyText").textContent = generateDailyText();
+		}
+		if(!$("#weeklyText").textContent.trim()){
+		  $("#weeklyText").textContent = generateWeeklyText();
+		}
+	  }
+
+	  function renderAll(){
+		renderTitle();
+		renderPattern();
+		renderTodayBalance();
+		renderNote();
+		renderSummaries();
+	  }
+
+	  // -----------------------------
+	  // Tabs
+	  // -----------------------------
+	  function setTab(name){
+		$all(".tab").forEach(btn => {
+		  const active = btn.dataset.tab === name;
+		  btn.classList.toggle("bg-white/10", active);
+		  btn.classList.toggle("bg-white/5", !active);
+		});
+
+		$("#tab-log").classList.toggle("hidden", name !== "log");
+		$("#tab-summary").classList.toggle("hidden", name !== "summary");
+		$("#tab-settings").classList.toggle("hidden", name !== "settings");
+	  }
+
+	  // -----------------------------
+	  // Events
+	  // -----------------------------
+	  function wireEvents(){
+		$("#btnGood").addEventListener("click", () => addEvent("good"));
+		$("#btnBad").addEventListener("click", () => addEvent("bad"));
+		$("#quickGood").addEventListener("click", () => addEvent("good"));
+		$("#quickBad").addEventListener("click", () => addEvent("bad"));
+
+		$("#btnUndo").addEventListener("click", undoLast);
+		$("#btnClearToday").addEventListener("click", clearToday);
+
+		$("#btnSaveNote").addEventListener("click", saveNote);
+
+		$all(".tab").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
+
+		$("#quickHome").addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+		$("#toastClose").addEventListener("click", () => $("#toast").classList.add("hidden"));
+
+		$("#btnGenerateDaily").addEventListener("click", () => {
+		  $("#dailyText").textContent = generateDailyText();
+		  toast("🌙", "Готово", "Итоги дня собраны мягко и честно.");
+		  haptic("success");
+		});
+
+		$("#btnGenerateWeekly").addEventListener("click", () => {
+		  $("#weeklyText").textContent = generateWeeklyText();
+		  toast("✨", "Готово", "Неделя стала яснее — без давления.");
+		  haptic("success");
+		});
+
+		$("#btnSendDaily").addEventListener("click", () => sendToBot("daily", $("#dailyText").textContent));
+		$("#btnSendWeekly").addEventListener("click", () => sendToBot("weekly", $("#weeklyText").textContent));
+
+		$("#btnSetBalance").addEventListener("click", () => {
+		  state.title = "Баланс";
+		  saveState();
+		  renderTitle();
+		  toast("🪞", "Название обновлено", "Пусть это будет твоей спокойной системой координат.");
+		  haptic("light");
+		});
+
+		$("#btnSetHarbor").addEventListener("click", () => {
+		  state.title = "Тихая Гавань";
+		  saveState();
+		  renderTitle();
+		  toast("⚓️", "Название обновлено", "Можно возвращаться сюда, когда штормит.");
+		  haptic("light");
+		});
+
+		$("#titleInput").addEventListener("change", (e) => {
+		  state.title = (e.target.value || "").trim() || "Баланс";
+		  saveState();
+		  renderTitle();
+		  toast("✅", "Сохранено", "Название стало твоим.");
+		  haptic("light");
+		});
+
+		$("#btnExport").addEventListener("click", () => {
+		  const box = $("#exportBox");
+		  box.classList.remove("hidden");
+		  box.textContent = JSON.stringify(state, null, 2);
+		  toast("📦", "Экспорт готов", "Это можно отправить себе или сохранить.");
+		  haptic("success");
+		});
+
+		$("#btnReset").addEventListener("click", () => {
+		  const ok = confirm("Стереть всю историю локально? Это нельзя отменить.");
+		  if(!ok) return;
+		  state = defaultState();
+		  saveState();
+		  $("#exportBox").classList.add("hidden");
+		  $("#dailyText").textContent = "";
+		  $("#weeklyText").textContent = "";
+		  toast("🫧", "Готово", "Чистый лист. Мягко начинаем заново.");
+		  haptic("light");
+		  renderAll();
+		});
+
+		$("#btnTelegram").addEventListener("click", () => {
+		  if(tg){
+			const user = tg.initDataUnsafe?.user;
+			const name = user?.first_name ? user.first_name : "друг";
+			toast("💬", "Telegram подключён", `Привет, ${name}. Я рядом 🙂`);
+			haptic("light");
+		  } else {
+			toast("🌐", "Предпросмотр в браузере", "В Telegram будет ещё уютнее (тема, sendData).");
+			haptic("light");
+		  }
+		});
+	  }
+
+	  // -----------------------------
+	  // Init
+	  // -----------------------------
+	  initTelegram();
+	  wireEvents();
+	  renderAll();
+	  setTab("log");
+
+	  // Small micro-copy rotation (gentle)
+	  const micro = [
+		"Давай попробуем? Твой баланс начинается прямо сейчас.",
+		"Ты не обязан(а) быть идеальным(ой). Достаточно быть честным(ой).",
+		"Одно нажатие — и в голове становится чуть больше тишины.",
+		"Если сегодня штормит — мы просто отмечаем и идём дальше."
+	  ];
+	  let mi = 0;
+	  setInterval(() => {
+		mi = (mi + 1) % micro.length;
+		$("#microCopy").textContent = micro[mi];
+	  }, 6000);
+	})();
+  </script>
+</body>
+</html>
