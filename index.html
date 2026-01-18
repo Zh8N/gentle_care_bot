@@ -33,17 +33,10 @@ body{
   font-family: system-ui, -apple-system, BlinkMacSystemFont;
 }
 
-.card{
-  background:var(--card);
-  border-radius:var(--radius);
-}
-
-.btn{
-  border-radius:20px;
-}
-
-.fade{animation:fade .25s ease}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.card{ background:var(--card); border-radius:var(--radius); }
+.btn{ border-radius:20px; }
+.fade{ animation:fade .25s ease }
+@keyframes fade{ from{opacity:0;transform:translateY(6px)} to{opacity:1} }
 
 #breathCircle{
   background: radial-gradient(
@@ -76,6 +69,7 @@ body{
   <button data-tab="settings" class="tab btn px-4 py-2 bg-[var(--card)]">⚙️</button>
 </nav>
 
+<!-- БАЛАНС -->
 <section id="tab-log" class="fade">
   <div class="grid gap-4">
     <button id="btnGood" class="card p-6 text-left border border-green-200">
@@ -98,22 +92,27 @@ body{
   </div>
 </section>
 
+<!-- ИТОГИ -->
 <section id="tab-summary" class="hidden fade">
+  <div class="card p-4 mb-4">
+    <pre id="dailySummary" class="text-sm whitespace-pre-wrap"></pre>
+  </div>
   <div class="card p-4">
-    <pre id="dailySummary" class="text-sm whitespace-pre-wrap">Итоги появятся позже 🌙</pre>
+    <pre id="weeklySummary" class="text-sm whitespace-pre-wrap"></pre>
   </div>
 </section>
 
+<!-- ДЫХАНИЕ -->
 <section id="tab-breath" class="hidden fade text-center">
   <div class="card p-6">
-    <div id="breathCircle"
-      class="mx-auto w-40 h-40 rounded-full flex items-center justify-center text-white text-lg">
+    <div id="breathCircle" class="mx-auto w-40 h-40 rounded-full flex items-center justify-center text-white text-lg">
       Вдох
     </div>
     <p id="breathText" class="mt-4 text-sm text-[var(--muted)]">Готовимся…</p>
   </div>
 </section>
 
+<!-- НАСТРОЙКИ -->
 <section id="tab-settings" class="hidden fade">
   <div class="card p-4">
     <p class="text-sm mb-2">Тема</p>
@@ -128,19 +127,19 @@ body{
 </div>
 
 <script>
-const STORAGE="harbor_v3";
+const STORAGE="harbor_final";
 let state=JSON.parse(localStorage.getItem(STORAGE))||{hideOnboarding:false,theme:"system",events:[]};
 const save=()=>localStorage.setItem(STORAGE,JSON.stringify(state));
 const today=()=>new Date().toISOString().slice(0,10);
 
 if(state.hideOnboarding)document.getElementById("onboarding")?.remove();
-document.getElementById("hideOnboarding").onclick=()=>{state.hideOnboarding=true;save();location.reload();};
+hideOnboarding.onclick=()=>{state.hideOnboarding=true;save();location.reload();};
 
 const pattern=document.getElementById("pattern");
-const renderPattern=()=>{
+function renderPattern(){
   const e=state.events.filter(x=>x.date===today());
   pattern.textContent=e.map(x=>x.type==="good"?"🟢":"🔴").join("")||"—";
-};
+}
 renderPattern();
 
 btnGood.onclick=()=>{state.events.push({date:today(),type:"good"});save();renderPattern();};
@@ -151,36 +150,66 @@ document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll("section[id^='tab']").forEach(s=>s.classList.add("hidden"));
     document.getElementById("tab-"+btn.dataset.tab).classList.remove("hidden");
+    if(btn.dataset.tab==="summary")renderSummaries();
     if(btn.dataset.tab==="breath")startBreathing(); else stopBreathing();
   };
 });
 
+function renderSummaries(){
+  const todayEvents=state.events.filter(e=>e.date===today());
+  const g=todayEvents.filter(e=>e.type==="good").length;
+  const r=todayEvents.filter(e=>e.type==="bad").length;
+  const pattern=todayEvents.map(e=>e.type==="good"?"🟢":"🔴").join("");
+
+  dailySummary.textContent=
+    todayEvents.length===0
+    ? "🌙 Тихий день\nСегодня ты ничего не отмечал(а)."
+    : `🌙 Итоги дня\n\nТвой узор:\n${pattern}\n\nБаланс: ${g-r}\n\n${g>=r?"Сегодня было много заботы о себе.":"День был непростым, но ты его увидел(а)."}`;
+
+  const days=[...Array(7)].map((_,i)=>{
+    const d=new Date();d.setDate(d.getDate()-i);
+    return d.toISOString().slice(0,10);
+  }).reverse();
+
+  let wg=0,wr=0;
+  const lines=days.map(d=>{
+    const ev=state.events.filter(e=>e.date===d);
+    if(ev.length===0)return "—";
+    const g=ev.filter(e=>e.type==="good").length;
+    const r=ev.filter(e=>e.type==="bad").length;
+    wg+=g;wr+=r;
+    return ev.map(e=>e.type==="good"?"🟢":"🔴").join("");
+  });
+
+  weeklySummary.textContent=
+`✨ Твоя неделя
+
+Полезных шагов: ${wg} 🌿
+Моментов на паузе: ${wr} 🍂
+Баланс: ${wg-wr}
+
+${lines.join("\n")}`;
+}
+
 let timer=null,total=0,phase=0,sec=0;
-const phases=[
-  ["Вдох",0.75,1],
-  ["Пауза",1,1],
-  ["Выдох",1,0.75],
-  ["Пауза",0.75,0.75]
-];
+const phases=[["Вдох",0.75,1],["Пауза",1,1],["Выдох",1,0.75],["Пауза",0.75,0.75]];
 
 function startBreathing(){
-  stopBreathing();
-  total=0;phase=0;sec=0;
+  stopBreathing();total=0;phase=0;sec=0;
   timer=setInterval(()=>{
     const [label,from,to]=phases[phase];
     const scale=from+(to-from)*(sec/4);
     breathCircle.style.transform=`scale(${scale})`;
     breathCircle.style.transition="transform 1s linear";
-    breathText.textContent=`${label} ${sec+1}/4`;
     breathCircle.textContent=label;
-    sec++; total++;
+    breathText.textContent=`${label} ${sec+1}/4`;
+    sec++;total++;
     if(sec>=4){sec=0;phase=(phase+1)%4;}
     if(total>=60){stopBreathing();breathCircle.textContent="Готово";breathText.textContent="Можно идти дальше 🌿";}
   },1000);
 }
-
 function stopBreathing(){if(timer){clearInterval(timer);timer=null;}}
-renderPattern();
 </script>
+
 </body>
 </html>
