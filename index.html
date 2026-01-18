@@ -32,40 +32,43 @@ body{
   color:var(--text);
   font-family: system-ui, -apple-system, BlinkMacSystemFont;
 }
+
 .card{
   background:var(--card);
   border-radius:var(--radius);
 }
+
 .btn{
   border-radius:20px;
 }
+
 .fade{animation:fade .25s ease}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 
+#breathCircle{
+  background: radial-gradient(
+    circle at 30% 30%,
+    rgba(255,255,255,0.35),
+    rgba(58,122,254,0.9) 45%,
+    rgba(40,90,200,1) 75%
+  );
+}
 </style>
 </head>
 
 <body class="min-h-screen px-4 pb-28">
-
 <div class="max-w-md mx-auto">
 
-<!-- HEADER -->
 <header class="flex items-center gap-3 pt-6 pb-4">
   <div class="w-9 h-9 rounded-full bg-[var(--green)]"></div>
   <h1 class="text-xl font-semibold">Тихая Гавань</h1>
 </header>
 
-<!-- ONBOARDING -->
 <section id="onboarding" class="card p-5 mb-4 fade">
-  <p class="text-sm text-[var(--muted)]">
-    Я рядом. Просто отмечай.
-  </p>
-  <button id="hideOnboarding" class="text-sm text-[var(--accent)] mt-3">
-    Понятно
-  </button>
+  <p class="text-sm text-[var(--muted)]">Я рядом. Просто отмечай.</p>
+  <button id="hideOnboarding" class="text-sm text-[var(--accent)] mt-3">Понятно</button>
 </section>
 
-<!-- TABS -->
 <nav class="flex gap-2 mb-4">
   <button data-tab="log" class="tab btn px-4 py-2 bg-[var(--accent)] text-white">Баланс</button>
   <button data-tab="summary" class="tab btn px-4 py-2 bg-[var(--card)]">Итоги</button>
@@ -73,7 +76,6 @@ body{
   <button data-tab="settings" class="tab btn px-4 py-2 bg-[var(--card)]">⚙️</button>
 </nav>
 
-<!-- LOG -->
 <section id="tab-log" class="fade">
   <div class="grid gap-4">
     <button id="btnGood" class="card p-6 text-left border border-green-200">
@@ -96,36 +98,22 @@ body{
   </div>
 </section>
 
-<!-- SUMMARY -->
 <section id="tab-summary" class="hidden fade">
-  <div class="card p-4 mb-4">
-    <pre id="dailySummary" class="text-sm whitespace-pre-wrap"></pre>
-    <button id="sendDaily" class="mt-3 text-sm text-[var(--accent)]">
-      Отправить в бот
-    </button>
-  </div>
-
   <div class="card p-4">
-    <pre id="weeklySummary" class="text-sm whitespace-pre-wrap"></pre>
-    <button id="sendWeekly" class="mt-3 text-sm text-[var(--accent)]">
-      Отправить в бот
-    </button>
+    <pre id="dailySummary" class="text-sm whitespace-pre-wrap">Итоги появятся позже 🌙</pre>
   </div>
 </section>
 
-<!-- BREATH -->
 <section id="tab-breath" class="hidden fade text-center">
   <div class="card p-6">
-    <div id="breathCircle" class="mx-auto w-40 h-40 rounded-full bg-[var(--accent)] flex items-center justify-center text-white text-lg pulse">
+    <div id="breathCircle"
+      class="mx-auto w-40 h-40 rounded-full flex items-center justify-center text-white text-lg">
       Вдох
     </div>
-    <p id="breathText" class="mt-4 text-sm text-[var(--muted)]">
-      4 • 4 • 4 • 4
-    </p>
+    <p id="breathText" class="mt-4 text-sm text-[var(--muted)]">Готовимся…</p>
   </div>
 </section>
 
-<!-- SETTINGS -->
 <section id="tab-settings" class="hidden fade">
   <div class="card p-4">
     <p class="text-sm mb-2">Тема</p>
@@ -140,150 +128,59 @@ body{
 </div>
 
 <script>
-const tg = window.Telegram?.WebApp;
-tg?.ready();
-
-const STORAGE = "harbor_v2";
-let state = JSON.parse(localStorage.getItem(STORAGE)) || {
-  hideOnboarding:false,
-  theme:"system",
-  events:[]
-};
-
+const STORAGE="harbor_v3";
+let state=JSON.parse(localStorage.getItem(STORAGE))||{hideOnboarding:false,theme:"system",events:[]};
 const save=()=>localStorage.setItem(STORAGE,JSON.stringify(state));
 const today=()=>new Date().toISOString().slice(0,10);
 
-const patternEl=document.getElementById("pattern");
+if(state.hideOnboarding)document.getElementById("onboarding")?.remove();
+document.getElementById("hideOnboarding").onclick=()=>{state.hideOnboarding=true;save();location.reload();};
 
-function renderPattern(){
+const pattern=document.getElementById("pattern");
+const renderPattern=()=>{
   const e=state.events.filter(x=>x.date===today());
-  patternEl.textContent=e.map(x=>x.type==="good"?"🟢":"🔴").join("")||"—";
-}
-
-document.getElementById("btnGood").onclick=()=>{
-  state.events.push({date:today(),type:"good"});
-  save();renderPattern();
+  pattern.textContent=e.map(x=>x.type==="good"?"🟢":"🔴").join("")||"—";
 };
+renderPattern();
 
-document.getElementById("btnBad").onclick=()=>{
-  state.events.push({date:today(),type:"bad"});
-  save();renderPattern();
-};
-
-document.getElementById("clearDay").onclick=()=>{
-  state.events=state.events.filter(x=>x.date!==today());
-  save();renderPattern();
-};
-
-document.getElementById("hideOnboarding").onclick=()=>{
-  state.hideOnboarding=true;
-  document.getElementById("onboarding").remove();
-  save();
-};
-
-if(state.hideOnboarding){
-  document.getElementById("onboarding")?.remove();
-}
+btnGood.onclick=()=>{state.events.push({date:today(),type:"good"});save();renderPattern();};
+btnBad.onclick=()=>{state.events.push({date:today(),type:"bad"});save();renderPattern();};
+clearDay.onclick=()=>{state.events=state.events.filter(x=>x.date!==today());save();renderPattern();};
 
 document.querySelectorAll(".tab").forEach(btn=>{
   btn.onclick=()=>{
     document.querySelectorAll("section[id^='tab']").forEach(s=>s.classList.add("hidden"));
     document.getElementById("tab-"+btn.dataset.tab).classList.remove("hidden");
+    if(btn.dataset.tab==="breath")startBreathing(); else stopBreathing();
   };
 });
 
-document.querySelectorAll("[data-theme]").forEach(btn=>{
-  btn.onclick=()=>{
-    state.theme=btn.dataset.theme;
-    save();
-    applyTheme();
-  };
-});
-
-function applyTheme(){
-  if(state.theme==="system"){
-    document.documentElement.removeAttribute("data-theme");
-  }else{
-    document.documentElement.setAttribute("data-theme",state.theme);
-  }
-}
-applyTheme();
-renderPattern();
- // =========================
-// BREATHING 4–4–4–4 (FIXED)
-// =========================
-const breathCircle = document.getElementById("breathCircle");
-const breathText   = document.getElementById("breathText");
-
-let breathTimer = null;
-let phaseIndex = 0;
-let secondInPhase = 0;
-
-const BREATH_PHASES = [
-  { label: "Вдох",   type: "in",   duration: 4, scaleFrom: 0.75, scaleTo: 1.0 },
-  { label: "Пауза",  type: "hold", duration: 4, scaleFrom: 1.0,  scaleTo: 1.0 },
-  { label: "Выдох",  type: "out",  duration: 4, scaleFrom: 1.0,  scaleTo: 0.75 },
-  { label: "Пауза",  type: "hold", duration: 4, scaleFrom: 0.75, scaleTo: 0.75 }
+let timer=null,total=0,phase=0,sec=0;
+const phases=[
+  ["Вдох",0.75,1],
+  ["Пауза",1,1],
+  ["Выдох",1,0.75],
+  ["Пауза",0.75,0.75]
 ];
-
-function setScale(scale, smooth = true){
-  breathCircle.style.transition = smooth ? "transform 1s linear" : "none";
-  breathCircle.style.transform  = `scale(${scale})`;
-}
 
 function startBreathing(){
   stopBreathing();
-
-  phaseIndex = 0;
-  secondInPhase = 0;
-
-  // начальное состояние
-  setScale(0.75, false);
-
-  breathTimer = setInterval(() => {
-    const phase = BREATH_PHASES[phaseIndex];
-
-    // вычисляем прогресс внутри фазы
-    const progress = secondInPhase / phase.duration;
-    const scale =
-      phase.scaleFrom +
-      (phase.scaleTo - phase.scaleFrom) * progress;
-
-    // применяем визуал
-    setScale(scale);
-    breathCircle.textContent = phase.label;
-    breathText.textContent = `${phase.label} · ${secondInPhase + 1} / ${phase.duration}`;
-
-    secondInPhase++;
-
-    // переход к следующей фазе
-    if(secondInPhase >= phase.duration){
-      secondInPhase = 0;
-      phaseIndex = (phaseIndex + 1) % BREATH_PHASES.length;
-    }
-  }, 1000);
+  total=0;phase=0;sec=0;
+  timer=setInterval(()=>{
+    const [label,from,to]=phases[phase];
+    const scale=from+(to-from)*(sec/4);
+    breathCircle.style.transform=`scale(${scale})`;
+    breathCircle.style.transition="transform 1s linear";
+    breathText.textContent=`${label} ${sec+1}/4`;
+    breathCircle.textContent=label;
+    sec++; total++;
+    if(sec>=4){sec=0;phase=(phase+1)%4;}
+    if(total>=60){stopBreathing();breathCircle.textContent="Готово";breathText.textContent="Можно идти дальше 🌿";}
+  },1000);
 }
 
-function stopBreathing(){
-  if(breathTimer){
-    clearInterval(breathTimer);
-    breathTimer = null;
-  }
-}
-
-// запуск при открытии вкладки "Дыхание"
-document.querySelector("[data-tab='breath']").addEventListener("click", () => {
-  startBreathing();
-});
-
-// остановка при уходе с вкладки
-document.querySelectorAll("[data-tab]").forEach(btn=>{
-  if(btn.dataset.tab !== "breath"){
-    btn.addEventListener("click", stopBreathing);
-  }
-});
-
+function stopBreathing(){if(timer){clearInterval(timer);timer=null;}}
+renderPattern();
 </script>
-
 </body>
 </html>
