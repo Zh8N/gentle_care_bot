@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Balance Care</title>
 
-  <!-- Tailwind (удобно, можно потом убрать) -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
@@ -16,7 +13,6 @@
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
 
-      /* Light */
       --bg: #f6f7fb;
       --card: rgba(255,255,255,0.92);
       --card2: rgba(255,255,255,0.78);
@@ -24,10 +20,9 @@
       --text: rgba(15,23,42,0.92);
       --muted: rgba(15,23,42,0.62);
 
-      /* Primary palette (синий + серый) */
-      --primary: #2563eb;      /* blue-600 */
-      --primary2:#1d4ed8;      /* blue-700 */
-      --neutral: #e8ecf4;      /* soft gray */
+      --primary: #2563eb;
+      --primary2:#1d4ed8;
+
       --neutralText: rgba(15,23,42,0.82);
 
       --shadow: 0 14px 40px rgba(15,23,42,0.10);
@@ -42,9 +37,7 @@
       --text: rgba(255,255,255,0.92);
       --muted: rgba(255,255,255,0.62);
 
-      --neutral: rgba(255,255,255,0.08);
       --neutralText: rgba(255,255,255,0.88);
-
       --shadow: 0 18px 50px rgba(0,0,0,0.35);
     }
 
@@ -81,9 +74,7 @@
       overflow-x:auto;
       -webkit-overflow-scrolling: touch;
     }
-    html[data-theme="dark"] .segmented{
-      background: rgba(255,255,255,0.06);
-    }
+    html[data-theme="dark"] .segmented{ background: rgba(255,255,255,0.06); }
 
     .tab-btn{
       border-radius: 999px;
@@ -99,7 +90,6 @@
       -webkit-user-select: none;
     }
     .tab-btn:active{ transform: scale(0.99); }
-
     .tab-btn.active{
       color: white;
       background: linear-gradient(180deg, var(--primary), var(--primary2));
@@ -147,10 +137,16 @@
       box-shadow: 0 8px 20px rgba(0,0,0,0.22);
     }
     .dot.good{ background: var(--primary); }
-    .dot.pause{ background: rgba(148,163,184,0.95); } /* slate-ish */
+    .dot.pause{ background: rgba(148,163,184,0.95); }
     html[data-theme="dark"] .dot.pause{ background: rgba(203,213,225,0.55); }
 
     .small-muted{ color: var(--muted); font-size: 13px; line-height: 1.35; }
+
+    #todayMicrocopy.whisper{
+      font-style: italic;
+      letter-spacing: 0.01em;
+      opacity: 0.92;
+    }
 
     .pill{
       display:inline-flex; align-items:center; gap:8px;
@@ -178,25 +174,37 @@
       border-color: rgba(37,99,235,0.28);
     }
 
-    /* Breathing circle */
     .breath-wrap{
       display:flex; flex-direction:column; align-items:center; gap: 12px;
       padding: 10px 0 2px;
     }
 
-    /* IMPORTANT: force perfect circle even in Telegram WebView */
+    /* ✅ ВАЖНО: тень/свечение на обёртке, чтобы ничего не "резалось" */
+    .breath-shadow{
+      filter: drop-shadow(0 22px 60px rgba(37,99,235,0.18));
+      -webkit-filter: drop-shadow(0 22px 60px rgba(37,99,235,0.18));
+    }
+    html[data-theme="dark"] .breath-shadow{
+      filter: drop-shadow(0 26px 70px rgba(0,0,0,0.45));
+      -webkit-filter: drop-shadow(0 26px 70px rgba(0,0,0,0.45));
+    }
+
+    /* ✅ Стабильный круг: маска + border-radius, без clip-path */
     .breath-circle{
       position: relative;
-      width: 190px; height: 190px;
+      width: 190px;
+      height: 190px;
 
-      border-radius: 50%;
+      border-radius: 9999px;
       overflow: hidden;
 
-      -webkit-mask-image: -webkit-radial-gradient(white, black);
-      mask-image: radial-gradient(white, black);
-
-      clip-path: circle(50% at 50% 50%);
-      -webkit-clip-path: circle(50% at 50% 50%);
+      /* круглая маска (очень стабильна в Telegram WebView) */
+      -webkit-mask-image: radial-gradient(circle at center, #000 99.4%, transparent 100%);
+      mask-image: radial-gradient(circle at center, #000 99.4%, transparent 100%);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-size: cover;
+      mask-size: cover;
 
       display:flex; align-items:center; justify-content:center;
       color: white;
@@ -208,29 +216,25 @@
       backface-visibility: hidden;
 
       border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: 0 22px 60px rgba(37,99,235,0.18);
       user-select:none;
       -webkit-user-select:none;
+      background: rgba(37,99,235,0.95); /* fallback */
     }
 
+    /* вращающийся градиент внутри круга */
     .breath-circle::before{
       content:"";
       position:absolute;
-      inset:-40px;
-
-      border-radius: 50%;
-      clip-path: circle(50% at 50% 50%);
-      -webkit-clip-path: circle(50% at 50% 50%);
-
+      inset:0;
+      border-radius: inherit;
       background: conic-gradient(from 180deg,
         rgba(37,99,235,1),
         rgba(29,78,216,1),
         rgba(124,58,237,1),
         rgba(37,99,235,1)
       );
-
       animation: spin 10s linear infinite;
-      opacity: 0.95;
+      opacity: 0.98;
       transform: translateZ(0);
     }
 
@@ -238,11 +242,7 @@
       content:"";
       position:absolute;
       inset:0;
-
-      border-radius: 50%;
-      clip-path: circle(50% at 50% 50%);
-      -webkit-clip-path: circle(50% at 50% 50%);
-
+      border-radius: inherit;
       background: radial-gradient(120px 120px at 30% 25%, rgba(255,255,255,0.28), transparent 60%),
                   rgba(0,0,0,0.10);
       mix-blend-mode: soft-light;
@@ -277,7 +277,6 @@
     html[data-theme="dark"] .ghost-btn{ background: rgba(255,255,255,0.06); }
     .ghost-btn:active{ transform: translateY(1px); }
 
-    /* Export box theme */
     .export-box{
       border: 1px solid var(--stroke);
       border-radius: 16px;
@@ -286,7 +285,6 @@
     }
     html[data-theme="dark"] .export-box{ background: rgba(255,255,255,0.06); }
 
-    /* Toast */
     .toast{
       position: fixed;
       left: 50%;
@@ -318,7 +316,6 @@
 
 <body>
   <div class="app-wrap max-w-md mx-auto px-4">
-    <!-- Tabs -->
     <div class="segmented card p-0 mb-4" style="box-shadow:none;">
       <button class="tab-btn active" data-tab="today">Сегодня</button>
       <button class="tab-btn" data-tab="summary">Итоги</button>
@@ -327,7 +324,7 @@
     </div>
 
     <!-- TODAY -->
-    <section id="tab-today" class="fade">
+    <section id="tab-today">
       <div class="card p-4 mb-4">
         <div>
           <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Отметить момент</div>
@@ -353,7 +350,7 @@
     </section>
 
     <!-- SUMMARY -->
-    <section id="tab-summary" class="hidden fade">
+    <section id="tab-summary" class="hidden">
       <div class="card p-4 mb-4">
         <div class="flex items-center justify-between mb-2">
           <div>
@@ -385,7 +382,7 @@
     </section>
 
     <!-- BREATH -->
-    <section id="tab-breath" class="hidden fade">
+    <section id="tab-breath" class="hidden">
       <div class="card p-5">
         <div class="flex items-center justify-between">
           <div>
@@ -396,8 +393,10 @@
         </div>
 
         <div class="breath-wrap">
-          <div id="breathCircle" class="breath-circle" aria-label="дыхание">
-            <span id="breathLabel">Готово</span>
+          <div class="breath-shadow">
+            <div id="breathCircle" class="breath-circle" aria-label="дыхание">
+              <span id="breathLabel">Готово</span>
+            </div>
           </div>
           <div class="breath-sub" id="breathSub">Нажми «Начать» и просто следуй счёту.</div>
         </div>
@@ -405,7 +404,7 @@
     </section>
 
     <!-- SETTINGS -->
-    <section id="tab-settings" class="hidden fade">
+    <section id="tab-settings" class="hidden">
       <div class="card p-4 mb-4">
         <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">Тема</div>
         <div class="segmented" style="box-shadow:none;">
@@ -438,31 +437,21 @@
     </section>
   </div>
 
-  <!-- Toast -->
   <div id="toast" class="toast">
     <div class="inner" id="toastInner">✓ Записано</div>
   </div>
 
   <script>
     ;(() => {
-      // -----------------------------
-      // Telegram
-      // -----------------------------
       const tg = window.Telegram?.WebApp || null;
-      try{
-        tg?.ready?.();
-        tg?.expand?.();
-      }catch(e){}
+      try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      // -----------------------------
-      // Storage
-      // -----------------------------
-      const STORAGE = "balancecare_v5";
+      const STORAGE = "balancecare_v7";
       const defaultState = () => ({
         theme: "system",
-        events: [],  // {ts, date, type: "good"|"pause"}
+        events: [],
         surprise: { lastShownAt: null },
-        ui: { microcopyDate: null, microcopyText: null }
+        ui: { microcopyDate: null, microcopyText: null, microcopyWhisper: false }
       });
 
       let state = loadState();
@@ -472,26 +461,19 @@
           const raw = localStorage.getItem(STORAGE);
           if(!raw) return defaultState();
           const parsed = JSON.parse(raw);
-          return { ...defaultState(), ...parsed, ui: { ...defaultState().ui, ...(parsed.ui||{}) } };
-        }catch(e){
-          return defaultState();
-        }
+          return {
+            ...defaultState(),
+            ...parsed,
+            ui: { ...defaultState().ui, ...(parsed.ui||{}) },
+            surprise: { ...defaultState().surprise, ...(parsed.surprise||{}) }
+          };
+        }catch(e){ return defaultState(); }
       }
-      function save(){
-        localStorage.setItem(STORAGE, JSON.stringify(state));
-      }
+      function save(){ localStorage.setItem(STORAGE, JSON.stringify(state)); }
 
-      // Local date key (без UTC-сдвигов)
       function pad(n){ return String(n).padStart(2,"0"); }
-      function dateKey(d=new Date()){
-        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-      }
+      function dateKey(d=new Date()){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
       function nowISO(){ return new Date().toISOString(); }
-
-      // -----------------------------
-      // Theme
-      // -----------------------------
-      let systemListenerAttached = false;
 
       function isLight(hex){
         try{
@@ -504,6 +486,43 @@
         }catch(e){ return true; }
       }
 
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+      function toast(msg){
+        const t = $("#toast");
+        $("#toastInner").textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => t.classList.remove("show"), 1400);
+      }
+      function haptic(kind="light"){
+        try{
+          if(tg?.HapticFeedback){
+            if(kind==="success") tg.HapticFeedback.notificationOccurred("success");
+            else tg.HapticFeedback.impactOccurred("light");
+          }
+        }catch(e){}
+      }
+      function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+      let systemListenerAttached = false;
+
+      function renderThemeButtons(){
+        const map = { light:"themeLight", dark:"themeDark", system:"themeSystem" };
+        ["themeLight","themeDark","themeSystem"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.remove("active");
+          el.style.background = "transparent";
+          el.style.color = "var(--muted)";
+        });
+        const activeId = map[state.theme] || "themeSystem";
+        const activeEl = document.getElementById(activeId);
+        activeEl.classList.add("active");
+        activeEl.style.background = "linear-gradient(180deg, var(--primary), var(--primary2))";
+        activeEl.style.color = "white";
+      }
+
       function applyTheme(){
         if(state.theme === "light"){
           document.documentElement.setAttribute("data-theme","light");
@@ -512,7 +531,6 @@
         }else{
           const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
           document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
-
           if(!systemListenerAttached && window.matchMedia){
             systemListenerAttached = true;
             window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
@@ -521,7 +539,6 @@
           }
         }
 
-        // Telegram theme hint (only if system)
         try{
           const tp = tg?.themeParams || {};
           const bg = tp.bg_color;
@@ -533,51 +550,8 @@
         renderThemeButtons();
       }
 
-      function renderThemeButtons(){
-        const map = { light:"themeLight", dark:"themeDark", system:"themeSystem" };
-        ["themeLight","themeDark","themeSystem"].forEach(id => {
-          const el = document.getElementById(id);
-          el.classList.remove("active");
-          el.style.background = "transparent";
-          el.style.color = "var(--muted)";
-        });
-
-        const activeId = map[state.theme] || "themeSystem";
-        const activeEl = document.getElementById(activeId);
-        activeEl.classList.add("active");
-        activeEl.style.background = "linear-gradient(180deg, var(--primary), var(--primary2))";
-        activeEl.style.color = "white";
-      }
-
-      // -----------------------------
-      // UI helpers
-      // -----------------------------
-      const $ = (s) => document.querySelector(s);
-      const $$ = (s) => Array.from(document.querySelectorAll(s));
-
-      function toast(msg){
-        const t = $("#toast");
-        $("#toastInner").textContent = msg;
-        t.classList.add("show");
-        clearTimeout(toast._t);
-        toast._t = setTimeout(() => t.classList.remove("show"), 1400);
-      }
-
-      function haptic(kind="light"){
-        try{
-          if(tg?.HapticFeedback){
-            if(kind==="success") tg.HapticFeedback.notificationOccurred("success");
-            else tg.HapticFeedback.impactOccurred("light");
-          }
-        }catch(e){}
-      }
-
-      function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
-
-      // -----------------------------
-      // Microcopy of the day (soft friend, motivating)
-      // -----------------------------
-      const MICROCOPY = [
+      // Microcopy
+      const MICRO_LONG = [
         "Мы ничего не оцениваем. Мы просто замечаем — и от этого легче.",
         "Один маленький шаг тоже считается. Правда.",
         "Ты можешь идти медленно. Главное — в свою сторону.",
@@ -597,81 +571,55 @@
         "Мы собираем не рекорды, а реальность. И это очень ценно."
       ];
 
+      const MICRO_WHISPER = [
+        "Тихо. Я рядом.",
+        "Один шаг — уже шаг.",
+        "Ты справляешься.",
+        "Мягко — и дальше.",
+        "Заметь. Этого достаточно.",
+        "Маленькое — тоже важное.",
+        "Дыши. Потом решим.",
+        "Ты не одна.",
+        "Никакой гонки. Правда.",
+        "Можно по-человечески."
+      ];
+
       function ensureMicrocopyForToday(){
         const d = dateKey();
-        state.ui = state.ui || {};
         if(state.ui.microcopyDate !== d || !state.ui.microcopyText){
+          const whisper = Math.random() < 0.40;
           state.ui.microcopyDate = d;
-          state.ui.microcopyText = pick(MICROCOPY);
+          state.ui.microcopyWhisper = whisper;
+          state.ui.microcopyText = whisper ? pick(MICRO_WHISPER) : pick(MICRO_LONG);
           save();
         }
         const el = $("#todayMicrocopy");
-        if(el) el.textContent = state.ui.microcopyText;
+        el.textContent = state.ui.microcopyText;
+        el.classList.toggle("whisper", !!state.ui.microcopyWhisper);
       }
 
-      // -----------------------------
       // Tabs
-      // -----------------------------
       let currentTab = "today";
 
       function setTab(name){
         currentTab = name;
-
-        $$(".tab-btn[data-tab]").forEach(btn => {
-          btn.classList.toggle("active", btn.dataset.tab === name);
-        });
-
-        ["today","summary","breath","settings"].forEach(t => {
-          $("#tab-"+t).classList.toggle("hidden", t !== name);
-        });
+        $$(".tab-btn[data-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === name));
+        ["today","summary","breath","settings"].forEach(t => $("#tab-"+t).classList.toggle("hidden", t !== name));
 
         if(name === "today") ensureMicrocopyForToday();
         if(name === "summary") renderSummary();
         if(name !== "breath") stopBreathing();
       }
+      $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
-      $$(".tab-btn[data-tab]").forEach(btn => {
-        btn.addEventListener("click", () => setTab(btn.dataset.tab));
-      });
-
-      // -----------------------------
-      // Data ops
-      // -----------------------------
-      function addEvent(type){
-        state.events.push({ ts: nowISO(), date: dateKey(), type });
-        save();
-        renderToday();
-        if(currentTab === "summary") renderSummary();
-
-        toast("✓ Записано");
-        haptic("success");
-      }
-
-      function clearToday(){
-        const d = dateKey();
-        state.events = state.events.filter(e => e.date !== d);
-        save();
-        renderToday();
-        if(currentTab === "summary") renderSummary();
-
-        toast("Очищено");
-        haptic("light");
-      }
-
-      function eventsFor(d){
-        return state.events.filter(e => e.date === d);
-      }
-
+      // Data
+      function eventsFor(d){ return state.events.filter(e => e.date === d); }
       function countFor(d){
         const ev = eventsFor(d);
         const good = ev.filter(x => x.type === "good").length;
         const pause = ev.filter(x => x.type === "pause").length;
         return { good, pause, total: ev.length, ev };
       }
-
-      // -----------------------------
-      // Today render
-      // -----------------------------
       function renderDots(container, ev){
         container.innerHTML = "";
         ev.slice(-48).forEach(e => {
@@ -684,10 +632,8 @@
       function renderToday(){
         const d = dateKey();
         const { ev, total } = countFor(d);
-
         const row = $("#todayDots");
         const empty = $("#todayEmpty");
-
         if(total === 0){
           row.innerHTML = "";
           empty.style.display = "block";
@@ -697,9 +643,26 @@
         }
       }
 
-      // -----------------------------
-      // Surprise observations (rare, warm)
-      // -----------------------------
+      function addEvent(type){
+        state.events.push({ ts: nowISO(), date: dateKey(), type });
+        save();
+        renderToday();
+        if(currentTab === "summary") renderSummary();
+        toast("✓ Записано");
+        haptic("success");
+      }
+
+      function clearToday(){
+        const d = dateKey();
+        state.events = state.events.filter(e => e.date !== d);
+        save();
+        renderToday();
+        if(currentTab === "summary") renderSummary();
+        toast("Очищено");
+        haptic("light");
+      }
+
+      // Surprise
       const SURPRISE_LINES = [
         "Мне нравится, как ты это делаешь: спокойно и по-честному.",
         "Ты заметила момент — и уже стала к себе ближе.",
@@ -711,38 +674,21 @@
         "Нежность тоже дисциплина. Ты её практикуешь.",
         "Ты не обязана доказывать. Можно просто жить и замечать."
       ];
-
       function shouldShowSurprise(){
         const last = state.surprise?.lastShownAt ? new Date(state.surprise.lastShownAt).getTime() : 0;
         const sixHours = 6 * 60 * 60 * 1000;
-        const okByTime = (Date.now() - last) > sixHours;
-        const chance = Math.random() < 0.35;
-        return okByTime && chance;
+        return (Date.now() - last) > sixHours && Math.random() < 0.35;
       }
 
-      // -----------------------------
-      // Summary text (soft friend, motivating)
-      // -----------------------------
+      // Summary
       function dailySummaryText(){
         const d = dateKey();
         const { good, pause, total } = countFor(d);
 
-        if(total === 0){
-          return "Сегодня было тихо — без отметок.\nЕсли захочешь, вернёшься позже. Я рядом.";
-        }
-
-        if(good > 0 && pause === 0){
-          return "Сегодня ты несколько раз выбрала полезное.\nПусть это останется внутри как тёплая уверенность: ты можешь.";
-        }
-
-        if(pause > 0 && good === 0){
-          return "Сегодня было больше пауз.\nЭто не про «плохо». Это про заботу: ты заметила, где нужен воздух.";
-        }
-
-        if(good >= pause){
-          return "День получился разным — и в этом есть жизнь.\nТы уже делаешь главное: замечаешь и не давишь на себя.";
-        }
-
+        if(total === 0) return "Сегодня было тихо — без отметок.\nЕсли захочешь, вернёшься позже. Я рядом.";
+        if(good > 0 && pause === 0) return "Сегодня ты несколько раз выбрала полезное.\nПусть это останется внутри как тёплая уверенность: ты можешь.";
+        if(pause > 0 && good === 0) return "Сегодня было больше пауз.\nЭто не про «плохо». Это про заботу: ты заметила, где нужен воздух.";
+        if(good >= pause) return "День получился разным — и в этом есть жизнь.\nТы уже делаешь главное: замечаешь и не давишь на себя.";
         return "Сегодня было непросто, но ты всё равно осталась с собой в контакте.\nЭто очень сильная, взрослая опора.";
       }
 
@@ -756,13 +702,11 @@
         }
         return out.reverse();
       }
-
       function dayName(iso){
         const d = new Date(iso+"T00:00:00");
         const map = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
         return map[d.getDay()];
       }
-
       function weeklySummaryText(){
         const days = lastNDays(7);
         let g=0,p=0;
@@ -770,36 +714,23 @@
           const c=countFor(d);
           g+=c.good; p+=c.pause;
         });
-
-        if(g+p===0){
-          return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки или одной минуты дыхания.";
-        }
-
-        const line =
-          g>=p
-            ? "В этой неделе было место и для движения, и для пауз. Это похоже на живой баланс."
-            : "В этой неделе было больше пауз. Возможно, тебе сейчас особенно важно беречь ресурс — и это нормально.";
-
+        if(g+p===0) return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки или одной минуты дыхания.";
+        const line = g>=p
+          ? "В этой неделе было место и для движения, и для пауз. Это похоже на живой баланс."
+          : "В этой неделе было больше пауз. Возможно, тебе сейчас особенно важно беречь ресурс — и это нормально.";
         return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
       }
 
       function renderSummary(){
-        $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", {
-          weekday:"long", day:"numeric", month:"long"
-        });
+        $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", { weekday:"long", day:"numeric", month:"long" });
 
         const d = dateKey();
         const c = countFor(d);
-
         $("#pillGood").textContent = `Полезное: ${c.good}`;
         $("#pillPause").textContent = `Пауза: ${c.pause}`;
 
         const row = $("#summaryDots");
-        if(c.total===0){
-          row.innerHTML = "";
-        }else{
-          renderDots(row, c.ev);
-        }
+        if(c.total===0) row.innerHTML = ""; else renderDots(row, c.ev);
 
         const box = $("#surpriseBox");
         if(shouldShowSurprise()){
@@ -815,8 +746,7 @@
 
         const grid = $("#weekGrid");
         grid.innerHTML = "";
-        const days = lastNDays(7);
-        days.forEach(dd=>{
+        lastNDays(7).forEach(dd=>{
           const cc = countFor(dd);
           const item = document.createElement("div");
           item.className = "p-3";
@@ -828,10 +758,7 @@
 
           const header = document.createElement("div");
           header.className = "flex items-center justify-between mb-2";
-          header.innerHTML = `
-            <div style="font-weight:650; letter-spacing:-0.02em;">${dayName(dd)}</div>
-            <div class="small-muted">${cc.good}/${cc.pause}</div>
-          `;
+          header.innerHTML = `<div style="font-weight:650; letter-spacing:-0.02em;">${dayName(dd)}</div><div class="small-muted">${cc.good}/${cc.pause}</div>`;
 
           const dots = document.createElement("div");
           dots.className = "dot-row";
@@ -856,9 +783,7 @@
         $("#weeklyText").textContent = weeklySummaryText();
       }
 
-      // -----------------------------
-      // Breathing (4–4–4–4, 1 minute) — correct cycle
-      // -----------------------------
+      // Breathing 4–4–4–4
       const breathCircle = $("#breathCircle");
       const breathLabel  = $("#breathLabel");
       const breathSub    = $("#breathSub");
@@ -890,45 +815,36 @@
 
       function startBreathing(){
         stopBreathing();
-
         running = true;
         breathElapsed = 0;
         phaseIndex = 0;
         secondInPhase = 0;
-
         breathToggle.textContent = "Стоп";
 
-        // init
         setScale(PHASES[0].from, false);
         breathLabel.textContent = PHASES[0].label;
         breathSub.textContent = `${PHASES[0].label} ${countString(1)}`;
-
-        // start first phase animation for full 4s
         requestAnimationFrame(() => setScale(PHASES[0].to, true, PHASES[0].dur));
 
         breathTimer = setInterval(() => {
           breathElapsed++;
-
           const phase = PHASES[phaseIndex];
           const step = secondInPhase + 1;
 
           breathLabel.textContent = phase.label;
-          breathSub.textContent = `${phase.label} ${countString(step)}${step < 4 ? "" : ""}`;
+          breathSub.textContent = `${phase.label} ${countString(step)}`;
 
-          // on phase start, trigger smooth animation for full phase duration
           if(secondInPhase === 0){
             setScale(phase.from, false);
             requestAnimationFrame(() => setScale(phase.to, true, phase.dur));
           }
 
           secondInPhase++;
-
           if(secondInPhase >= phase.dur){
             secondInPhase = 0;
             phaseIndex = (phaseIndex + 1) % PHASES.length;
           }
 
-          // auto stop at 60 sec
           if(breathElapsed >= 60){
             stopBreathing(true);
           }
@@ -950,14 +866,13 @@
         if(auto){ toast("✓ 1 минута"); haptic("success"); }
       }
 
-      breathToggle.addEventListener("click", () => {
-        if(running) stopBreathing(false);
-        else startBreathing();
-      });
+      breathToggle.addEventListener("click", () => running ? stopBreathing(false) : startBreathing());
 
-      // -----------------------------
-      // Settings actions
-      // -----------------------------
+      // Wire buttons
+      $("#btnGood").addEventListener("click", () => addEvent("good"));
+      $("#btnPause").addEventListener("click", () => addEvent("pause"));
+      $("#btnClearToday").addEventListener("click", clearToday);
+
       $$("#tab-settings [data-theme]").forEach(btn=>{
         btn.addEventListener("click", () => {
           state.theme = btn.dataset.theme;
@@ -989,16 +904,7 @@
         haptic("light");
       });
 
-      // -----------------------------
-      // Wire buttons
-      // -----------------------------
-      $("#btnGood").addEventListener("click", () => addEvent("good"));
-      $("#btnPause").addEventListener("click", () => addEvent("pause"));
-      $("#btnClearToday").addEventListener("click", clearToday);
-
-      // -----------------------------
       // Init
-      // -----------------------------
       applyTheme();
       renderToday();
       ensureMicrocopyForToday();
