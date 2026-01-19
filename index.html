@@ -5,818 +5,926 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Balance Care</title>
 
+  <!-- Tailwind (можно убрать позже, но сейчас удобно) -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
   <style>
     :root{
-      /* Palette (мягкая, но заметная) */
-      --bg: #F6F7F7;
-      --card: #FFFFFF;
-      --text: #121316;
-      --muted: rgba(18,19,22,.58);
-      --line: rgba(18,19,22,.10);
-
-      /* Main actions */
-      --good: #2FBF71;          /* зелёный */
-      --goodSoft: rgba(47,191,113,.14);
-
-      --pause: #E56B6F;         /* мягкий красный/коралл */
-      --pauseSoft: rgba(229,107,111,.14);
-
-      /* Accent for links / focus */
-      --accent: #2F6FED;
-
-      --radius: 22px;
-
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+      /* Light */
+      --bg: #f6f7fb;
+      --card: rgba(255,255,255,0.9);
+      --card2: rgba(255,255,255,0.75);
+      --stroke: rgba(15,23,42,0.10);
+      --text: rgba(15,23,42,0.92);
+      --muted: rgba(15,23,42,0.62);
+
+      /* Primary palette (синий + серый) */
+      --primary: #2563eb;      /* blue-600 */
+      --primary2:#1d4ed8;      /* blue-700 */
+      --neutral: #e8ecf4;      /* soft gray */
+      --neutralText: rgba(15,23,42,0.80);
+
+      --shadow: 0 14px 40px rgba(15,23,42,0.10);
+      --radius: 22px;
     }
 
-    [data-theme="dark"]{
-      --bg: #0E1014;
-      --card: #151822;
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.62);
-      --line: rgba(255,255,255,.10);
+    html[data-theme="dark"]{
+      --bg: #0b1020;
+      --card: rgba(255,255,255,0.06);
+      --card2: rgba(255,255,255,0.08);
+      --stroke: rgba(255,255,255,0.10);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.62);
 
-      --goodSoft: rgba(47,191,113,.18);
-      --pauseSoft: rgba(229,107,111,.18);
+      --neutral: rgba(255,255,255,0.08);
+      --neutralText: rgba(255,255,255,0.86);
+
+      --shadow: 0 18px 50px rgba(0,0,0,0.35);
     }
 
     body{
-      background: var(--bg);
+      margin:0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 10% 0%, rgba(37,99,235,0.10), transparent 55%),
+                  radial-gradient(900px 600px at 85% 20%, rgba(29,78,216,0.10), transparent 60%),
+                  var(--bg);
       color: var(--text);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
     }
 
-    .safe{
+    .app-wrap{
       padding-top: calc(14px + var(--safe-top));
       padding-bottom: calc(18px + var(--safe-bottom));
     }
 
     .card{
-      background: var(--card);
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      border: 1px solid var(--stroke);
       border-radius: var(--radius);
-      border: 1px solid var(--line);
-      box-shadow: 0 10px 26px rgba(0,0,0,.06);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
     }
 
-    .btn{
-      border-radius: 18px;
-      transition: transform .08s ease, filter .08s ease, background .2s ease;
+    .segmented{
+      background: rgba(255,255,255,0.55);
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      padding: 6px;
+      display:flex;
+      gap: 6px;
+      overflow-x:auto;
+      -webkit-overflow-scrolling: touch;
     }
-    .btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+    html[data-theme="dark"] .segmented{
+      background: rgba(255,255,255,0.06);
+    }
 
-    /* Tabs */
-    .tabs{
-      background: color-mix(in srgb, var(--card) 88%, transparent);
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      overflow: hidden;
-    }
-    .tab{
-      position: relative;
-      padding: 10px 12px;
+    .tab-btn{
+      border-radius: 999px;
+      padding: 10px 14px;
       font-size: 14px;
+      line-height: 1;
+      white-space: nowrap;
+      border: 1px solid transparent;
       color: var(--muted);
       background: transparent;
-      width: 100%;
-      text-align: center;
+      transition: transform .06s ease, background .18s ease, color .18s ease, border-color .18s ease;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    .tab.is-active{
-      color: var(--text);
-      background: color-mix(in srgb, var(--card) 92%, transparent);
-    }
-    .tab.is-active::after{
-      content:"";
-      position:absolute;
-      left: 16px;
-      right: 16px;
-      bottom: 0;
-      height: 2px;
-      border-radius: 999px;
-      background: color-mix(in srgb, var(--text) 70%, transparent);
-      opacity: .55;
-    }
+    .tab-btn:active{ transform: scale(0.99); }
 
-    /* Action buttons */
-    .action{
-      padding: 18px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
-      font-weight: 650;
-      font-size: 17px;
-      border: 1px solid var(--line);
-    }
-    .action.good{ background: var(--goodSoft); }
-    .action.pause{ background: var(--pauseSoft); }
-
-    .icon{
-      width: 18px;
-      height: 18px;
-      display:inline-block;
-    }
-
-    /* Dots row */
-    .dots{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items:center;
-      padding: 10px 0 2px;
-    }
-    .dot{
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,.06);
-    }
-    [data-theme="dark"] .dot{
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .dot.good{ background: color-mix(in srgb, var(--good) 85%, white); }
-    .dot.pause{ background: color-mix(in srgb, var(--pause) 85%, white); }
-
-    /* Breathing */
-    .breath-wrap{
-      display:flex;
-      flex-direction: column;
-      align-items:center;
-      justify-content:center;
-      gap: 10px;
-      padding: 18px 12px;
-    }
-    .breath-circle{
-      width: 170px;
-      height: 170px;
-      border-radius: 999px;
-      position: relative;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+    .tab-btn.active{
       color: white;
+      background: linear-gradient(180deg, var(--primary), var(--primary2));
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 10px 26px rgba(37,99,235,0.22);
+    }
+
+    .action-btn{
+      width: 100%;
+      border-radius: 20px;
+      padding: 18px 16px;
+      font-size: 18px;
       font-weight: 650;
-      letter-spacing: .2px;
-      transform: scale(.78);
-      box-shadow: 0 18px 40px rgba(0,0,0,.12);
-      overflow:hidden;
+      border: 1px solid var(--stroke);
+      transition: transform .06s ease, filter .08s ease;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    /* Gradient “живой” фон */
-    .breath-circle::before{
-      content:"";
-      position:absolute;
-      inset:-30%;
-      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.35), transparent 45%),
-                  linear-gradient(135deg, #2FBF71, #2F6FED, #E56B6F);
-      filter: saturate(1.05);
-      animation: gradientShift 6s ease-in-out infinite alternate;
-      transform: rotate(8deg);
+    .action-btn:active{ transform: translateY(1px); filter: brightness(0.98); }
+
+    .action-primary{
+      color: white;
+      background: linear-gradient(180deg, var(--primary), var(--primary2));
+      border-color: rgba(255,255,255,0.18);
+      box-shadow: 0 14px 34px rgba(37,99,235,0.26);
     }
-    @keyframes gradientShift{
-      from{ transform: rotate(6deg) translateX(-6px); }
-      to{ transform: rotate(14deg) translateX(6px); }
+
+    .action-neutral{
+      color: var(--neutralText);
+      background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.45));
     }
-    .breath-circle > span{
-      position: relative;
-      z-index: 2;
+    html[data-theme="dark"] .action-neutral{
+      background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
     }
-    .breath-sub{
-      color: var(--muted);
-      font-size: 14px;
-      text-align:center;
-      line-height: 1.35;
+
+    .dot-row{ display:flex; gap:8px; flex-wrap: wrap; padding-top: 6px; }
+    .dot{
+      width: 16px; height: 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 8px 20px rgba(15,23,42,0.06);
     }
+    html[data-theme="dark"] .dot{
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.22);
+    }
+    .dot.good{ background: var(--primary); }
+    .dot.pause{ background: rgba(148,163,184,0.95); } /* slate-ish */
+    html[data-theme="dark"] .dot.pause{ background: rgba(203,213,225,0.55); }
+
+    .small-muted{ color: var(--muted); font-size: 13px; line-height: 1.35; }
 
     .pill{
-      display:inline-flex;
-      align-items:center;
-      gap: 8px;
-      padding: 10px 12px;
+      display:inline-flex; align-items:center; gap:8px;
       border-radius: 999px;
-      border: 1px solid var(--line);
-      color: var(--muted);
-      background: color-mix(in srgb, var(--card) 92%, transparent);
+      padding: 8px 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.55);
       font-size: 13px;
-    }
-
-    /* Small “surprise note” */
-    .note{
-      border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
-      background: color-mix(in srgb, var(--card) 92%, transparent);
-    }
-
-    /* Buttons in settings */
-    .seg{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-    }
-    .seg button{
-      padding: 10px 10px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
       color: var(--muted);
-      background: color-mix(in srgb, var(--card) 92%, transparent);
-      font-size: 14px;
-      font-weight: 600;
     }
-    .seg button.is-active{
+    html[data-theme="dark"] .pill{ background: rgba(255,255,255,0.06); }
+
+    .surprise{
+      border-radius: 18px;
+      padding: 12px 14px;
+      border: 1px dashed rgba(37,99,235,0.28);
+      background: radial-gradient(900px 260px at 20% 0%, rgba(37,99,235,0.10), transparent 55%),
+                  rgba(255,255,255,0.55);
+      color: rgba(15,23,42,0.82);
+    }
+    html[data-theme="dark"] .surprise{
+      background: radial-gradient(900px 260px at 20% 0%, rgba(37,99,235,0.18), transparent 55%),
+                  rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.86);
+      border-color: rgba(37,99,235,0.28);
+    }
+
+    /* Breathing circle */
+    .breath-wrap{
+      display:flex; flex-direction:column; align-items:center; gap: 12px;
+      padding: 10px 0 2px;
+    }
+    .breath-circle{
+      position: relative;
+      width: 190px; height: 190px;
+      border-radius: 999px;
+      display:flex; align-items:center; justify-content:center;
+      color: white;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      transform: scale(0.78);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: 0 22px 60px rgba(37,99,235,0.18);
+      overflow:hidden;
+      user-select:none;
+      -webkit-user-select:none;
+    }
+    .breath-circle::before{
+      content:"";
+      position:absolute; inset:-40px;
+      background: conic-gradient(from 180deg,
+        rgba(37,99,235,1),
+        rgba(29,78,216,1),
+        rgba(124,58,237,1),
+        rgba(37,99,235,1)
+      );
+      filter: blur(0px);
+      animation: spin 10s linear infinite;
+      opacity: 0.95;
+    }
+    .breath-circle::after{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(120px 120px at 30% 25%, rgba(255,255,255,0.28), transparent 60%),
+                  rgba(0,0,0,0.10);
+      mix-blend-mode: soft-light;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .breath-circle > span{ position: relative; z-index: 2; text-align:center; padding: 0 12px; }
+
+    .breath-sub{
+      font-size: 14px;
+      color: var(--muted);
+      text-align:center;
+    }
+
+    .ghost-btn{
+      border-radius: 16px;
+      padding: 10px 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.55);
       color: var(--text);
-      background: color-mix(in srgb, var(--accent) 12%, var(--card));
-      border-color: color-mix(in srgb, var(--accent) 20%, var(--line));
+      font-size: 14px;
+      transition: transform .06s ease, background .16s ease;
+      user-select:none; -webkit-user-select:none;
+    }
+    html[data-theme="dark"] .ghost-btn{ background: rgba(255,255,255,0.06); }
+    .ghost-btn:active{ transform: translateY(1px); }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: calc(18px + var(--safe-bottom));
+      z-index: 50;
+      width: min(92vw, 420px);
+      display:none;
+    }
+    .toast.show{ display:block; }
+    .toast .inner{
+      border-radius: 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.75);
+      box-shadow: 0 18px 50px rgba(15,23,42,0.12);
+      color: rgba(15,23,42,0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-size: 14px;
+    }
+    html[data-theme="dark"] .toast .inner{
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.90);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.38);
     }
   </style>
 </head>
 
-<body class="min-h-screen">
-  <div class="max-w-md mx-auto safe px-4 pb-10">
-
-    <!-- Tabs -->
-    <div class="tabs grid grid-cols-4 mb-4">
-      <button class="tab is-active" data-tab="today">Сегодня</button>
-      <button class="tab" data-tab="summary">Итоги</button>
-      <button class="tab" data-tab="breath">Дыхание</button>
-      <button class="tab" data-tab="settings">Настройки</button>
+<body>
+  <div class="app-wrap max-w-md mx-auto px-4">
+    <!-- Tabs (без названия/логотипа) -->
+    <div class="segmented card p-0 mb-4" style="box-shadow:none;">
+      <button class="tab-btn active" data-tab="today">Сегодня</button>
+      <button class="tab-btn" data-tab="summary">Итоги</button>
+      <button class="tab-btn" data-tab="breath">Дыхание</button>
+      <button class="tab-btn" data-tab="settings">Настройки</button>
     </div>
 
     <!-- TODAY -->
     <section id="tab-today" class="fade">
-      <div class="grid gap-4">
-        <div class="card p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <div class="text-[15px] font-semibold">Отметить момент</div>
-              <div class="text-[13px] mt-1" style="color: var(--muted);">
-                Никаких оценок. Просто фиксируем — и становится чуть яснее.
-              </div>
-            </div>
-            <div id="todayPill" class="pill">Сегодня: —</div>
-          </div>
-
-          <div class="grid gap-3 mt-4">
-            <button id="btnGood" class="btn action good">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 5v14M5 12h14" stroke="rgba(18,19,22,.80)" stroke-width="2.4" stroke-linecap="round"/>
-              </svg>
-              <span>Сделала полезное</span>
-            </button>
-
-            <button id="btnPause" class="btn action pause">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M8 6v12M16 6v12" stroke="rgba(18,19,22,.80)" stroke-width="2.4" stroke-linecap="round"/>
-              </svg>
-              <span>Сделала паузу</span>
-            </button>
+      <div class="card p-4 mb-4">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Отметить момент</div>
+            <div class="small-muted">Без оценок. Просто фиксируем — и становится яснее.</div>
           </div>
         </div>
+      </div>
 
-        <div class="card p-4">
-          <div class="flex items-center justify-between gap-3">
-            <div class="text-[15px] font-semibold">Сегодня</div>
-            <button id="btnClearToday" class="text-[13px] font-semibold" style="color: var(--accent);">
-              Очистить
-            </button>
-          </div>
-          <div id="dots" class="dots mt-2"></div>
-          <div class="text-[13px] mt-2" style="color: var(--muted);">
-            Маленькие отметки — это не контроль. Это забота о себе.
-          </div>
+      <div class="grid gap-3 mb-4">
+        <button id="btnGood" class="action-btn action-primary">Сделала полезное</button>
+        <button id="btnPause" class="action-btn action-neutral">Сделала паузу</button>
+      </div>
+
+      <div class="card p-4">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-semibold">Сегодня</div>
+          <button id="btnClearToday" class="ghost-btn" style="padding:8px 10px; font-size:13px;">Очистить</button>
+        </div>
+        <div id="todayDots" class="dot-row"></div>
+        <div id="todayEmpty" class="small-muted mt-2" style="display:none;">
+          Пока здесь пусто — и это тоже нормально.
         </div>
       </div>
     </section>
 
     <!-- SUMMARY -->
-    <section id="tab-summary" class="hidden">
-      <div class="grid gap-4">
-        <div class="card p-4">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-[15px] font-semibold">Итоги дня</div>
-              <div class="text-[13px] mt-1" style="color: var(--muted);">по сегодняшним отметкам</div>
-            </div>
-            <button id="btnGenDaily" class="btn px-4 py-2 text-[13px] font-semibold card" style="background: color-mix(in srgb, var(--accent) 10%, var(--card));">
-              Сгенерировать
-            </button>
+    <section id="tab-summary" class="hidden fade">
+      <div class="card p-4 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Итоги дня</div>
+            <div class="small-muted" id="summaryDate"></div>
           </div>
-
-          <div id="surpriseDaily" class="hidden card note p-3 mt-3">
-            <div class="text-[13px]" style="color: var(--muted);" id="surpriseDailyText"></div>
-          </div>
-
-          <pre id="dailyText" class="mt-3 whitespace-pre-wrap text-[14px] leading-relaxed p-3 rounded-2xl"
-               style="background: color-mix(in srgb, var(--card) 88%, transparent); border: 1px solid var(--line);"></pre>
-
-          <button id="btnSendDaily" class="mt-3 text-[13px] font-semibold" style="color: var(--accent);">
-            Отправить в бот
-          </button>
         </div>
 
-        <div class="card p-4">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="text-[15px] font-semibold">Итоги недели</div>
-              <div class="text-[13px] mt-1" style="color: var(--muted);">последние 7 дней</div>
-            </div>
-            <button id="btnGenWeekly" class="btn px-4 py-2 text-[13px] font-semibold card" style="background: color-mix(in srgb, var(--accent) 10%, var(--card));">
-              Сгенерировать
-            </button>
-          </div>
-
-          <div id="surpriseWeekly" class="hidden card note p-3 mt-3">
-            <div class="text-[13px]" style="color: var(--muted);" id="surpriseWeeklyText"></div>
-          </div>
-
-          <pre id="weeklyText" class="mt-3 whitespace-pre-wrap text-[14px] leading-relaxed p-3 rounded-2xl"
-               style="background: color-mix(in srgb, var(--card) 88%, transparent); border: 1px solid var(--line);"></pre>
-
-          <button id="btnSendWeekly" class="mt-3 text-[13px] font-semibold" style="color: var(--accent);">
-            Отправить в бот
-          </button>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="pill" id="pillGood">Полезное: 0</span>
+          <span class="pill" id="pillPause">Пауза: 0</span>
         </div>
+
+        <div id="summaryDots" class="dot-row mb-3"></div>
+
+        <div id="surpriseBox" class="surprise" style="display:none;"></div>
+
+        <div class="mt-3 small-muted whitespace-pre-wrap" id="dailyText"></div>
+      </div>
+
+      <div class="card p-4">
+        <div class="text-base font-semibold mb-1" style="letter-spacing:-0.02em;">Неделя</div>
+        <div class="small-muted mb-3">Семь дней — одна линия наблюдений.</div>
+
+        <div id="weekGrid" class="grid gap-2"></div>
+
+        <div class="mt-3 small-muted whitespace-pre-wrap" id="weeklyText"></div>
       </div>
     </section>
 
     <!-- BREATH -->
-    <section id="tab-breath" class="hidden">
-      <div class="card p-4">
-        <div class="flex items-center justify-between gap-3">
+    <section id="tab-breath" class="hidden fade">
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
           <div>
-            <div class="text-[15px] font-semibold">Дыхание 4–4–4–4</div>
-            <div class="text-[13px] mt-1" style="color: var(--muted);">
-              1 минута. Мягко выровнять состояние.
-            </div>
+            <div class="text-base font-semibold" style="letter-spacing:-0.02em;">1 минута</div>
+            <div class="small-muted">Дыхание 4 • 4 • 4 • 4</div>
           </div>
-          <div class="pill" id="breathTimerPill">00:00 / 01:00</div>
+          <button id="breathToggle" class="ghost-btn">Начать</button>
         </div>
 
-        <div class="breath-wrap mt-4">
-          <div id="breathCircle" class="breath-circle">
-            <span id="breathLabel">Готова</span>
+        <div class="breath-wrap">
+          <div id="breathCircle" class="breath-circle" aria-label="дыхание">
+            <span id="breathLabel">Готово</span>
           </div>
-
-          <div class="breath-sub" id="breathHint">
-            Нажми «Старт». Дальше всё пойдёт само.
-          </div>
-
-          <div class="flex gap-2 mt-2">
-            <button id="breathStart" class="btn px-4 py-2 text-[14px] font-semibold card"
-              style="background: color-mix(in srgb, var(--accent) 12%, var(--card));">
-              Старт
-            </button>
-            <button id="breathStop" class="btn px-4 py-2 text-[14px] font-semibold card">
-              Стоп
-            </button>
-          </div>
+          <div class="breath-sub" id="breathSub">Нажми «Начать» и просто следуй счёту.</div>
         </div>
       </div>
     </section>
 
     <!-- SETTINGS -->
-    <section id="tab-settings" class="hidden">
-      <div class="grid gap-4">
-        <div class="card p-4">
-          <div class="text-[15px] font-semibold">Тема</div>
-          <div class="text-[13px] mt-1 mb-3" style="color: var(--muted);">
-            Выбери, как тебе комфортнее.
-          </div>
-
-          <div class="seg">
-            <button data-theme="light" id="themeLight">☀️ Светлая</button>
-            <button data-theme="dark" id="themeDark">🌙 Тёмная</button>
-            <button data-theme="system" id="themeSystem">⚙️ Системная</button>
-          </div>
+    <section id="tab-settings" class="hidden fade">
+      <div class="card p-4 mb-4">
+        <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">Тема</div>
+        <div class="segmented" style="box-shadow:none;">
+          <button class="tab-btn" data-theme="light" id="themeLight">☀︎ Светлая</button>
+          <button class="tab-btn" data-theme="dark" id="themeDark">☾ Тёмная</button>
+          <button class="tab-btn" data-theme="system" id="themeSystem">◯ Системная</button>
         </div>
+        <div class="small-muted mt-2">Можно оставить «Системная» — будет подстраиваться.</div>
+      </div>
 
-        <div class="card p-4">
-          <div class="text-[15px] font-semibold">О приложении</div>
-          <div class="text-[14px] mt-2 leading-relaxed" style="color: var(--muted);">
-            Это маленькое пространство для простых отметок в течение дня.<br>
-            <b style="color: var(--text);">Сделала полезное</b> — фиксируешь шаг в свою сторону.<br>
-            <b style="color: var(--text);">Сделала паузу</b> — честно отмечаешь момент, когда ушла(ушёл) в сторону или просто стало тяжело.<br><br>
-            К вечеру и к концу недели из этих точек появляется понятная картина —
-            и становится легче увидеть, почему получается именно такой результат.
-          </div>
-
-          <div class="mt-3 text-[13px]" style="color: var(--muted);">
-            Данные хранятся локально в твоём браузере/Telegram WebApp.
-          </div>
-
-          <button id="btnExport" class="mt-3 text-[13px] font-semibold" style="color: var(--accent);">
-            Экспорт JSON
-          </button>
-          <pre id="exportBox" class="hidden mt-3 whitespace-pre-wrap text-[12px] leading-relaxed p-3 rounded-2xl"
-               style="background: color-mix(in srgb, var(--card) 88%, transparent); border: 1px solid var(--line);"></pre>
-
-          <button id="btnReset" class="mt-3 text-[13px] font-semibold" style="color: color-mix(in srgb, var(--pause) 80%, var(--text));">
-            Стереть всё локально
-          </button>
+      <div class="card p-4 mb-4">
+        <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">О приложении</div>
+        <div class="small-muted whitespace-pre-wrap">
+Это мини-пространство для наблюдений.
+В течение дня ты отмечаешь маленькие шаги: «полезное» или «пауза».
+К концу дня складывается картина, а потом — неделя.
+Из таких маленьких отметок становится проще понять, что ведёт к результатам — мягко, без давления.
         </div>
       </div>
-    </section>
 
+      <div class="card p-4">
+        <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">Данные</div>
+        <div class="small-muted">Если захочешь начать с чистого листа — можно стереть локальную историю.</div>
+        <div class="mt-3 flex gap-2">
+          <button id="btnExport" class="ghost-btn flex-1">Экспорт</button>
+          <button id="btnReset" class="ghost-btn flex-1" style="border-color: rgba(37,99,235,0.25);">Стереть</button>
+        </div>
+        <pre id="exportBox" class="mt-3 hidden small-muted whitespace-pre-wrap p-3" style="border:1px solid var(--stroke); border-radius: 16px; background: rgba(255,255,255,0.55);"></pre>
+      </div>
+    </section>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">
+    <div class="inner" id="toastInner">✓ Записано</div>
   </div>
 
   <script>
-    // -----------------------------
-    // Telegram
-    // -----------------------------
-    const tg = window.Telegram?.WebApp;
-    tg?.ready?.();
-    tg?.expand?.();
-
-    // -----------------------------
-    // State
-    // -----------------------------
-    const STORAGE = "balancecare_v3";
-    const todayKey = () => {
-      const d = new Date();
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth()+1).padStart(2,"0");
-      const dd = String(d.getDate()).padStart(2,"0");
-      return `${yyyy}-${mm}-${dd}`;
-    };
-
-    const defaultState = () => ({
-      theme: "system",
-      events: [], // {date, type: "good"|"pause", ts}
-      lastSurprise: { daily: null, weekly: null }
-    });
-
-    let state = (() => {
+    ;(() => {
+      // -----------------------------
+      // Telegram
+      // -----------------------------
+      const tg = window.Telegram?.WebApp || null;
       try{
-        const raw = localStorage.getItem(STORAGE);
-        if(!raw) return defaultState();
-        return { ...defaultState(), ...JSON.parse(raw) };
-      }catch(e){
-        return defaultState();
-      }
-    })();
+        tg?.ready?.();
+        tg?.expand?.();
+      }catch(e){}
 
-    const save = () => localStorage.setItem(STORAGE, JSON.stringify(state));
-
-    // -----------------------------
-    // DOM helpers
-    // -----------------------------
-    const $ = (s) => document.querySelector(s);
-    const $$ = (s) => Array.from(document.querySelectorAll(s));
-
-    // -----------------------------
-    // Tabs
-    // -----------------------------
-    function setTab(name){
-      $$(".tab").forEach(b => b.classList.toggle("is-active", b.dataset.tab === name));
-      ["today","summary","breath","settings"].forEach(t => {
-        $("#tab-"+t).classList.toggle("hidden", t !== name);
+      // -----------------------------
+      // Storage
+      // -----------------------------
+      const STORAGE = "balancecare_v4";
+      const defaultState = () => ({
+        theme: "system",
+        events: [],  // {ts, date, type: "good"|"pause"}
+        surprise: { lastShownAt: null }
       });
 
-      // breath: stop when leaving
-      if(name !== "breath") stopBreathing();
-      if(name === "summary"){
-        renderSummaries(true);
+      let state = loadState();
+
+      function loadState(){
+        try{
+          const raw = localStorage.getItem(STORAGE);
+          if(!raw) return defaultState();
+          const parsed = JSON.parse(raw);
+          return { ...defaultState(), ...parsed };
+        }catch(e){
+          return defaultState();
+        }
       }
-    }
-
-    $$(".tab").forEach(btn => {
-      btn.addEventListener("click", () => setTab(btn.dataset.tab));
-    });
-
-    // -----------------------------
-    // Theme
-    // -----------------------------
-    function applyTheme(){
-      const root = document.documentElement;
-
-      if(state.theme === "system"){
-        root.removeAttribute("data-theme");
-      } else {
-        root.setAttribute("data-theme", state.theme);
+      function save(){
+        localStorage.setItem(STORAGE, JSON.stringify(state));
       }
 
-      // active styles on theme buttons
-      ["light","dark","system"].forEach(t => {
-        const el = document.querySelector(`[data-theme="${t}"]`);
-        el?.classList.toggle("is-active", state.theme === t);
+      // Local date key (без UTC-сдвигов)
+      function pad(n){ return String(n).padStart(2,"0"); }
+      function dateKey(d=new Date()){
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+      }
+      function nowISO(){ return new Date().toISOString(); }
+
+      // -----------------------------
+      // Theme
+      // -----------------------------
+      let systemListenerAttached = false;
+
+      function isLight(hex){
+        try{
+          const h = hex.replace("#","").trim();
+          const full = h.length === 3 ? h.split("").map(x=>x+x).join("") : h;
+          const n = parseInt(full,16);
+          const r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+          const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+          return lum > 0.6;
+        }catch(e){ return true; }
+      }
+
+      function applyTheme(){
+        // user choice
+        if(state.theme === "light"){
+          document.documentElement.setAttribute("data-theme","light");
+        }else if(state.theme === "dark"){
+          document.documentElement.setAttribute("data-theme","dark");
+        }else{
+          // system
+          const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+          document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
+
+          if(!systemListenerAttached && window.matchMedia){
+            systemListenerAttached = true;
+            window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+              if(state.theme === "system") applyTheme();
+            });
+          }
+        }
+
+        // Telegram theme adaptation (только если system)
+        try{
+          const tp = tg?.themeParams || {};
+          const bg = tp.bg_color;
+          if(state.theme === "system" && bg){
+            // если Telegram светлый — оставляем светлый, если тёмный — тёмный
+            document.documentElement.setAttribute("data-theme", isLight(bg) ? "light" : "dark");
+          }
+        }catch(e){}
+
+        renderThemeButtons();
+      }
+
+      function renderThemeButtons(){
+        const map = { light:"themeLight", dark:"themeDark", system:"themeSystem" };
+        ["themeLight","themeDark","themeSystem"].forEach(id => {
+          const el = document.getElementById(id);
+          el.classList.remove("active");
+          el.style.background = "transparent";
+          el.style.color = "var(--muted)";
+        });
+
+        const activeId = map[state.theme] || "themeSystem";
+        const activeEl = document.getElementById(activeId);
+        activeEl.classList.add("active");
+        activeEl.style.background = "linear-gradient(180deg, var(--primary), var(--primary2))";
+        activeEl.style.color = "white";
+      }
+
+      // -----------------------------
+      // UI helpers
+      // -----------------------------
+      const $ = (s) => document.querySelector(s);
+      const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+      function toast(msg){
+        const t = $("#toast");
+        $("#toastInner").textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => t.classList.remove("show"), 1400);
+      }
+
+      function haptic(kind="light"){
+        try{
+          if(tg?.HapticFeedback){
+            if(kind==="success") tg.HapticFeedback.notificationOccurred("success");
+            else tg.HapticFeedback.impactOccurred("light");
+          }
+        }catch(e){}
+      }
+
+      // -----------------------------
+      // Tabs
+      // -----------------------------
+      let currentTab = "today";
+
+      function setTab(name){
+        currentTab = name;
+
+        $$(".tab-btn[data-tab]").forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.tab === name);
+        });
+
+        ["today","summary","breath","settings"].forEach(t => {
+          $("#tab-"+t).classList.toggle("hidden", t !== name);
+        });
+
+        if(name === "summary") renderSummary();
+        if(name !== "breath") stopBreathing();
+      }
+
+      $$(".tab-btn[data-tab]").forEach(btn => {
+        btn.addEventListener("click", () => setTab(btn.dataset.tab));
       });
-    }
 
-    $$("[data-theme]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        state.theme = btn.dataset.theme;
+      // -----------------------------
+      // Data ops
+      // -----------------------------
+      function addEvent(type){
+        state.events.push({ ts: nowISO(), date: dateKey(), type });
         save();
-        applyTheme();
-      });
-    });
+        renderToday();
+        if(currentTab === "summary") renderSummary();
 
-    // -----------------------------
-    // Events (Today)
-    // -----------------------------
-    function addEvent(type){
-      state.events.push({ date: todayKey(), type, ts: new Date().toISOString() });
-      save();
-      renderToday();
-    }
-
-    $("#btnGood").addEventListener("click", () => addEvent("good"));
-    $("#btnPause").addEventListener("click", () => addEvent("pause"));
-
-    $("#btnClearToday").addEventListener("click", () => {
-      state.events = state.events.filter(e => e.date !== todayKey());
-      save();
-      renderToday();
-    });
-
-    function countForDate(d){
-      const events = state.events.filter(e => e.date === d);
-      const g = events.filter(e => e.type === "good").length;
-      const p = events.filter(e => e.type === "pause").length;
-      return { g, p, total: events.length, events };
-    }
-
-    function renderToday(){
-      const { g, p, events } = countForDate(todayKey());
-
-      // pill
-      const pill = $("#todayPill");
-      if(g+p === 0){
-        pill.textContent = "Сегодня: —";
-      } else {
-        pill.textContent = `Сегодня: ${g} + / ${p} ⏸`;
+        toast("✓ Записано");
+        haptic("success");
       }
 
-      // dots
-      const dots = $("#dots");
-      dots.innerHTML = "";
-      if(events.length === 0){
-        const t = document.createElement("div");
-        t.className = "text-[14px]";
-        t.style.color = "var(--muted)";
-        t.textContent = "Пока тихо.";
-        dots.appendChild(t);
-        return;
+      function clearToday(){
+        const d = dateKey();
+        state.events = state.events.filter(e => e.date !== d);
+        save();
+        renderToday();
+        if(currentTab === "summary") renderSummary();
+
+        toast("Очищено");
+        haptic("light");
       }
 
-      events.slice(-40).forEach(e => {
-        const d = document.createElement("div");
-        d.className = "dot " + (e.type === "good" ? "good" : "pause");
-        dots.appendChild(d);
-      });
-    }
-
-    // -----------------------------
-    // Summaries + Surprise notes
-    // -----------------------------
-    const surpriseDailyPool = [
-      "Я заметила: ты умеешь возвращаться к себе — даже маленькими шагами. Это очень ценно.",
-      "Сегодня ты не доказывала ничего миру. Ты просто была рядом с собой — и это уже победа.",
-      "Маленькая честность сегодня сделала день легче. Спасибо, что не бросила себя.",
-      "Пусть это будет напоминанием: у тебя получается бережно выстраивать опору."
-    ];
-
-    const surpriseWeeklyPool = [
-      "Неделя выглядит как живая. Не идеальная — настоящая. И это куда важнее.",
-      "Ты собираешь себя по точкам — и это очень взрослый, сильный способ идти вперёд.",
-      "Вижу ритм: ты стараешься. И ты не одна в этом процессе.",
-      "Твоя устойчивость — не “всегда”, а “возвращаться снова”. И ты это делаешь."
-    ];
-
-    function maybeShowSurprise(kind, dateKey){
-      // kind: "daily" | "weekly"
-      // показываем редко (примерно 35%), и не чаще 1 раза в день для daily / 1 раза в неделю для weekly
-      const chance = 0.35;
-
-      const last = state.lastSurprise?.[kind];
-      const already = last === dateKey;
-
-      const box = kind === "daily" ? $("#surpriseDaily") : $("#surpriseWeekly");
-      const textEl = kind === "daily" ? $("#surpriseDailyText") : $("#surpriseWeeklyText");
-
-      box.classList.add("hidden");
-
-      if(already) return;
-      if(Math.random() > chance) return;
-
-      const pool = kind === "daily" ? surpriseDailyPool : surpriseWeeklyPool;
-      const pick = pool[Math.floor(Math.random()*pool.length)];
-
-      textEl.textContent = pick;
-      box.classList.remove("hidden");
-
-      state.lastSurprise[kind] = dateKey;
-      save();
-    }
-
-    function generateDailyText(){
-      const d = todayKey();
-      const { g, p, events } = countForDate(d);
-
-      if(events.length === 0){
-        return `Сегодня было тихо — без отметок.\n\nЕсли захочешь — просто сделай одну маленькую запись завтра. Я рядом.`;
+      function eventsFor(d){
+        return state.events.filter(e => e.date === d);
       }
 
-      const pattern = events.map(e => e.type === "good" ? "●" : "◐").join(" ");
-      // ● = полезное, ◐ = пауза (нейтрально)
-      if(g >= p){
-        return `Итоги дня\n\n${pattern}\n\nПолезных шагов: ${g}\nПаузы: ${p}\n\nХороший ритм. Даже одна “точка” — это уже забота о себе.`;
-      } else {
-        return `Итоги дня\n\n${pattern}\n\nПолезных шагов: ${g}\nПаузы: ${p}\n\nДень мог быть непростым. Спасибо, что всё равно отметила. Завтра будет новый шанс — без давления.`;
+      function countFor(d){
+        const ev = eventsFor(d);
+        const good = ev.filter(x => x.type === "good").length;
+        const pause = ev.filter(x => x.type === "pause").length;
+        return { good, pause, total: ev.length, ev };
       }
-    }
 
-    function lastNDays(n){
-      const out = [];
-      const t = new Date();
-      for(let i=0; i<n; i++){
-        const d = new Date(t);
-        d.setDate(t.getDate() - i);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth()+1).padStart(2,"0");
-        const dd = String(d.getDate()).padStart(2,"0");
-        out.push(`${yyyy}-${mm}-${dd}`);
+      // -----------------------------
+      // Today render
+      // -----------------------------
+      function renderDots(container, ev){
+        container.innerHTML = "";
+        ev.slice(-48).forEach(e => {
+          const dot = document.createElement("div");
+          dot.className = "dot " + (e.type === "good" ? "good" : "pause");
+          container.appendChild(dot);
+        });
       }
-      return out.reverse();
-    }
 
-    function wd(iso){
-      const d = new Date(iso+"T00:00:00");
-      return ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"][d.getDay()];
-    }
+      function renderToday(){
+        const d = dateKey();
+        const { ev, total } = countFor(d);
 
-    function generateWeeklyText(){
-      const days = lastNDays(7);
-      let gSum=0, pSum=0;
+        const row = $("#todayDots");
+        const empty = $("#todayEmpty");
 
-      const lines = days.map(d => {
-        const { g, p, events } = countForDate(d);
-        gSum += g; pSum += p;
-        if(events.length === 0) return `${wd(d)}: —`;
-        const row = events.map(e => e.type === "good" ? "●" : "◐").join("");
-        return `${wd(d)}: ${row}`;
-      }).join("\n");
-
-      return `Итоги недели\n\nПолезных шагов: ${gSum}\nПаузы: ${pSum}\n\nКарта недели:\n${lines}\n\nСмысл не в идеальности. Смысл в том, что ты видишь картину — и можешь мягко подрулить.`;
-    }
-
-    function renderSummaries(withSurprise=false){
-      $("#dailyText").textContent = generateDailyText();
-      $("#weeklyText").textContent = generateWeeklyText();
-
-      if(withSurprise){
-        maybeShowSurprise("daily", todayKey());
-        // ключ недели: YYYY-Wxx (упрощённо)
-        const now = new Date();
-        const year = now.getFullYear();
-        const weekKey = `${year}-W${Math.ceil((((now - new Date(year,0,1)) / 86400000) + new Date(year,0,1).getDay()+1)/7)}`;
-        maybeShowSurprise("weekly", weekKey);
+        if(total === 0){
+          row.innerHTML = "";
+          empty.style.display = "block";
+        }else{
+          empty.style.display = "none";
+          renderDots(row, ev);
+        }
       }
-    }
 
-    function sendToBot(kind, text){
-      const payload = {
-        kind,
-        text,
-        ts: new Date().toISOString(),
-        date: todayKey()
-      };
+      // -----------------------------
+      // Warm “surprise” observations
+      // -----------------------------
+      const SURPRISE_LINES = [
+        "Я вижу этот момент. Он маленький — и всё равно настоящий.",
+        "Ты не обязана делать много. Достаточно быть рядом с собой.",
+        "Отметка есть — значит, ты не потерялась. Ты здесь.",
+        "Пусть это будет мягкой опорой: шаг за шагом, без гонки.",
+        "Хорошо получается: спокойно, по-честному, без лишнего шума.",
+        "Иногда достаточно просто заметить. И это уже меняет день."
+      ];
 
-      if(tg && tg.sendData){
-        tg.sendData(JSON.stringify(payload));
-      } else {
-        navigator.clipboard?.writeText(text).catch(()=>{});
+      function shouldShowSurprise(){
+        // не чаще 1 раза в 6 часов + шанс
+        const last = state.surprise?.lastShownAt ? new Date(state.surprise.lastShownAt).getTime() : 0;
+        const sixHours = 6 * 60 * 60 * 1000;
+        const okByTime = (Date.now() - last) > sixHours;
+        const chance = Math.random() < 0.35;
+        return okByTime && chance;
       }
-    }
 
-    $("#btnGenDaily").addEventListener("click", () => renderSummaries(true));
-    $("#btnGenWeekly").addEventListener("click", () => renderSummaries(true));
-    $("#btnSendDaily").addEventListener("click", () => sendToBot("daily", $("#dailyText").textContent));
-    $("#btnSendWeekly").addEventListener("click", () => sendToBot("weekly", $("#weeklyText").textContent));
+      function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 
-    // -----------------------------
-    // Breathing 4–4–4–4 (1 minute auto-stop)
-    // -----------------------------
-    const breathCircle = $("#breathCircle");
-    const breathLabel  = $("#breathLabel");
-    const breathHint   = $("#breathHint");
-    const timerPill    = $("#breathTimerPill");
+      // -----------------------------
+      // Summary text
+      // -----------------------------
+      function dailySummaryText(){
+        const d = dateKey();
+        const { good, pause, total } = countFor(d);
 
-    let breathInterval = null;
-    let breathElapsed = 0; // seconds
-    let phaseIndex = 0;    // 0..3
-    let secInPhase = 0;    // 0..3
-    const MAX_SECONDS = 60;
-
-    const phases = [
-      { label: "Вдох",  mode:"in",   dur:4, from:.78, to:1.00 },
-      { label: "Пауза", mode:"hold", dur:4, from:1.00, to:1.00 },
-      { label: "Выдох", mode:"out",  dur:4, from:1.00, to:.78 },
-      { label: "Пауза", mode:"hold", dur:4, from:.78, to:.78 }
-    ];
-
-    function fmtTime(s){
-      const mm = String(Math.floor(s/60)).padStart(2,"0");
-      const ss = String(s%60).padStart(2,"0");
-      return `${mm}:${ss}`;
-    }
-
-    function setScale(scale, smooth=true){
-      breathCircle.style.transition = smooth ? "transform 1s linear" : "none";
-      breathCircle.style.transform = `scale(${scale})`;
-    }
-
-    function updateBreathUI(){
-      const phase = phases[phaseIndex];
-      const progress = secInPhase / phase.dur; // 0..0.75
-      const scale = phase.from + (phase.to - phase.from) * progress;
-
-      setScale(scale, true);
-      breathLabel.textContent = `${phase.label} ${secInPhase+1}`;
-      breathHint.textContent = `4 • 4 • 4 • 4 — спокойно, без усилий`;
-
-      timerPill.textContent = `${fmtTime(breathElapsed)} / 01:00`;
-    }
-
-    function startBreathing(){
-      stopBreathing();
-
-      breathElapsed = 0;
-      phaseIndex = 0;
-      secInPhase = 0;
-
-      setScale(.78, false);
-      breathLabel.textContent = "Вдох 1";
-      breathHint.textContent = "Можешь просто следовать кругу.";
-
-      timerPill.textContent = "00:00 / 01:00";
-
-      breathInterval = setInterval(() => {
-        // auto-stop
-        if(breathElapsed >= MAX_SECONDS){
-          finishBreathing();
-          return;
+        if(total === 0){
+          return "Сегодня было тихо — без отметок.\nЕсли захочешь, можно вернуться к этому позже. Я рядом.";
         }
 
-        updateBreathUI();
-
-        // tick
-        breathElapsed++;
-        secInPhase++;
-
-        if(secInPhase >= phases[phaseIndex].dur){
-          secInPhase = 0;
-          phaseIndex = (phaseIndex + 1) % phases.length;
+        // очень простой, дружелюбный тон, без сравнений и “обычно”
+        if(good > 0 && pause === 0){
+          return "Сегодня у тебя получалось выбирать полезное.\nПусть это останется как тёплая точка опоры.";
         }
-      }, 1000);
-    }
-
-    function finishBreathing(){
-      stopBreathing();
-      breathLabel.textContent = "Готово";
-      breathHint.textContent = "Хорошо. Можно просто посидеть ещё пару секунд — и идти дальше 🙂";
-      timerPill.textContent = "01:00 / 01:00";
-      setScale(.90, true);
-    }
-
-    function stopBreathing(){
-      if(breathInterval){
-        clearInterval(breathInterval);
-        breathInterval = null;
+        if(pause > 0 && good === 0){
+          return "Сегодня было больше пауз.\nЭто не “провал” — это сигнал: тебе нужна бережность.";
+        }
+        if(good >= pause){
+          return "День получился разным — и в этом есть жизнь.\nТо, что ты отмечаешь, уже делает картину яснее.";
+        }
+        return "Сегодня было непросто, но ты всё равно осталась в контакте с собой.\nЭто очень ценная вещь.";
       }
-    }
 
-    $("#breathStart").addEventListener("click", startBreathing);
-    $("#breathStop").addEventListener("click", stopBreathing);
+      function lastNDays(n){
+        const out = [];
+        const base = new Date();
+        for(let i=0;i<n;i++){
+          const d = new Date(base);
+          d.setDate(base.getDate()-i);
+          out.push(dateKey(d));
+        }
+        return out.reverse();
+      }
 
-    // -----------------------------
-    // Settings: export / reset
-    // -----------------------------
-    $("#btnExport").addEventListener("click", () => {
-      const box = $("#exportBox");
-      box.classList.remove("hidden");
-      box.textContent = JSON.stringify(state, null, 2);
-    });
+      function dayName(iso){
+        const d = new Date(iso+"T00:00:00");
+        const map = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+        return map[d.getDay()];
+      }
 
-    $("#btnReset").addEventListener("click", () => {
-      const ok = confirm("Стереть все данные локально? Это нельзя отменить.");
-      if(!ok) return;
-      state = defaultState();
-      save();
-      $("#exportBox").classList.add("hidden");
-      stopBreathing();
+      function weeklySummaryText(){
+        const days = lastNDays(7);
+        let g=0,p=0;
+        days.forEach(d=>{
+          const c=countFor(d);
+          g+=c.good; p+=c.pause;
+        });
+
+        if(g+p===0){
+          return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки, одного вдоха.";
+        }
+
+        const line =
+          g>=p
+            ? "В этой неделе было место и для движения, и для пауз. Хороший баланс."
+            : "В этой неделе было больше пауз. Возможно, тебе сейчас важно беречь ресурс.";
+
+        return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
+      }
+
+      function renderSummary(){
+        // date label
+        const d = dateKey();
+        $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", { weekday:"long", day:"numeric", month:"long" });
+
+        const c = countFor(d);
+        $("#pillGood").textContent = `Полезное: ${c.good}`;
+        $("#pillPause").textContent = `Пауза: ${c.pause}`;
+
+        // dots
+        const row = $("#summaryDots");
+        if(c.total===0){
+          row.innerHTML = "";
+        }else{
+          renderDots(row, c.ev);
+        }
+
+        // surprise
+        const box = $("#surpriseBox");
+        if(shouldShowSurprise()){
+          box.style.display = "block";
+          box.textContent = pick(SURPRISE_LINES);
+          state.surprise.lastShownAt = nowISO();
+          save();
+        }else{
+          box.style.display = "none";
+        }
+
+        // daily text
+        $("#dailyText").textContent = dailySummaryText();
+
+        // week grid
+        const grid = $("#weekGrid");
+        grid.innerHTML = "";
+        const days = lastNDays(7);
+        days.forEach(dd=>{
+          const cc = countFor(dd);
+          const item = document.createElement("div");
+          item.className = "p-3";
+          item.style.border = "1px solid var(--stroke)";
+          item.style.borderRadius = "16px";
+          item.style.background = "rgba(255,255,255,0.55)";
+          if(document.documentElement.getAttribute("data-theme")==="dark"){
+            item.style.background = "rgba(255,255,255,0.06)";
+          }
+
+          const header = document.createElement("div");
+          header.className = "flex items-center justify-between mb-2";
+          header.innerHTML = `
+            <div style="font-weight:650; letter-spacing:-0.02em;">${dayName(dd)}</div>
+            <div class="small-muted">${cc.good}/${cc.pause}</div>
+          `;
+
+          const dots = document.createElement("div");
+          dots.className = "dot-row";
+          if(cc.total>0){
+            cc.ev.slice(-24).forEach(e=>{
+              const dot = document.createElement("div");
+              dot.className = "dot " + (e.type==="good" ? "good" : "pause");
+              dots.appendChild(dot);
+            });
+          }else{
+            const t=document.createElement("div");
+            t.className="small-muted";
+            t.textContent="—";
+            dots.appendChild(t);
+          }
+
+          item.appendChild(header);
+          item.appendChild(dots);
+          grid.appendChild(item);
+        });
+
+        $("#weeklyText").textContent = weeklySummaryText();
+      }
+
+      // -----------------------------
+      // Breathing (4–4–4–4, 1 minute)
+      // -----------------------------
+      const breathCircle = $("#breathCircle");
+      const breathLabel  = $("#breathLabel");
+      const breathSub    = $("#breathSub");
+      const breathToggle = $("#breathToggle");
+
+      let breathTimer = null;
+      let breathElapsed = 0;
+      let phaseIndex = 0;
+      let secondInPhase = 0;
+      let running = false;
+
+      const PHASES = [
+        { label:"Вдох",  dur:4, kind:"in",   from:0.78, to:1.00 },
+        { label:"Пауза", dur:4, kind:"hold", from:1.00, to:1.00 },
+        { label:"Выдох", dur:4, kind:"out",  from:1.00, to:0.78 },
+        { label:"Пауза", dur:4, kind:"hold", from:0.78, to:0.78 }
+      ];
+
+      function setScale(scale, smooth=true, seconds=1){
+        breathCircle.style.transition = smooth ? `transform ${seconds}s linear` : "none";
+        breathCircle.style.transform = `scale(${scale})`;
+      }
+
+      function startBreathing(){
+        stopBreathing();
+
+        running = true;
+        breathElapsed = 0;
+        phaseIndex = 0;
+        secondInPhase = 0;
+
+        breathToggle.textContent = "Стоп";
+        breathLabel.textContent = "Вдох";
+        breathSub.textContent = "Вдох 1-2-3-4";
+
+        // init scale
+        setScale(0.78, false);
+
+        // trigger first phase animation smoothly (4s)
+        requestAnimationFrame(() => {
+          setScale(1.00, true, 4);
+        });
+
+        breathTimer = setInterval(() => {
+          breathElapsed++;
+
+          const phase = PHASES[phaseIndex];
+          const count = secondInPhase + 1;
+
+          // text: "Вдох 1-2-3-4" (подсветку не делаем, чтобы было тихо)
+          breathLabel.textContent = phase.label;
+          breathSub.textContent = `${phase.label} ${count}-${count+1<=4?count+1:4}-${count+2<=4?count+2:4}-${count+3<=4?count+3:4}`.replace(/4-4-4-4$/,"1-2-3-4");
+          // проще и честнее: ещё покажем счет в конце
+          breathSub.textContent = `${phase.label} • ${count}/4`;
+
+          // phase start logic: если только вошли в фазу — запускаем анимацию на всю фазу
+          if(secondInPhase === 0){
+            // set from instantly to avoid drift
+            setScale(phase.from, false);
+            requestAnimationFrame(() => {
+              setScale(phase.to, true, phase.dur);
+            });
+          }
+
+          secondInPhase++;
+
+          if(secondInPhase >= phase.dur){
+            secondInPhase = 0;
+            phaseIndex = (phaseIndex + 1) % PHASES.length;
+          }
+
+          // auto stop at 60 seconds
+          if(breathElapsed >= 60){
+            stopBreathing(true);
+          }
+        }, 1000);
+      }
+
+      function stopBreathing(auto=false){
+        if(breathTimer){
+          clearInterval(breathTimer);
+          breathTimer = null;
+        }
+        running = false;
+        breathToggle.textContent = "Начать";
+        breathLabel.textContent = auto ? "Готово" : "Готово";
+        breathSub.textContent = auto ? "Хорошо. Можно просто заметить это ощущение." : "Нажми «Начать» и просто следуй счёту.";
+        // мягко вернём к исходному размеру
+        setScale(0.78, true, 0.6);
+        if(auto) { toast("✓ 1 минута"); haptic("success"); }
+      }
+
+      breathToggle.addEventListener("click", () => {
+        if(running) stopBreathing(false);
+        else startBreathing();
+      });
+
+      // -----------------------------
+      // Settings actions
+      // -----------------------------
+      $$("#tab-settings [data-theme]").forEach(btn=>{
+        btn.addEventListener("click", () => {
+          state.theme = btn.dataset.theme;
+          save();
+          applyTheme();
+          toast("Тема сохранена");
+        });
+      });
+
+      $("#btnExport").addEventListener("click", () => {
+        const box = $("#exportBox");
+        box.classList.remove("hidden");
+        box.textContent = JSON.stringify(state, null, 2);
+        // copy to clipboard (если можно)
+        navigator.clipboard?.writeText(box.textContent).catch(()=>{});
+        toast("Экспорт скопирован");
+        haptic("success");
+      });
+
+      $("#btnReset").addEventListener("click", () => {
+        const ok = confirm("Стереть всю историю на этом устройстве?");
+        if(!ok) return;
+        state = defaultState();
+        save();
+        $("#exportBox").classList.add("hidden");
+        renderToday();
+        if(currentTab==="summary") renderSummary();
+        toast("Готово. Чистый лист");
+        haptic("light");
+      });
+
+      // -----------------------------
+      // Wire buttons
+      // -----------------------------
+      $("#btnGood").addEventListener("click", () => addEvent("good"));
+      $("#btnPause").addEventListener("click", () => addEvent("pause"));
+      $("#btnClearToday").addEventListener("click", clearToday);
+
+      // -----------------------------
+      // Init
+      // -----------------------------
       applyTheme();
       renderToday();
-      renderSummaries(false);
       setTab("today");
-    });
-
-    // -----------------------------
-    // Init
-    // -----------------------------
-    applyTheme();
-    renderToday();
-    renderSummaries(false);
-    setTab("today");
+    })();
   </script>
 </body>
 </html>
