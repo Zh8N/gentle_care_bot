@@ -308,21 +308,6 @@
       color: rgba(255,255,255,0.90);
       box-shadow: 0 18px 50px rgba(0,0,0,0.38);
     }
-
-    /* Compass */
-    .compass-q{
-      font-size: 18px;
-      font-weight: 680;
-      letter-spacing: -0.02em;
-      line-height: 1.25;
-    }
-    .compass-list{
-      padding-left: 18px;
-    }
-    .compass-list li{
-      margin: 8px 0;
-      color: var(--text);
-    }
   </style>
 </head>
 
@@ -331,7 +316,6 @@
     <div class="segmented card p-0 mb-4" style="box-shadow:none;">
       <button class="tab-btn active" data-tab="today">Сегодня</button>
       <button class="tab-btn" data-tab="summary">Итоги</button>
-      <button class="tab-btn" data-tab="compass">Компас</button>
       <button class="tab-btn" data-tab="breath">Дыхание</button>
       <button class="tab-btn" data-tab="settings">Настройки</button>
     </div>
@@ -396,31 +380,6 @@
       </div>
     </section>
 
-    <!-- COMPASS -->
-    <section id="tab-compass" class="hidden">
-      <div class="card p-4 mb-4">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Компас</div>
-            <div class="small-muted">Вопросы, которые возвращают ясность.</div>
-          </div>
-          <button id="btnCompassNext" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Ещё один</button>
-        </div>
-
-        <div class="mt-4 compass-q" id="compassQuestion">…</div>
-        <div class="mt-2 small-muted" id="compassHint">Вопрос дня обновляется сам. “Ещё один” — когда хочется.</div>
-
-        <div class="mt-3 flex gap-2">
-          <button id="btnCompassCopy" class="ghost-btn flex-1">Скопировать</button>
-        </div>
-      </div>
-
-      <div class="card p-4">
-        <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">Все 8 вопросов</div>
-        <ol class="compass-list" id="compassList"></ol>
-      </div>
-    </section>
-
     <!-- BREATH -->
     <section id="tab-breath" class="hidden">
       <div class="card p-5">
@@ -461,7 +420,7 @@
 Это мини-пространство для наблюдений.
 В течение дня ты отмечаешь маленькие шаги: «полезное» или «пауза».
 К концу дня складывается картина, а потом — неделя.
-Из таких маленьких отметок становится проще понять, что ведёт к результатам — мягко, без давления.
+Из таких отметок становится проще понять, что ведёт к результатам — мягко, без давления.
         </div>
       </div>
 
@@ -491,8 +450,7 @@
         theme: "system",
         events: [],
         surprise: { lastShownAt: null },
-        ui: { microcopyDate: null, microcopyText: null },
-        compass: { dayKey: null, dayQuestion: null }
+        ui: { microcopyDate: null, microcopyText: null }
       });
 
       let state = loadState();
@@ -506,8 +464,7 @@
             ...defaultState(),
             ...parsed,
             ui: { ...defaultState().ui, ...(parsed.ui||{}) },
-            surprise: { ...defaultState().surprise, ...(parsed.surprise||{}) },
-            compass: { ...defaultState().compass, ...(parsed.compass||{}) }
+            surprise: { ...defaultState().surprise, ...(parsed.surprise||{}) }
           };
         }catch(e){ return defaultState(); }
       }
@@ -637,69 +594,15 @@
         setMicrocopy(state.ui.microcopyText);
       }
 
-      // ===== Compass (8 universal questions) =====
-      const COMPASS_8 = [
-        "Это ведёт к моим целям — или просто тушит срочное?",
-        "Я сейчас выбираю действие — или живу на автопилоте?",
-        "Как выглядит версия этого шага на 10 минут?",
-        "Что одно я откладываю — и какой самый маленький шаг возможен сегодня?",
-        "Что меня наполняет — а что тихо забирает силы?",
-        "Это знание улучшит мою жизнь — или просто перегружает голову? (какое 1 действие?)",
-        "Что мне даётся легко и полезно другим — и где здесь может быть доход?",
-        "Где я могу быть видимой без давления — на 10 минут, маленьким шагом?"
-      ];
-
-      function renderCompassList(){
-        const list = $("#compassList");
-        list.innerHTML = "";
-        COMPASS_8.forEach((q, i) => {
-          const li = document.createElement("li");
-          li.textContent = q;
-          list.appendChild(li);
-        });
-      }
-
-      function ensureCompassQuestionOfDay(){
-        const d = dateKey();
-        if(state.compass.dayKey !== d || !state.compass.dayQuestion){
-          state.compass.dayKey = d;
-          state.compass.dayQuestion = pick(COMPASS_8);
-          save();
-        }
-        $("#compassQuestion").textContent = state.compass.dayQuestion;
-      }
-
-      function compassNext(){
-        let next = state.compass.dayQuestion || "";
-        for(let i=0;i<6;i++){
-          const cand = pick(COMPASS_8);
-          if(cand !== next){ next = cand; break; }
-        }
-        $("#compassQuestion").textContent = next;
-        toast("Компас ✨");
-        haptic("light");
-      }
-
-      function compassCopy(){
-        const text = $("#compassQuestion").textContent || "";
-        navigator.clipboard?.writeText(text).then(()=>{
-          toast("Скопировано");
-          haptic("success");
-        }).catch(()=>{
-          toast("Можно выделить и скопировать");
-        });
-      }
-
       // Tabs
       let currentTab = "today";
       function setTab(name){
         currentTab = name;
         $$(".tab-btn[data-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === name));
-        ["today","summary","compass","breath","settings"].forEach(t => $("#tab-"+t).classList.toggle("hidden", t !== name));
+        ["today","summary","breath","settings"].forEach(t => $("#tab-"+t).classList.toggle("hidden", t !== name));
 
         if(name === "today") ensureMicrocopyForToday();
         if(name === "summary") renderSummary();
-        if(name === "compass") { ensureCompassQuestionOfDay(); renderCompassList(); }
         if(name !== "breath") stopBreathing(false);
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
@@ -974,9 +877,6 @@
       $("#btnPause").addEventListener("click", () => addEvent("pause"));
       $("#btnClearToday").addEventListener("click", clearToday);
 
-      $("#btnCompassNext").addEventListener("click", compassNext);
-      $("#btnCompassCopy").addEventListener("click", compassCopy);
-
       $$("#tab-settings [data-theme]").forEach(btn=>{
         btn.addEventListener("click", () => {
           state.theme = btn.dataset.theme;
@@ -1011,8 +911,6 @@
       applyTheme();
       renderToday();
       ensureMicrocopyForToday();
-      ensureCompassQuestionOfDay();
-      renderCompassList();
       setTab("today");
     })();
   </script>
