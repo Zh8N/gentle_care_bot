@@ -1,235 +1,822 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Баланс</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Balance Care</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-<style>
-:root{
-  --bg:#f7f8f6;
-  --card:#ffffff;
-  --text:#1c1c1e;
-  --muted:#7a7a80;
-  --green:#7fb7a0;
-  --pause:#c9b8b2;
-  --accent:#5f8cff;
-  --radius:22px;
-}
+  <style>
+    :root{
+      /* Palette (мягкая, но заметная) */
+      --bg: #F6F7F7;
+      --card: #FFFFFF;
+      --text: #121316;
+      --muted: rgba(18,19,22,.58);
+      --line: rgba(18,19,22,.10);
 
-[data-theme="dark"]{
-  --bg:#0f1115;
-  --card:#1a1c22;
-  --text:#f2f2f3;
-  --muted:#9b9ba0;
-}
+      /* Main actions */
+      --good: #2FBF71;          /* зелёный */
+      --goodSoft: rgba(47,191,113,.14);
 
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
-}
+      --pause: #E56B6F;         /* мягкий красный/коралл */
+      --pauseSoft: rgba(229,107,111,.14);
 
-.card{
-  background:var(--card);
-  border-radius:var(--radius);
-}
+      /* Accent for links / focus */
+      --accent: #2F6FED;
 
-.tab{
-  padding:6px 10px;
-  font-size:14px;
-  color:var(--muted);
-}
+      --radius: 22px;
 
-.tab.active{
-  color:var(--text);
-  border-bottom:2px solid var(--text);
-}
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
 
-.fade{animation:fade .25s ease}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+    [data-theme="dark"]{
+      --bg: #0E1014;
+      --card: #151822;
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.62);
+      --line: rgba(255,255,255,.10);
 
-</style>
+      --goodSoft: rgba(47,191,113,.18);
+      --pauseSoft: rgba(229,107,111,.18);
+    }
+
+    body{
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+    }
+
+    .safe{
+      padding-top: calc(14px + var(--safe-top));
+      padding-bottom: calc(18px + var(--safe-bottom));
+    }
+
+    .card{
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 26px rgba(0,0,0,.06);
+    }
+
+    .btn{
+      border-radius: 18px;
+      transition: transform .08s ease, filter .08s ease, background .2s ease;
+    }
+    .btn:active{ transform: translateY(1px) scale(.99); filter: brightness(.98); }
+
+    /* Tabs */
+    .tabs{
+      background: color-mix(in srgb, var(--card) 88%, transparent);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+    .tab{
+      position: relative;
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--muted);
+      background: transparent;
+      width: 100%;
+      text-align: center;
+    }
+    .tab.is-active{
+      color: var(--text);
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+    }
+    .tab.is-active::after{
+      content:"";
+      position:absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 0;
+      height: 2px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--text) 70%, transparent);
+      opacity: .55;
+    }
+
+    /* Action buttons */
+    .action{
+      padding: 18px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      font-weight: 650;
+      font-size: 17px;
+      border: 1px solid var(--line);
+    }
+    .action.good{ background: var(--goodSoft); }
+    .action.pause{ background: var(--pauseSoft); }
+
+    .icon{
+      width: 18px;
+      height: 18px;
+      display:inline-block;
+    }
+
+    /* Dots row */
+    .dots{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      padding: 10px 0 2px;
+    }
+    .dot{
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,.06);
+    }
+    [data-theme="dark"] .dot{
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .dot.good{ background: color-mix(in srgb, var(--good) 85%, white); }
+    .dot.pause{ background: color-mix(in srgb, var(--pause) 85%, white); }
+
+    /* Breathing */
+    .breath-wrap{
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      padding: 18px 12px;
+    }
+    .breath-circle{
+      width: 170px;
+      height: 170px;
+      border-radius: 999px;
+      position: relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: white;
+      font-weight: 650;
+      letter-spacing: .2px;
+      transform: scale(.78);
+      box-shadow: 0 18px 40px rgba(0,0,0,.12);
+      overflow:hidden;
+    }
+    /* Gradient “живой” фон */
+    .breath-circle::before{
+      content:"";
+      position:absolute;
+      inset:-30%;
+      background: radial-gradient(circle at 30% 20%, rgba(255,255,255,.35), transparent 45%),
+                  linear-gradient(135deg, #2FBF71, #2F6FED, #E56B6F);
+      filter: saturate(1.05);
+      animation: gradientShift 6s ease-in-out infinite alternate;
+      transform: rotate(8deg);
+    }
+    @keyframes gradientShift{
+      from{ transform: rotate(6deg) translateX(-6px); }
+      to{ transform: rotate(14deg) translateX(6px); }
+    }
+    .breath-circle > span{
+      position: relative;
+      z-index: 2;
+    }
+    .breath-sub{
+      color: var(--muted);
+      font-size: 14px;
+      text-align:center;
+      line-height: 1.35;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      font-size: 13px;
+    }
+
+    /* Small “surprise note” */
+    .note{
+      border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent);
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+    }
+
+    /* Buttons in settings */
+    .seg{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .seg button{
+      padding: 10px 10px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      background: color-mix(in srgb, var(--card) 92%, transparent);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .seg button.is-active{
+      color: var(--text);
+      background: color-mix(in srgb, var(--accent) 12%, var(--card));
+      border-color: color-mix(in srgb, var(--accent) 20%, var(--line));
+    }
+  </style>
 </head>
 
-<body class="min-h-screen px-4 pb-28">
+<body class="min-h-screen">
+  <div class="max-w-md mx-auto safe px-4 pb-10">
 
-<div class="max-w-md mx-auto">
-
-<!-- TABS -->
-<nav class="flex gap-5 pt-6 pb-4">
-  <button data-tab="log" class="tab active">Сегодня</button>
-  <button data-tab="summary" class="tab">Итоги</button>
-  <button data-tab="breath" class="tab">Дыхание</button>
-  <button data-tab="settings" class="tab">Настройки</button>
-</nav>
-
-<!-- TODAY -->
-<section id="tab-log" class="fade">
-  <div class="grid gap-4">
-
-    <button id="btnGood" class="card p-6 text-left" style="background:#eef6f2">
-      <div class="text-lg font-medium">➕ Сделала полезное</div>
-    </button>
-
-    <button id="btnBad" class="card p-6 text-left" style="background:#f3efee">
-      <div class="text-lg font-medium">⏸ Сделала паузу</div>
-    </button>
-
-    <div class="card p-4">
-      <div class="text-sm mb-2">Сегодня</div>
-      <div id="pattern" class="text-xl"></div>
+    <!-- Tabs -->
+    <div class="tabs grid grid-cols-4 mb-4">
+      <button class="tab is-active" data-tab="today">Сегодня</button>
+      <button class="tab" data-tab="summary">Итоги</button>
+      <button class="tab" data-tab="breath">Дыхание</button>
+      <button class="tab" data-tab="settings">Настройки</button>
     </div>
 
+    <!-- TODAY -->
+    <section id="tab-today" class="fade">
+      <div class="grid gap-4">
+        <div class="card p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="text-[15px] font-semibold">Отметить момент</div>
+              <div class="text-[13px] mt-1" style="color: var(--muted);">
+                Никаких оценок. Просто фиксируем — и становится чуть яснее.
+              </div>
+            </div>
+            <div id="todayPill" class="pill">Сегодня: —</div>
+          </div>
+
+          <div class="grid gap-3 mt-4">
+            <button id="btnGood" class="btn action good">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="rgba(18,19,22,.80)" stroke-width="2.4" stroke-linecap="round"/>
+              </svg>
+              <span>Сделала полезное</span>
+            </button>
+
+            <button id="btnPause" class="btn action pause">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M8 6v12M16 6v12" stroke="rgba(18,19,22,.80)" stroke-width="2.4" stroke-linecap="round"/>
+              </svg>
+              <span>Сделала паузу</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div class="text-[15px] font-semibold">Сегодня</div>
+            <button id="btnClearToday" class="text-[13px] font-semibold" style="color: var(--accent);">
+              Очистить
+            </button>
+          </div>
+          <div id="dots" class="dots mt-2"></div>
+          <div class="text-[13px] mt-2" style="color: var(--muted);">
+            Маленькие отметки — это не контроль. Это забота о себе.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section id="tab-summary" class="hidden">
+      <div class="grid gap-4">
+        <div class="card p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-[15px] font-semibold">Итоги дня</div>
+              <div class="text-[13px] mt-1" style="color: var(--muted);">по сегодняшним отметкам</div>
+            </div>
+            <button id="btnGenDaily" class="btn px-4 py-2 text-[13px] font-semibold card" style="background: color-mix(in srgb, var(--accent) 10%, var(--card));">
+              Сгенерировать
+            </button>
+          </div>
+
+          <div id="surpriseDaily" class="hidden card note p-3 mt-3">
+            <div class="text-[13px]" style="color: var(--muted);" id="surpriseDailyText"></div>
+          </div>
+
+          <pre id="dailyText" class="mt-3 whitespace-pre-wrap text-[14px] leading-relaxed p-3 rounded-2xl"
+               style="background: color-mix(in srgb, var(--card) 88%, transparent); border: 1px solid var(--line);"></pre>
+
+          <button id="btnSendDaily" class="mt-3 text-[13px] font-semibold" style="color: var(--accent);">
+            Отправить в бот
+          </button>
+        </div>
+
+        <div class="card p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-[15px] font-semibold">Итоги недели</div>
+              <div class="text-[13px] mt-1" style="color: var(--muted);">последние 7 дней</div>
+            </div>
+            <button id="btnGenWeekly" class="btn px-4 py-2 text-[13px] font-semibold card" style="background: color-mix(in srgb, var(--accent) 10%, var(--card));">
+              Сгенерировать
+            </button>
+          </div>
+
+          <div id="surpriseWeekly" class="hidden card note p-3 mt-3">
+            <div class="text-[13px]" style="color: var(--muted);" id="surpriseWeeklyText"></div>
+          </div>
+
+          <pre id="weeklyText" class="mt-3 whitespace-pre-wrap text-[14px] leading-relaxed p-3 rounded-2xl"
+               style="background: color-mix(in srgb, var(--card) 88%, transparent); border: 1px solid var(--line);"></pre>
+
+          <button id="btnSendWeekly" class="mt-3 text-[13px] font-semibold" style="color: var(--accent);">
+            Отправить в бот
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- BREATH -->
+    <section id="tab-breath" class="hidden">
+      <div class="card p-4">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <div class="text-[15px] font-semibold">Дыхание 4–4–4–4</div>
+            <div class="text-[13px] mt-1" style="color: var(--muted);">
+              1 минута. Мягко выровнять состояние.
+            </div>
+          </div>
+          <div class="pill" id="breathTimerPill">00:00 / 01:00</div>
+        </div>
+
+        <div class="breath-wrap mt-4">
+          <div id="breathCircle" class="breath-circle">
+            <span id="breathLabel">Готова</span>
+          </div>
+
+          <div class="breath-sub" id="breathHint">
+            Нажми «Старт». Дальше всё пойдёт само.
+          </div>
+
+          <div class="flex gap-2 mt-2">
+            <button id="breathStart" class="btn px-4 py-2 text-[14px] font-semibold card"
+              style="background: color-mix(in srgb, var(--accent) 12%, var(--card));">
+              Старт
+            </button>
+            <button id="breathStop" class="btn px-4 py-2 text-[14px] font-semibold card">
+              Стоп
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="hidden">
+      <div class="grid gap-4">
+        <div class="card p-4">
+          <div class="text-[15px] font-semibold">Тема</div>
+          <div class="text-[13px] mt-1 mb-3" style="color: var(--muted);">
+            Выбери, как тебе комфортнее.
+          </div>
+
+          <div class="seg">
+            <button data-theme="light" id="themeLight">☀️ Светлая</button>
+            <button data-theme="dark" id="themeDark">🌙 Тёмная</button>
+            <button data-theme="system" id="themeSystem">⚙️ Системная</button>
+          </div>
+        </div>
+
+        <div class="card p-4">
+          <div class="text-[15px] font-semibold">О приложении</div>
+          <div class="text-[14px] mt-2 leading-relaxed" style="color: var(--muted);">
+            Это маленькое пространство для простых отметок в течение дня.<br>
+            <b style="color: var(--text);">Сделала полезное</b> — фиксируешь шаг в свою сторону.<br>
+            <b style="color: var(--text);">Сделала паузу</b> — честно отмечаешь момент, когда ушла(ушёл) в сторону или просто стало тяжело.<br><br>
+            К вечеру и к концу недели из этих точек появляется понятная картина —
+            и становится легче увидеть, почему получается именно такой результат.
+          </div>
+
+          <div class="mt-3 text-[13px]" style="color: var(--muted);">
+            Данные хранятся локально в твоём браузере/Telegram WebApp.
+          </div>
+
+          <button id="btnExport" class="mt-3 text-[13px] font-semibold" style="color: var(--accent);">
+            Экспорт JSON
+          </button>
+          <pre id="exportBox" class="hidden mt-3 whitespace-pre-wrap text-[12px] leading-relaxed p-3 rounded-2xl"
+               style="background: color-mix(in srgb, var(--card) 88%, transparent); border: 1px solid var(--line);"></pre>
+
+          <button id="btnReset" class="mt-3 text-[13px] font-semibold" style="color: color-mix(in srgb, var(--pause) 80%, var(--text));">
+            Стереть всё локально
+          </button>
+        </div>
+      </div>
+    </section>
+
   </div>
-</section>
 
-<!-- SUMMARY -->
-<section id="tab-summary" class="hidden fade">
-  <div class="card p-4">
-    <div id="summaryPattern" class="text-xl mb-3"></div>
-    <div id="summaryPhrase" class="text-sm text-[var(--muted)]"></div>
-  </div>
-</section>
+  <script>
+    // -----------------------------
+    // Telegram
+    // -----------------------------
+    const tg = window.Telegram?.WebApp;
+    tg?.ready?.();
+    tg?.expand?.();
 
-<!-- BREATH -->
-<section id="tab-breath" class="hidden fade text-center">
-  <div class="card p-6">
-    <div id="breathCircle"
-      class="mx-auto w-40 h-40 rounded-full flex items-center justify-center text-white text-lg"
-      style="background:radial-gradient(circle at top,#8fb8ff,#5f8cff)">
-      Вдох
-    </div>
-    <div id="breathText" class="mt-4 text-sm text-[var(--muted)]"></div>
-  </div>
-</section>
+    // -----------------------------
+    // State
+    // -----------------------------
+    const STORAGE = "balancecare_v3";
+    const todayKey = () => {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2,"0");
+      const dd = String(d.getDate()).padStart(2,"0");
+      return `${yyyy}-${mm}-${dd}`;
+    };
 
-<!-- SETTINGS -->
-<section id="tab-settings" class="hidden fade">
-  <div class="card p-4">
-    <div class="text-sm mb-2">Тема</div>
-    <div class="flex gap-2">
-      <button data-theme="light">Светлая</button>
-      <button data-theme="dark">Тёмная</button>
-      <button data-theme="system">Системная</button>
-    </div>
-  </div>
-</section>
+    const defaultState = () => ({
+      theme: "system",
+      events: [], // {date, type: "good"|"pause", ts}
+      lastSurprise: { daily: null, weekly: null }
+    });
 
-</div>
+    let state = (() => {
+      try{
+        const raw = localStorage.getItem(STORAGE);
+        if(!raw) return defaultState();
+        return { ...defaultState(), ...JSON.parse(raw) };
+      }catch(e){
+        return defaultState();
+      }
+    })();
 
-<script>
-const tg = window.Telegram?.WebApp;
-tg?.ready();
+    const save = () => localStorage.setItem(STORAGE, JSON.stringify(state));
 
-const STORAGE="balance_final";
-let state=JSON.parse(localStorage.getItem(STORAGE))||{events:[],theme:"system"};
-const save=()=>localStorage.setItem(STORAGE,JSON.stringify(state));
-const today=()=>new Date().toISOString().slice(0,10);
+    // -----------------------------
+    // DOM helpers
+    // -----------------------------
+    const $ = (s) => document.querySelector(s);
+    const $$ = (s) => Array.from(document.querySelectorAll(s));
 
-const phrases={
-  good:[
-    "Сегодня многое поддерживало.",
-    "В этом дне было на что опереться.",
-    "День держался ровно."
-  ],
-  mixed:[
-    "День получился разным.",
-    "Сегодня было по-разному.",
-    "Много всего вперемешку."
-  ],
-  pause:[
-    "День был непростым, но живым.",
-    "Ритм сегодня сбивался.",
-    "Иногда так и идёт."
-  ],
-  empty:[
-    "Сегодня было спокойно.",
-    "День прошёл тихо.",
-    "Иногда день просто идёт."
-  ]
-};
+    // -----------------------------
+    // Tabs
+    // -----------------------------
+    function setTab(name){
+      $$(".tab").forEach(b => b.classList.toggle("is-active", b.dataset.tab === name));
+      ["today","summary","breath","settings"].forEach(t => {
+        $("#tab-"+t).classList.toggle("hidden", t !== name);
+      });
 
-function render(){
-  const events=state.events.filter(e=>e.date===today());
-  document.getElementById("pattern").textContent=
-    events.map(e=>e.type==="good"?"🟢":"🟠").join("")||"—";
-
-  document.getElementById("summaryPattern").textContent=
-    events.map(e=>e.type==="good"?"🟢":"🟠").join("")||"—";
-
-  const phraseEl=document.getElementById("summaryPhrase");
-  phraseEl.textContent="";
-
-  if(Math.random()<0.35){
-    let pool="empty";
-    const g=events.filter(e=>e.type==="good").length;
-    const p=events.filter(e=>e.type==="pause").length;
-    if(events.length){
-      pool=g>p?"good":p>g?"pause":"mixed";
+      // breath: stop when leaving
+      if(name !== "breath") stopBreathing();
+      if(name === "summary"){
+        renderSummaries(true);
+      }
     }
-    phraseEl.textContent=
-      phrases[pool][Math.floor(Math.random()*phrases[pool].length)];
-  }
-}
 
-document.getElementById("btnGood").onclick=()=>{
-  state.events.push({date:today(),type:"good"});save();render();
-};
-document.getElementById("btnBad").onclick=()=>{
-  state.events.push({date:today(),type:"pause"});save();render();
-};
+    $$(".tab").forEach(btn => {
+      btn.addEventListener("click", () => setTab(btn.dataset.tab));
+    });
 
-document.querySelectorAll(".tab").forEach(btn=>{
-  btn.onclick=()=>{
-    document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    document.querySelectorAll("section[id^='tab']").forEach(s=>s.classList.add("hidden"));
-    document.getElementById("tab-"+btn.dataset.tab).classList.remove("hidden");
-  };
-});
+    // -----------------------------
+    // Theme
+    // -----------------------------
+    function applyTheme(){
+      const root = document.documentElement;
 
-/* BREATHING */
-let breathTimer,stopTimer;
-const circle=document.getElementById("breathCircle");
-const text=document.getElementById("breathText");
-const phases=[
-  ["Вдох",4,0.8,1],
-  ["Пауза",4,1,1],
-  ["Выдох",4,1,0.8],
-  ["Пауза",4,0.8,0.8]
-];
+      if(state.theme === "system"){
+        root.removeAttribute("data-theme");
+      } else {
+        root.setAttribute("data-theme", state.theme);
+      }
 
-function startBreath(){
-  let p=0,s=0;
-  circle.style.transform="scale(0.8)";
-  breathTimer=setInterval(()=>{
-    const [label,d,a,b]=phases[p];
-    const k=s/d;
-    circle.textContent=label;
-    circle.style.transform=`scale(${a+(b-a)*k})`;
-    text.textContent=label+" "+(s+1);
-    s++;
-    if(s>=d){s=0;p=(p+1)%4;}
-  },1000);
-  stopTimer=setTimeout(stopBreath,60000);
-}
+      // active styles on theme buttons
+      ["light","dark","system"].forEach(t => {
+        const el = document.querySelector(`[data-theme="${t}"]`);
+        el?.classList.toggle("is-active", state.theme === t);
+      });
+    }
 
-function stopBreath(){
-  clearInterval(breathTimer);
-  clearTimeout(stopTimer);
-}
+    $$("[data-theme]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.theme = btn.dataset.theme;
+        save();
+        applyTheme();
+      });
+    });
 
-document.querySelector("[data-tab='breath']").onclick=startBreath;
-document.querySelectorAll("[data-tab]").forEach(b=>{
-  if(b.dataset.tab!=="breath")b.onclick=stopBreath;
-});
+    // -----------------------------
+    // Events (Today)
+    // -----------------------------
+    function addEvent(type){
+      state.events.push({ date: todayKey(), type, ts: new Date().toISOString() });
+      save();
+      renderToday();
+    }
 
-render();
-</script>
+    $("#btnGood").addEventListener("click", () => addEvent("good"));
+    $("#btnPause").addEventListener("click", () => addEvent("pause"));
 
+    $("#btnClearToday").addEventListener("click", () => {
+      state.events = state.events.filter(e => e.date !== todayKey());
+      save();
+      renderToday();
+    });
+
+    function countForDate(d){
+      const events = state.events.filter(e => e.date === d);
+      const g = events.filter(e => e.type === "good").length;
+      const p = events.filter(e => e.type === "pause").length;
+      return { g, p, total: events.length, events };
+    }
+
+    function renderToday(){
+      const { g, p, events } = countForDate(todayKey());
+
+      // pill
+      const pill = $("#todayPill");
+      if(g+p === 0){
+        pill.textContent = "Сегодня: —";
+      } else {
+        pill.textContent = `Сегодня: ${g} + / ${p} ⏸`;
+      }
+
+      // dots
+      const dots = $("#dots");
+      dots.innerHTML = "";
+      if(events.length === 0){
+        const t = document.createElement("div");
+        t.className = "text-[14px]";
+        t.style.color = "var(--muted)";
+        t.textContent = "Пока тихо.";
+        dots.appendChild(t);
+        return;
+      }
+
+      events.slice(-40).forEach(e => {
+        const d = document.createElement("div");
+        d.className = "dot " + (e.type === "good" ? "good" : "pause");
+        dots.appendChild(d);
+      });
+    }
+
+    // -----------------------------
+    // Summaries + Surprise notes
+    // -----------------------------
+    const surpriseDailyPool = [
+      "Я заметила: ты умеешь возвращаться к себе — даже маленькими шагами. Это очень ценно.",
+      "Сегодня ты не доказывала ничего миру. Ты просто была рядом с собой — и это уже победа.",
+      "Маленькая честность сегодня сделала день легче. Спасибо, что не бросила себя.",
+      "Пусть это будет напоминанием: у тебя получается бережно выстраивать опору."
+    ];
+
+    const surpriseWeeklyPool = [
+      "Неделя выглядит как живая. Не идеальная — настоящая. И это куда важнее.",
+      "Ты собираешь себя по точкам — и это очень взрослый, сильный способ идти вперёд.",
+      "Вижу ритм: ты стараешься. И ты не одна в этом процессе.",
+      "Твоя устойчивость — не “всегда”, а “возвращаться снова”. И ты это делаешь."
+    ];
+
+    function maybeShowSurprise(kind, dateKey){
+      // kind: "daily" | "weekly"
+      // показываем редко (примерно 35%), и не чаще 1 раза в день для daily / 1 раза в неделю для weekly
+      const chance = 0.35;
+
+      const last = state.lastSurprise?.[kind];
+      const already = last === dateKey;
+
+      const box = kind === "daily" ? $("#surpriseDaily") : $("#surpriseWeekly");
+      const textEl = kind === "daily" ? $("#surpriseDailyText") : $("#surpriseWeeklyText");
+
+      box.classList.add("hidden");
+
+      if(already) return;
+      if(Math.random() > chance) return;
+
+      const pool = kind === "daily" ? surpriseDailyPool : surpriseWeeklyPool;
+      const pick = pool[Math.floor(Math.random()*pool.length)];
+
+      textEl.textContent = pick;
+      box.classList.remove("hidden");
+
+      state.lastSurprise[kind] = dateKey;
+      save();
+    }
+
+    function generateDailyText(){
+      const d = todayKey();
+      const { g, p, events } = countForDate(d);
+
+      if(events.length === 0){
+        return `Сегодня было тихо — без отметок.\n\nЕсли захочешь — просто сделай одну маленькую запись завтра. Я рядом.`;
+      }
+
+      const pattern = events.map(e => e.type === "good" ? "●" : "◐").join(" ");
+      // ● = полезное, ◐ = пауза (нейтрально)
+      if(g >= p){
+        return `Итоги дня\n\n${pattern}\n\nПолезных шагов: ${g}\nПаузы: ${p}\n\nХороший ритм. Даже одна “точка” — это уже забота о себе.`;
+      } else {
+        return `Итоги дня\n\n${pattern}\n\nПолезных шагов: ${g}\nПаузы: ${p}\n\nДень мог быть непростым. Спасибо, что всё равно отметила. Завтра будет новый шанс — без давления.`;
+      }
+    }
+
+    function lastNDays(n){
+      const out = [];
+      const t = new Date();
+      for(let i=0; i<n; i++){
+        const d = new Date(t);
+        d.setDate(t.getDate() - i);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth()+1).padStart(2,"0");
+        const dd = String(d.getDate()).padStart(2,"0");
+        out.push(`${yyyy}-${mm}-${dd}`);
+      }
+      return out.reverse();
+    }
+
+    function wd(iso){
+      const d = new Date(iso+"T00:00:00");
+      return ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"][d.getDay()];
+    }
+
+    function generateWeeklyText(){
+      const days = lastNDays(7);
+      let gSum=0, pSum=0;
+
+      const lines = days.map(d => {
+        const { g, p, events } = countForDate(d);
+        gSum += g; pSum += p;
+        if(events.length === 0) return `${wd(d)}: —`;
+        const row = events.map(e => e.type === "good" ? "●" : "◐").join("");
+        return `${wd(d)}: ${row}`;
+      }).join("\n");
+
+      return `Итоги недели\n\nПолезных шагов: ${gSum}\nПаузы: ${pSum}\n\nКарта недели:\n${lines}\n\nСмысл не в идеальности. Смысл в том, что ты видишь картину — и можешь мягко подрулить.`;
+    }
+
+    function renderSummaries(withSurprise=false){
+      $("#dailyText").textContent = generateDailyText();
+      $("#weeklyText").textContent = generateWeeklyText();
+
+      if(withSurprise){
+        maybeShowSurprise("daily", todayKey());
+        // ключ недели: YYYY-Wxx (упрощённо)
+        const now = new Date();
+        const year = now.getFullYear();
+        const weekKey = `${year}-W${Math.ceil((((now - new Date(year,0,1)) / 86400000) + new Date(year,0,1).getDay()+1)/7)}`;
+        maybeShowSurprise("weekly", weekKey);
+      }
+    }
+
+    function sendToBot(kind, text){
+      const payload = {
+        kind,
+        text,
+        ts: new Date().toISOString(),
+        date: todayKey()
+      };
+
+      if(tg && tg.sendData){
+        tg.sendData(JSON.stringify(payload));
+      } else {
+        navigator.clipboard?.writeText(text).catch(()=>{});
+      }
+    }
+
+    $("#btnGenDaily").addEventListener("click", () => renderSummaries(true));
+    $("#btnGenWeekly").addEventListener("click", () => renderSummaries(true));
+    $("#btnSendDaily").addEventListener("click", () => sendToBot("daily", $("#dailyText").textContent));
+    $("#btnSendWeekly").addEventListener("click", () => sendToBot("weekly", $("#weeklyText").textContent));
+
+    // -----------------------------
+    // Breathing 4–4–4–4 (1 minute auto-stop)
+    // -----------------------------
+    const breathCircle = $("#breathCircle");
+    const breathLabel  = $("#breathLabel");
+    const breathHint   = $("#breathHint");
+    const timerPill    = $("#breathTimerPill");
+
+    let breathInterval = null;
+    let breathElapsed = 0; // seconds
+    let phaseIndex = 0;    // 0..3
+    let secInPhase = 0;    // 0..3
+    const MAX_SECONDS = 60;
+
+    const phases = [
+      { label: "Вдох",  mode:"in",   dur:4, from:.78, to:1.00 },
+      { label: "Пауза", mode:"hold", dur:4, from:1.00, to:1.00 },
+      { label: "Выдох", mode:"out",  dur:4, from:1.00, to:.78 },
+      { label: "Пауза", mode:"hold", dur:4, from:.78, to:.78 }
+    ];
+
+    function fmtTime(s){
+      const mm = String(Math.floor(s/60)).padStart(2,"0");
+      const ss = String(s%60).padStart(2,"0");
+      return `${mm}:${ss}`;
+    }
+
+    function setScale(scale, smooth=true){
+      breathCircle.style.transition = smooth ? "transform 1s linear" : "none";
+      breathCircle.style.transform = `scale(${scale})`;
+    }
+
+    function updateBreathUI(){
+      const phase = phases[phaseIndex];
+      const progress = secInPhase / phase.dur; // 0..0.75
+      const scale = phase.from + (phase.to - phase.from) * progress;
+
+      setScale(scale, true);
+      breathLabel.textContent = `${phase.label} ${secInPhase+1}`;
+      breathHint.textContent = `4 • 4 • 4 • 4 — спокойно, без усилий`;
+
+      timerPill.textContent = `${fmtTime(breathElapsed)} / 01:00`;
+    }
+
+    function startBreathing(){
+      stopBreathing();
+
+      breathElapsed = 0;
+      phaseIndex = 0;
+      secInPhase = 0;
+
+      setScale(.78, false);
+      breathLabel.textContent = "Вдох 1";
+      breathHint.textContent = "Можешь просто следовать кругу.";
+
+      timerPill.textContent = "00:00 / 01:00";
+
+      breathInterval = setInterval(() => {
+        // auto-stop
+        if(breathElapsed >= MAX_SECONDS){
+          finishBreathing();
+          return;
+        }
+
+        updateBreathUI();
+
+        // tick
+        breathElapsed++;
+        secInPhase++;
+
+        if(secInPhase >= phases[phaseIndex].dur){
+          secInPhase = 0;
+          phaseIndex = (phaseIndex + 1) % phases.length;
+        }
+      }, 1000);
+    }
+
+    function finishBreathing(){
+      stopBreathing();
+      breathLabel.textContent = "Готово";
+      breathHint.textContent = "Хорошо. Можно просто посидеть ещё пару секунд — и идти дальше 🙂";
+      timerPill.textContent = "01:00 / 01:00";
+      setScale(.90, true);
+    }
+
+    function stopBreathing(){
+      if(breathInterval){
+        clearInterval(breathInterval);
+        breathInterval = null;
+      }
+    }
+
+    $("#breathStart").addEventListener("click", startBreathing);
+    $("#breathStop").addEventListener("click", stopBreathing);
+
+    // -----------------------------
+    // Settings: export / reset
+    // -----------------------------
+    $("#btnExport").addEventListener("click", () => {
+      const box = $("#exportBox");
+      box.classList.remove("hidden");
+      box.textContent = JSON.stringify(state, null, 2);
+    });
+
+    $("#btnReset").addEventListener("click", () => {
+      const ok = confirm("Стереть все данные локально? Это нельзя отменить.");
+      if(!ok) return;
+      state = defaultState();
+      save();
+      $("#exportBox").classList.add("hidden");
+      stopBreathing();
+      applyTheme();
+      renderToday();
+      renderSummaries(false);
+      setTab("today");
+    });
+
+    // -----------------------------
+    // Init
+    // -----------------------------
+    applyTheme();
+    renderToday();
+    renderSummaries(false);
+    setTab("today");
+  </script>
 </body>
 </html>
