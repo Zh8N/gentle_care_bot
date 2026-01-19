@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Balance Care</title>
 
-  <!-- Tailwind (можно убрать позже, но сейчас удобно) -->
+  <!-- Tailwind (удобно, можно потом убрать) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Telegram WebApp SDK -->
@@ -18,8 +18,8 @@
 
       /* Light */
       --bg: #f6f7fb;
-      --card: rgba(255,255,255,0.9);
-      --card2: rgba(255,255,255,0.75);
+      --card: rgba(255,255,255,0.92);
+      --card2: rgba(255,255,255,0.78);
       --stroke: rgba(15,23,42,0.10);
       --text: rgba(15,23,42,0.92);
       --muted: rgba(15,23,42,0.62);
@@ -28,7 +28,7 @@
       --primary: #2563eb;      /* blue-600 */
       --primary2:#1d4ed8;      /* blue-700 */
       --neutral: #e8ecf4;      /* soft gray */
-      --neutralText: rgba(15,23,42,0.80);
+      --neutralText: rgba(15,23,42,0.82);
 
       --shadow: 0 14px 40px rgba(15,23,42,0.10);
       --radius: 22px;
@@ -43,7 +43,7 @@
       --muted: rgba(255,255,255,0.62);
 
       --neutral: rgba(255,255,255,0.08);
-      --neutralText: rgba(255,255,255,0.86);
+      --neutralText: rgba(255,255,255,0.88);
 
       --shadow: 0 18px 50px rgba(0,0,0,0.35);
     }
@@ -183,43 +183,80 @@
       display:flex; flex-direction:column; align-items:center; gap: 12px;
       padding: 10px 0 2px;
     }
+
+    /* IMPORTANT: force perfect circle even in Telegram WebView */
     .breath-circle{
       position: relative;
       width: 190px; height: 190px;
-      border-radius: 999px;
+
+      border-radius: 50%;
+      overflow: hidden;
+
+      -webkit-mask-image: -webkit-radial-gradient(white, black);
+      mask-image: radial-gradient(white, black);
+
+      clip-path: circle(50% at 50% 50%);
+      -webkit-clip-path: circle(50% at 50% 50%);
+
       display:flex; align-items:center; justify-content:center;
       color: white;
       font-weight: 700;
       letter-spacing: -0.02em;
-      transform: scale(0.78);
+
+      transform: translateZ(0) scale(0.78);
+      will-change: transform;
+      backface-visibility: hidden;
+
       border: 1px solid rgba(255,255,255,0.14);
       box-shadow: 0 22px 60px rgba(37,99,235,0.18);
-      overflow:hidden;
       user-select:none;
       -webkit-user-select:none;
     }
+
     .breath-circle::before{
       content:"";
-      position:absolute; inset:-40px;
+      position:absolute;
+      inset:-40px;
+
+      border-radius: 50%;
+      clip-path: circle(50% at 50% 50%);
+      -webkit-clip-path: circle(50% at 50% 50%);
+
       background: conic-gradient(from 180deg,
         rgba(37,99,235,1),
         rgba(29,78,216,1),
         rgba(124,58,237,1),
         rgba(37,99,235,1)
       );
-      filter: blur(0px);
+
       animation: spin 10s linear infinite;
       opacity: 0.95;
+      transform: translateZ(0);
     }
+
     .breath-circle::after{
       content:"";
-      position:absolute; inset:0;
+      position:absolute;
+      inset:0;
+
+      border-radius: 50%;
+      clip-path: circle(50% at 50% 50%);
+      -webkit-clip-path: circle(50% at 50% 50%);
+
       background: radial-gradient(120px 120px at 30% 25%, rgba(255,255,255,0.28), transparent 60%),
                   rgba(0,0,0,0.10);
       mix-blend-mode: soft-light;
+      transform: translateZ(0);
     }
+
     @keyframes spin { to { transform: rotate(360deg); } }
-    .breath-circle > span{ position: relative; z-index: 2; text-align:center; padding: 0 12px; }
+
+    .breath-circle > span{
+      position: relative;
+      z-index: 2;
+      text-align:center;
+      padding: 0 12px;
+    }
 
     .breath-sub{
       font-size: 14px;
@@ -239,6 +276,15 @@
     }
     html[data-theme="dark"] .ghost-btn{ background: rgba(255,255,255,0.06); }
     .ghost-btn:active{ transform: translateY(1px); }
+
+    /* Export box theme */
+    .export-box{
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.55);
+      padding: 12px 14px;
+    }
+    html[data-theme="dark"] .export-box{ background: rgba(255,255,255,0.06); }
 
     /* Toast */
     .toast{
@@ -272,7 +318,7 @@
 
 <body>
   <div class="app-wrap max-w-md mx-auto px-4">
-    <!-- Tabs (без названия/логотипа) -->
+    <!-- Tabs -->
     <div class="segmented card p-0 mb-4" style="box-shadow:none;">
       <button class="tab-btn active" data-tab="today">Сегодня</button>
       <button class="tab-btn" data-tab="summary">Итоги</button>
@@ -283,11 +329,9 @@
     <!-- TODAY -->
     <section id="tab-today" class="fade">
       <div class="card p-4 mb-4">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Отметить момент</div>
-            <div class="small-muted">Без оценок. Просто фиксируем — и становится яснее.</div>
-          </div>
+        <div>
+          <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Отметить момент</div>
+          <div class="small-muted" id="todayMicrocopy">Без оценок. Просто фиксируем — и становится яснее.</div>
         </div>
       </div>
 
@@ -389,7 +433,7 @@
           <button id="btnExport" class="ghost-btn flex-1">Экспорт</button>
           <button id="btnReset" class="ghost-btn flex-1" style="border-color: rgba(37,99,235,0.25);">Стереть</button>
         </div>
-        <pre id="exportBox" class="mt-3 hidden small-muted whitespace-pre-wrap p-3" style="border:1px solid var(--stroke); border-radius: 16px; background: rgba(255,255,255,0.55);"></pre>
+        <pre id="exportBox" class="mt-3 hidden export-box small-muted whitespace-pre-wrap"></pre>
       </div>
     </section>
   </div>
@@ -413,11 +457,12 @@
       // -----------------------------
       // Storage
       // -----------------------------
-      const STORAGE = "balancecare_v4";
+      const STORAGE = "balancecare_v5";
       const defaultState = () => ({
         theme: "system",
         events: [],  // {ts, date, type: "good"|"pause"}
-        surprise: { lastShownAt: null }
+        surprise: { lastShownAt: null },
+        ui: { microcopyDate: null, microcopyText: null }
       });
 
       let state = loadState();
@@ -427,7 +472,7 @@
           const raw = localStorage.getItem(STORAGE);
           if(!raw) return defaultState();
           const parsed = JSON.parse(raw);
-          return { ...defaultState(), ...parsed };
+          return { ...defaultState(), ...parsed, ui: { ...defaultState().ui, ...(parsed.ui||{}) } };
         }catch(e){
           return defaultState();
         }
@@ -460,13 +505,11 @@
       }
 
       function applyTheme(){
-        // user choice
         if(state.theme === "light"){
           document.documentElement.setAttribute("data-theme","light");
         }else if(state.theme === "dark"){
           document.documentElement.setAttribute("data-theme","dark");
         }else{
-          // system
           const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
           document.documentElement.setAttribute("data-theme", prefersDark ? "dark" : "light");
 
@@ -478,12 +521,11 @@
           }
         }
 
-        // Telegram theme adaptation (только если system)
+        // Telegram theme hint (only if system)
         try{
           const tp = tg?.themeParams || {};
           const bg = tp.bg_color;
           if(state.theme === "system" && bg){
-            // если Telegram светлый — оставляем светлый, если тёмный — тёмный
             document.documentElement.setAttribute("data-theme", isLight(bg) ? "light" : "dark");
           }
         }catch(e){}
@@ -530,6 +572,43 @@
         }catch(e){}
       }
 
+      function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+      // -----------------------------
+      // Microcopy of the day (soft friend, motivating)
+      // -----------------------------
+      const MICROCOPY = [
+        "Мы ничего не оцениваем. Мы просто замечаем — и от этого легче.",
+        "Один маленький шаг тоже считается. Правда.",
+        "Ты можешь идти медленно. Главное — в свою сторону.",
+        "Нежно фиксируем — и внутри становится чуть тише.",
+        "Сейчас достаточно одной отметки. Остальное — потом.",
+        "Ты не обязана быть идеальной, чтобы двигаться вперёд.",
+        "Если хочешь — просто отметь. Это уже забота о себе.",
+        "Шаг за шагом. Не героически — по-человечески.",
+        "Ты уже здесь. Это хорошее место начать.",
+        "Маленькая ясность сегодня — большой подарок завтра.",
+        "Не нужно «правильно». Нужно бережно и честно.",
+        "Даже пауза — это действие. Ты заметила её.",
+        "Я с тобой. Давай просто посмотрим, как оно есть.",
+        "Твоё «чуть-чуть» сегодня — всё равно движение.",
+        "Иногда самое сильное — это не ускориться, а остановиться вовремя.",
+        "Пусть это будет твоей тихой опорой на день.",
+        "Мы собираем не рекорды, а реальность. И это очень ценно."
+      ];
+
+      function ensureMicrocopyForToday(){
+        const d = dateKey();
+        state.ui = state.ui || {};
+        if(state.ui.microcopyDate !== d || !state.ui.microcopyText){
+          state.ui.microcopyDate = d;
+          state.ui.microcopyText = pick(MICROCOPY);
+          save();
+        }
+        const el = $("#todayMicrocopy");
+        if(el) el.textContent = state.ui.microcopyText;
+      }
+
       // -----------------------------
       // Tabs
       // -----------------------------
@@ -546,6 +625,7 @@
           $("#tab-"+t).classList.toggle("hidden", t !== name);
         });
 
+        if(name === "today") ensureMicrocopyForToday();
         if(name === "summary") renderSummary();
         if(name !== "breath") stopBreathing();
       }
@@ -618,19 +698,21 @@
       }
 
       // -----------------------------
-      // Warm “surprise” observations
+      // Surprise observations (rare, warm)
       // -----------------------------
       const SURPRISE_LINES = [
-        "Я вижу этот момент. Он маленький — и всё равно настоящий.",
-        "Ты не обязана делать много. Достаточно быть рядом с собой.",
-        "Отметка есть — значит, ты не потерялась. Ты здесь.",
-        "Пусть это будет мягкой опорой: шаг за шагом, без гонки.",
-        "Хорошо получается: спокойно, по-честному, без лишнего шума.",
-        "Иногда достаточно просто заметить. И это уже меняет день."
+        "Мне нравится, как ты это делаешь: спокойно и по-честному.",
+        "Ты заметила момент — и уже стала к себе ближе.",
+        "Пусть это будет маленьким «я с собой» в середине дня.",
+        "Ты не одна: я тут, рядом, на твоей стороне.",
+        "Смотри, ты реально движешься. Даже если шаги маленькие.",
+        "Сегодня ты выбрала себя хотя бы раз — и это уже много.",
+        "Иногда самое мудрое — дать себе паузу. Ты умеешь.",
+        "Нежность тоже дисциплина. Ты её практикуешь.",
+        "Ты не обязана доказывать. Можно просто жить и замечать."
       ];
 
       function shouldShowSurprise(){
-        // не чаще 1 раза в 6 часов + шанс
         const last = state.surprise?.lastShownAt ? new Date(state.surprise.lastShownAt).getTime() : 0;
         const sixHours = 6 * 60 * 60 * 1000;
         const okByTime = (Date.now() - last) > sixHours;
@@ -638,30 +720,30 @@
         return okByTime && chance;
       }
 
-      function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
-
       // -----------------------------
-      // Summary text
+      // Summary text (soft friend, motivating)
       // -----------------------------
       function dailySummaryText(){
         const d = dateKey();
         const { good, pause, total } = countFor(d);
 
         if(total === 0){
-          return "Сегодня было тихо — без отметок.\nЕсли захочешь, можно вернуться к этому позже. Я рядом.";
+          return "Сегодня было тихо — без отметок.\nЕсли захочешь, вернёшься позже. Я рядом.";
         }
 
-        // очень простой, дружелюбный тон, без сравнений и “обычно”
         if(good > 0 && pause === 0){
-          return "Сегодня у тебя получалось выбирать полезное.\nПусть это останется как тёплая точка опоры.";
+          return "Сегодня ты несколько раз выбрала полезное.\nПусть это останется внутри как тёплая уверенность: ты можешь.";
         }
+
         if(pause > 0 && good === 0){
-          return "Сегодня было больше пауз.\nЭто не “провал” — это сигнал: тебе нужна бережность.";
+          return "Сегодня было больше пауз.\nЭто не про «плохо». Это про заботу: ты заметила, где нужен воздух.";
         }
+
         if(good >= pause){
-          return "День получился разным — и в этом есть жизнь.\nТо, что ты отмечаешь, уже делает картину яснее.";
+          return "День получился разным — и в этом есть жизнь.\nТы уже делаешь главное: замечаешь и не давишь на себя.";
         }
-        return "Сегодня было непросто, но ты всё равно осталась в контакте с собой.\nЭто очень ценная вещь.";
+
+        return "Сегодня было непросто, но ты всё равно осталась с собой в контакте.\nЭто очень сильная, взрослая опора.";
       }
 
       function lastNDays(n){
@@ -690,27 +772,28 @@
         });
 
         if(g+p===0){
-          return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки, одного вдоха.";
+          return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки или одной минуты дыхания.";
         }
 
         const line =
           g>=p
-            ? "В этой неделе было место и для движения, и для пауз. Хороший баланс."
-            : "В этой неделе было больше пауз. Возможно, тебе сейчас важно беречь ресурс.";
+            ? "В этой неделе было место и для движения, и для пауз. Это похоже на живой баланс."
+            : "В этой неделе было больше пауз. Возможно, тебе сейчас особенно важно беречь ресурс — и это нормально.";
 
         return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
       }
 
       function renderSummary(){
-        // date label
-        const d = dateKey();
-        $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", { weekday:"long", day:"numeric", month:"long" });
+        $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", {
+          weekday:"long", day:"numeric", month:"long"
+        });
 
+        const d = dateKey();
         const c = countFor(d);
+
         $("#pillGood").textContent = `Полезное: ${c.good}`;
         $("#pillPause").textContent = `Пауза: ${c.pause}`;
 
-        // dots
         const row = $("#summaryDots");
         if(c.total===0){
           row.innerHTML = "";
@@ -718,7 +801,6 @@
           renderDots(row, c.ev);
         }
 
-        // surprise
         const box = $("#surpriseBox");
         if(shouldShowSurprise()){
           box.style.display = "block";
@@ -729,10 +811,8 @@
           box.style.display = "none";
         }
 
-        // daily text
         $("#dailyText").textContent = dailySummaryText();
 
-        // week grid
         const grid = $("#weekGrid");
         grid.innerHTML = "";
         const days = lastNDays(7);
@@ -742,10 +822,9 @@
           item.className = "p-3";
           item.style.border = "1px solid var(--stroke)";
           item.style.borderRadius = "16px";
-          item.style.background = "rgba(255,255,255,0.55)";
-          if(document.documentElement.getAttribute("data-theme")==="dark"){
-            item.style.background = "rgba(255,255,255,0.06)";
-          }
+          item.style.background = (document.documentElement.getAttribute("data-theme")==="dark")
+            ? "rgba(255,255,255,0.06)"
+            : "rgba(255,255,255,0.55)";
 
           const header = document.createElement("div");
           header.className = "flex items-center justify-between mb-2";
@@ -778,7 +857,7 @@
       }
 
       // -----------------------------
-      // Breathing (4–4–4–4, 1 minute)
+      // Breathing (4–4–4–4, 1 minute) — correct cycle
       // -----------------------------
       const breathCircle = $("#breathCircle");
       const breathLabel  = $("#breathLabel");
@@ -792,15 +871,21 @@
       let running = false;
 
       const PHASES = [
-        { label:"Вдох",  dur:4, kind:"in",   from:0.78, to:1.00 },
-        { label:"Пауза", dur:4, kind:"hold", from:1.00, to:1.00 },
-        { label:"Выдох", dur:4, kind:"out",  from:1.00, to:0.78 },
-        { label:"Пауза", dur:4, kind:"hold", from:0.78, to:0.78 }
+        { label:"Вдох",  dur:4, from:0.78, to:1.00 },
+        { label:"Пауза", dur:4, from:1.00, to:1.00 },
+        { label:"Выдох", dur:4, from:1.00, to:0.78 },
+        { label:"Пауза", dur:4, from:0.78, to:0.78 }
       ];
 
       function setScale(scale, smooth=true, seconds=1){
         breathCircle.style.transition = smooth ? `transform ${seconds}s linear` : "none";
-        breathCircle.style.transform = `scale(${scale})`;
+        breathCircle.style.transform = `translateZ(0) scale(${scale})`;
+      }
+
+      function countString(n){
+        const arr = [];
+        for(let i=1;i<=n;i++) arr.push(String(i));
+        return arr.join("-");
       }
 
       function startBreathing(){
@@ -812,36 +897,28 @@
         secondInPhase = 0;
 
         breathToggle.textContent = "Стоп";
-        breathLabel.textContent = "Вдох";
-        breathSub.textContent = "Вдох 1-2-3-4";
 
-        // init scale
-        setScale(0.78, false);
+        // init
+        setScale(PHASES[0].from, false);
+        breathLabel.textContent = PHASES[0].label;
+        breathSub.textContent = `${PHASES[0].label} ${countString(1)}`;
 
-        // trigger first phase animation smoothly (4s)
-        requestAnimationFrame(() => {
-          setScale(1.00, true, 4);
-        });
+        // start first phase animation for full 4s
+        requestAnimationFrame(() => setScale(PHASES[0].to, true, PHASES[0].dur));
 
         breathTimer = setInterval(() => {
           breathElapsed++;
 
           const phase = PHASES[phaseIndex];
-          const count = secondInPhase + 1;
+          const step = secondInPhase + 1;
 
-          // text: "Вдох 1-2-3-4" (подсветку не делаем, чтобы было тихо)
           breathLabel.textContent = phase.label;
-          breathSub.textContent = `${phase.label} ${count}-${count+1<=4?count+1:4}-${count+2<=4?count+2:4}-${count+3<=4?count+3:4}`.replace(/4-4-4-4$/,"1-2-3-4");
-          // проще и честнее: ещё покажем счет в конце
-          breathSub.textContent = `${phase.label} • ${count}/4`;
+          breathSub.textContent = `${phase.label} ${countString(step)}${step < 4 ? "" : ""}`;
 
-          // phase start logic: если только вошли в фазу — запускаем анимацию на всю фазу
+          // on phase start, trigger smooth animation for full phase duration
           if(secondInPhase === 0){
-            // set from instantly to avoid drift
             setScale(phase.from, false);
-            requestAnimationFrame(() => {
-              setScale(phase.to, true, phase.dur);
-            });
+            requestAnimationFrame(() => setScale(phase.to, true, phase.dur));
           }
 
           secondInPhase++;
@@ -851,7 +928,7 @@
             phaseIndex = (phaseIndex + 1) % PHASES.length;
           }
 
-          // auto stop at 60 seconds
+          // auto stop at 60 sec
           if(breathElapsed >= 60){
             stopBreathing(true);
           }
@@ -865,11 +942,12 @@
         }
         running = false;
         breathToggle.textContent = "Начать";
-        breathLabel.textContent = auto ? "Готово" : "Готово";
-        breathSub.textContent = auto ? "Хорошо. Можно просто заметить это ощущение." : "Нажми «Начать» и просто следуй счёту.";
-        // мягко вернём к исходному размеру
+        breathLabel.textContent = "Готово";
+        breathSub.textContent = auto
+          ? "Хорошо. Можно просто заметить это ощущение."
+          : "Нажми «Начать» и просто следуй счёту.";
         setScale(0.78, true, 0.6);
-        if(auto) { toast("✓ 1 минута"); haptic("success"); }
+        if(auto){ toast("✓ 1 минута"); haptic("success"); }
       }
 
       breathToggle.addEventListener("click", () => {
@@ -893,7 +971,6 @@
         const box = $("#exportBox");
         box.classList.remove("hidden");
         box.textContent = JSON.stringify(state, null, 2);
-        // copy to clipboard (если можно)
         navigator.clipboard?.writeText(box.textContent).catch(()=>{});
         toast("Экспорт скопирован");
         haptic("success");
@@ -907,6 +984,7 @@
         $("#exportBox").classList.add("hidden");
         renderToday();
         if(currentTab==="summary") renderSummary();
+        ensureMicrocopyForToday();
         toast("Готово. Чистый лист");
         haptic("light");
       });
@@ -923,6 +1001,7 @@
       // -----------------------------
       applyTheme();
       renderToday();
+      ensureMicrocopyForToday();
       setTab("today");
     })();
   </script>
