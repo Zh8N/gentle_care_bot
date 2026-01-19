@@ -142,12 +142,6 @@
 
     .small-muted{ color: var(--muted); font-size: 13px; line-height: 1.35; }
 
-    #todayMicrocopy.whisper{
-      font-style: italic;
-      letter-spacing: 0.01em;
-      opacity: 0.92;
-    }
-
     .pill{
       display:inline-flex; align-items:center; gap:8px;
       border-radius: 999px;
@@ -179,7 +173,6 @@
       padding: 10px 0 2px;
     }
 
-    /* ✅ ВАЖНО: тень/свечение на обёртке, чтобы ничего не "резалось" */
     .breath-shadow{
       filter: drop-shadow(0 22px 60px rgba(37,99,235,0.18));
       -webkit-filter: drop-shadow(0 22px 60px rgba(37,99,235,0.18));
@@ -189,7 +182,6 @@
       -webkit-filter: drop-shadow(0 26px 70px rgba(0,0,0,0.45));
     }
 
-    /* ✅ Стабильный круг: маска + border-radius, без clip-path */
     .breath-circle{
       position: relative;
       width: 190px;
@@ -198,7 +190,6 @@
       border-radius: 9999px;
       overflow: hidden;
 
-      /* круглая маска (очень стабильна в Telegram WebView) */
       -webkit-mask-image: radial-gradient(circle at center, #000 99.4%, transparent 100%);
       mask-image: radial-gradient(circle at center, #000 99.4%, transparent 100%);
       -webkit-mask-repeat: no-repeat;
@@ -218,10 +209,9 @@
       border: 1px solid rgba(255,255,255,0.14);
       user-select:none;
       -webkit-user-select:none;
-      background: rgba(37,99,235,0.95); /* fallback */
+      background: rgba(37,99,235,0.95);
     }
 
-    /* вращающийся градиент внутри круга */
     .breath-circle::before{
       content:"";
       position:absolute;
@@ -446,12 +436,12 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v7";
+      const STORAGE = "balancecare_v8";
       const defaultState = () => ({
         theme: "system",
         events: [],
         surprise: { lastShownAt: null },
-        ui: { microcopyDate: null, microcopyText: null, microcopyWhisper: false }
+        ui: { microcopyDate: null, microcopyText: null }
       });
 
       let state = loadState();
@@ -550,57 +540,34 @@
         renderThemeButtons();
       }
 
-      // Microcopy
-      const MICRO_LONG = [
-        "Мы ничего не оцениваем. Мы просто замечаем — и от этого легче.",
-        "Один маленький шаг тоже считается. Правда.",
-        "Ты можешь идти медленно. Главное — в свою сторону.",
-        "Нежно фиксируем — и внутри становится чуть тише.",
-        "Сейчас достаточно одной отметки. Остальное — потом.",
-        "Ты не обязана быть идеальной, чтобы двигаться вперёд.",
-        "Если хочешь — просто отметь. Это уже забота о себе.",
-        "Шаг за шагом. Не героически — по-человечески.",
-        "Ты уже здесь. Это хорошее место начать.",
-        "Маленькая ясность сегодня — большой подарок завтра.",
-        "Не нужно «правильно». Нужно бережно и честно.",
-        "Даже пауза — это действие. Ты заметила её.",
-        "Я с тобой. Давай просто посмотрим, как оно есть.",
-        "Твоё «чуть-чуть» сегодня — всё равно движение.",
-        "Иногда самое сильное — это не ускориться, а остановиться вовремя.",
-        "Пусть это будет твоей тихой опорой на день.",
-        "Мы собираем не рекорды, а реальность. И это очень ценно."
-      ];
-
-      const MICRO_WHISPER = [
-        "Тихо. Я рядом.",
-        "Один шаг — уже шаг.",
-        "Ты справляешься.",
-        "Мягко — и дальше.",
-        "Заметь. Этого достаточно.",
-        "Маленькое — тоже важное.",
-        "Дыши. Потом решим.",
-        "Ты не одна.",
-        "Никакой гонки. Правда.",
-        "Можно по-человечески."
+      // Microcopy: "цитаты-мысли" (без "Тихо. Я рядом.")
+      const MICRO_QUOTES = [
+        "Один маленький шаг тоже считается.",
+        "Не нужно идеально. Достаточно по-человечески.",
+        "Сначала заметить — потом решать. Уже хорошо.",
+        "Ты можешь двигаться мягко. Это тоже сила.",
+        "Маленькая ясность сегодня — тёплая опора завтра.",
+        "Ты не обязана ускоряться, чтобы быть «достаточной».",
+        "Даже пауза — это забота, если она вовремя.",
+        "Смотри, ты возвращаешь себе управление — без давления.",
+        "Шаг за шагом. И этого достаточно.",
+        "Нежность к себе — не слабость. Это навык.",
+        "Ты умеешь выбирать себя маленькими действиями.",
+        "Если день сложный — мы просто отмечаем и идём дальше."
       ];
 
       function ensureMicrocopyForToday(){
         const d = dateKey();
         if(state.ui.microcopyDate !== d || !state.ui.microcopyText){
-          const whisper = Math.random() < 0.40;
           state.ui.microcopyDate = d;
-          state.ui.microcopyWhisper = whisper;
-          state.ui.microcopyText = whisper ? pick(MICRO_WHISPER) : pick(MICRO_LONG);
+          state.ui.microcopyText = pick(MICRO_QUOTES);
           save();
         }
-        const el = $("#todayMicrocopy");
-        el.textContent = state.ui.microcopyText;
-        el.classList.toggle("whisper", !!state.ui.microcopyWhisper);
+        $("#todayMicrocopy").textContent = state.ui.microcopyText;
       }
 
       // Tabs
       let currentTab = "today";
-
       function setTab(name){
         currentTab = name;
         $$(".tab-btn[data-tab]").forEach(btn => btn.classList.toggle("active", btn.dataset.tab === name));
@@ -608,7 +575,7 @@
 
         if(name === "today") ensureMicrocopyForToday();
         if(name === "summary") renderSummary();
-        if(name !== "breath") stopBreathing();
+        if(name !== "breath") stopBreathing(false);
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
@@ -662,16 +629,14 @@
         haptic("light");
       }
 
-      // Surprise
+      // Surprise (в итогах)
       const SURPRISE_LINES = [
-        "Мне нравится, как ты это делаешь: спокойно и по-честному.",
-        "Ты заметила момент — и уже стала к себе ближе.",
-        "Пусть это будет маленьким «я с собой» в середине дня.",
-        "Ты не одна: я тут, рядом, на твоей стороне.",
-        "Смотри, ты реально движешься. Даже если шаги маленькие.",
-        "Сегодня ты выбрала себя хотя бы раз — и это уже много.",
-        "Иногда самое мудрое — дать себе паузу. Ты умеешь.",
-        "Нежность тоже дисциплина. Ты её практикуешь.",
+        "Мне нравится твой стиль: спокойно и честно.",
+        "Ты заметила момент — и стала к себе ближе.",
+        "Пусть это будет маленьким «я с собой» внутри дня.",
+        "Сегодня ты выбрала себя хотя бы раз — это уже много.",
+        "Иногда самое мудрое — вовремя дать себе паузу.",
+        "Нежность тоже дисциплина. И ты её практикуешь.",
         "Ты не обязана доказывать. Можно просто жить и замечать."
       ];
       function shouldShowSurprise(){
@@ -680,16 +645,15 @@
         return (Date.now() - last) > sixHours && Math.random() < 0.35;
       }
 
-      // Summary
       function dailySummaryText(){
         const d = dateKey();
         const { good, pause, total } = countFor(d);
 
-        if(total === 0) return "Сегодня было тихо — без отметок.\nЕсли захочешь, вернёшься позже. Я рядом.";
+        if(total === 0) return "Сегодня было тихо — без отметок.\nЕсли захочешь, вернёшься позже.";
         if(good > 0 && pause === 0) return "Сегодня ты несколько раз выбрала полезное.\nПусть это останется внутри как тёплая уверенность: ты можешь.";
-        if(pause > 0 && good === 0) return "Сегодня было больше пауз.\nЭто не про «плохо». Это про заботу: ты заметила, где нужен воздух.";
-        if(good >= pause) return "День получился разным — и в этом есть жизнь.\nТы уже делаешь главное: замечаешь и не давишь на себя.";
-        return "Сегодня было непросто, но ты всё равно осталась с собой в контакте.\nЭто очень сильная, взрослая опора.";
+        if(pause > 0 && good === 0) return "Сегодня было больше пауз.\nЭто не про «плохо». Это про ресурс: ты заметила, где нужен воздух.";
+        if(good >= pause) return "День получился разным — и в этом есть жизнь.\nТы делаешь главное: замечаешь и не давишь на себя.";
+        return "Сегодня было непросто, но ты всё равно осталась с собой в контакте.\nЭто сильная опора.";
       }
 
       function lastNDays(n){
@@ -716,8 +680,8 @@
         });
         if(g+p===0) return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки или одной минуты дыхания.";
         const line = g>=p
-          ? "В этой неделе было место и для движения, и для пауз. Это похоже на живой баланс."
-          : "В этой неделе было больше пауз. Возможно, тебе сейчас особенно важно беречь ресурс — и это нормально.";
+          ? "В неделе было место и для движения, и для пауз. Это похоже на живой баланс."
+          : "В неделе было больше пауз. Возможно, тебе сейчас особенно важно беречь ресурс — и это нормально.";
         return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
       }
 
@@ -783,7 +747,9 @@
         $("#weeklyText").textContent = weeklySummaryText();
       }
 
-      // Breathing 4–4–4–4
+      // =========================
+      // BREATHING 4–4–4–4 (FIXED START)
+      // =========================
       const breathCircle = $("#breathCircle");
       const breathLabel  = $("#breathLabel");
       const breathSub    = $("#breathSub");
@@ -808,62 +774,81 @@
       }
 
       function countString(n){
-        const arr = [];
-        for(let i=1;i<=n;i++) arr.push(String(i));
-        return arr.join("-");
+        // 1..4 -> "1-2-3-4" обрезаем по n
+        const base = ["1","2","3","4"];
+        return base.slice(0, Math.max(1, Math.min(4,n))).join("-");
+      }
+
+      function runPhase(i){
+        const phase = PHASES[i];
+        phaseIndex = i;
+        secondInPhase = 0;
+
+        breathLabel.textContent = phase.label;
+        breathSub.textContent = `${phase.label} ${countString(1)}`;
+
+        // ВАЖНО: scale задаём 1 раз на входе в фазу и НЕ трогаем каждую секунду
+        setScale(phase.from, false);
+
+        // двойной rAF, чтобы браузер гарантированно применил from перед переходом
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setScale(phase.to, true, phase.dur);
+          });
+        });
       }
 
       function startBreathing(){
-        stopBreathing();
+        stopBreathing(false);
+
         running = true;
         breathElapsed = 0;
-        phaseIndex = 0;
-        secondInPhase = 0;
         breathToggle.textContent = "Стоп";
 
-        setScale(PHASES[0].from, false);
-        breathLabel.textContent = PHASES[0].label;
-        breathSub.textContent = `${PHASES[0].label} ${countString(1)}`;
-        requestAnimationFrame(() => setScale(PHASES[0].to, true, PHASES[0].dur));
+        runPhase(0); // стартуем сразу с плавного "Вдох" на 4 сек
 
         breathTimer = setInterval(() => {
           breathElapsed++;
+
           const phase = PHASES[phaseIndex];
-          const step = secondInPhase + 1;
 
-          breathLabel.textContent = phase.label;
-          breathSub.textContent = `${phase.label} ${countString(step)}`;
-
-          if(secondInPhase === 0){
-            setScale(phase.from, false);
-            requestAnimationFrame(() => setScale(phase.to, true, phase.dur));
-          }
-
+          // обновляем только счёт (без сброса scale)
           secondInPhase++;
-          if(secondInPhase >= phase.dur){
-            secondInPhase = 0;
-            phaseIndex = (phaseIndex + 1) % PHASES.length;
+          if(secondInPhase < phase.dur){
+            breathSub.textContent = `${phase.label} ${countString(secondInPhase+1)}`;
+          }else{
+            // переход на следующую фазу
+            const next = (phaseIndex + 1) % PHASES.length;
+            runPhase(next);
           }
 
+          // авто-стоп через 60 сек
           if(breathElapsed >= 60){
             stopBreathing(true);
           }
         }, 1000);
       }
 
-      function stopBreathing(auto=false){
+      function stopBreathing(auto){
         if(breathTimer){
           clearInterval(breathTimer);
           breathTimer = null;
         }
         running = false;
+
         breathToggle.textContent = "Начать";
         breathLabel.textContent = "Готово";
         breathSub.textContent = auto
           ? "Хорошо. Можно просто заметить это ощущение."
           : "Нажми «Начать» и просто следуй счёту.";
+
+        // мягко возвращаем к базовому размеру
         setScale(0.78, true, 0.6);
-        if(auto){ toast("✓ 1 минута"); haptic("success"); }
+
+        if(auto){
+          toast("✓ 1 минута");
+          haptic("success");
+        }
       }
 
       breathToggle.addEventListener("click", () => running ? stopBreathing(false) : startBreathing());
