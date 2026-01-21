@@ -138,9 +138,8 @@
       background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
     }
 
-    .dot-row{ display:flex; gap:8px; flex-wrap: wrap; padding-top: 6px; }
+    .dot-row{ display:flex; gap:10px; flex-wrap: wrap; padding-top: 6px; } /* чуть больше воздуха */
 
-    /* dot wrapper so we can show × */
     .dot-wrap{
       position: relative;
       width: 16px;
@@ -194,9 +193,7 @@
       border-color: rgba(248,113,113,0.25);
       box-shadow: 0 10px 24px rgba(0,0,0,0.30);
     }
-    .dot-wrap.delete-mode .dot-x{
-      display:flex;
-    }
+    .dot-wrap.delete-mode .dot-x{ display:flex; }
 
     .small-muted{ color: var(--muted); font-size: 13px; line-height: 1.35; }
     #todayMicrocopy{
@@ -206,7 +203,6 @@
       white-space: pre-wrap;
     }
 
-    /* Pills (Counters) */
     .pill{
       display:inline-flex; align-items:center; gap:8px;
       border-radius: 999px;
@@ -257,7 +253,6 @@
     html[data-theme="dark"] .ghost-btn{ background: rgba(255,255,255,0.06); }
     .ghost-btn:active{ transform: translateY(1px); }
 
-    /* Note button (accent) */
     .note-btn{
       border-radius: 14px;
       padding: 8px 10px;
@@ -276,34 +271,36 @@
     }
     .note-btn:active{ transform: translateY(1px); filter: brightness(0.98); }
 
+    /* ✅ Day note: clean, full width, no "field in field", X inside */
     .inline-note{
       margin-top: 10px;
+      width: 100%;
       border: 1px solid var(--stroke);
       border-radius: 16px;
       background: rgba(255,255,255,0.55);
-      padding: 10px;
+      padding: 10px 10px;
       display:none;
-      gap: 10px;
-      align-items: center;
+      align-items:center;
+      gap: 8px;
+      overflow: hidden;
     }
     html[data-theme="dark"] .inline-note{ background: rgba(255,255,255,0.06); }
     .inline-note.show{ display:flex; }
 
     .inline-input{
       flex: 1 1 auto;
-      border-radius: 14px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,0.55);
-      padding: 10px 12px;
+      min-width: 0;
+      border: none;              /* убрали "внутреннее поле" */
+      background: transparent;
+      padding: 8px 6px;
       font-size: 14px;
       color: var(--text);
       outline: none;
     }
-    html[data-theme="dark"] .inline-input{ background: rgba(255,255,255,0.06); }
 
     .inline-x{
       width: 34px; height: 34px;
-      border-radius: 14px;
+      border-radius: 12px;
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,0.55);
       color: var(--muted);
@@ -351,7 +348,6 @@
       box-shadow: 0 18px 50px rgba(0,0,0,0.38);
     }
 
-    /* Modal */
     .modal{
       position: fixed;
       inset: 0;
@@ -412,16 +408,19 @@
       gap: 8px;
       padding-top: 10px;
     }
+
+    /* ✅ chips smaller + less dominant */
     .chip{
       border-radius: 999px;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,0.55);
       color: var(--text);
-      font-size: 14px;
+      font-size: 13px;
       transition: transform .06s ease, background .14s ease, border-color .14s ease;
       user-select:none;
       -webkit-user-select:none;
+      position: relative;
     }
     html[data-theme="dark"] .chip{ background: rgba(255,255,255,0.06); }
     .chip:active{ transform: translateY(1px); }
@@ -433,6 +432,36 @@
       border-style: dashed;
       border-color: rgba(37,99,235,0.28);
     }
+
+    /* ✅ chip delete mode */
+    .chip.delete-mode{
+      outline: 2px solid rgba(239,68,68,0.70);
+      outline-offset: 2px;
+    }
+    .chip-x{
+      position:absolute;
+      top:-7px;
+      right:-7px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      font-size: 12px;
+      line-height: 1;
+      border: 1px solid rgba(239,68,68,0.35);
+      background: rgba(255,255,255,0.85);
+      color: rgba(239,68,68,0.95);
+      box-shadow: 0 10px 24px rgba(15,23,42,0.14);
+    }
+    html[data-theme="dark"] .chip-x{
+      background: rgba(255,255,255,0.10);
+      color: rgba(248,113,113,0.95);
+      border-color: rgba(248,113,113,0.25);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.30);
+    }
+    .chip.delete-mode .chip-x{ display:flex; }
 
     .custom-wrap{
       margin-top: 10px;
@@ -468,7 +497,6 @@
     }
     html[data-theme="dark"] .note{ background: rgba(255,255,255,0.06); }
 
-    /* Topic rows */
     .topic-row{
       border: 1px solid var(--stroke);
       border-radius: 16px;
@@ -545,7 +573,6 @@
     }
     .topic-details.show{ display:block; }
 
-    /* Breath */
     .breath-wrap{
       display:flex; flex-direction:column; align-items:center; gap: 12px;
       padding: 10px 0 2px;
@@ -619,6 +646,41 @@
       color: var(--muted);
       text-align:center;
     }
+
+    /* ✅ modal header close icon */
+    .icon-close{
+      width: 36px;
+      height: 36px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.55);
+      color: var(--muted);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      user-select:none;
+      -webkit-user-select:none;
+      transition: transform .06s ease;
+      flex: 0 0 auto;
+    }
+    html[data-theme="dark"] .icon-close{ background: rgba(255,255,255,0.06); }
+    .icon-close:active{ transform: translateY(1px); }
+
+    /* ✅ modal action buttons bigger than chips */
+    .modal-actions .ghost-btn{
+      padding: 10px 12px;
+      font-size: 15px;
+      border-radius: 14px;
+    }
+
+    /* ✅ today hint under dots, softer */
+    .today-hint{
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0.78;
+      line-height: 1.35;
+    }
   </style>
 </head>
 
@@ -635,11 +697,10 @@
     <section id="tab-today">
       <div class="card p-4 mb-4">
         <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
+          <div class="min-w-0 flex-1">
             <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Отметить момент</div>
             <div class="small-muted" id="todayMicrocopy">Один шаг — уже движение.</div>
 
-            <!-- inline day note -->
             <div id="dayNoteWrap" class="inline-note">
               <input id="dayNoteInput" class="inline-input" maxlength="40" placeholder="Тема дня (1–2 слова)…" />
               <button id="dayNoteClose" class="inline-x" title="Закрыть">✕</button>
@@ -654,7 +715,7 @@
 
       <div class="grid gap-3 mb-4">
         <button id="btnGood" class="action-btn action-primary">Полезное для себя</button>
-        <button id="btnPause" class="action-btn action-neutral">Пауза / шаг в сторону</button>
+        <button id="btnPause" class="action-btn action-neutral">Шаг в сторону</button>
       </div>
 
       <div class="card p-4" id="todayCard">
@@ -662,10 +723,14 @@
           <div class="text-sm font-semibold">Сегодня</div>
           <button id="btnClearToday" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Очистить</button>
         </div>
-        <div class="small-muted" style="margin-top:2px;">Долгое нажатие на кружочек → × → удалить. Тап по пустому месту выключает режим удаления.</div>
+
         <div id="todayDots" class="dot-row"></div>
         <div id="todayEmpty" class="small-muted mt-2" style="display:none;">
           Пока здесь пусто — и это нормально.
+        </div>
+
+        <div class="today-hint">
+          Долгое нажатие на кружочек → появится × → можно удалить. Тап по пустому месту выключает режим удаления.
         </div>
       </div>
     </section>
@@ -684,7 +749,7 @@
 
         <div class="flex items-center gap-2 mb-3">
           <span class="pill pill-good" id="pillGood">Полезное: 0</span>
-          <span class="pill pill-pause" id="pillPause">Пауза: 0</span>
+          <span class="pill pill-pause" id="pillPause">Шаг в сторону: 0</span>
         </div>
 
         <div id="summaryDots" class="dot-row mb-3"></div>
@@ -777,7 +842,7 @@
     <div class="inner" id="toastInner">✓ Записано</div>
   </div>
 
-  <!-- Modal: note (only after good/pause) -->
+  <!-- Modal -->
   <div id="noteModal" class="modal" aria-hidden="true">
     <div class="modal-backdrop" id="noteBackdrop"></div>
 
@@ -787,14 +852,14 @@
           <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Короткая отметка</div>
           <div class="small-muted" id="noteSubtitle">Можно выбрать тему. Можно пропустить.</div>
         </div>
-        <button id="noteClose" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Закрыть</button>
+        <button id="noteClose" class="icon-close" title="Закрыть" aria-label="Закрыть">✕</button>
       </div>
 
       <div class="mt-3 flex items-center justify-between gap-2">
         <span id="noteBadge" class="badge good">Полезное</span>
-        <div class="flex gap-2">
-          <button id="noteSkip" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Пропустить</button>
-          <button id="noteSave" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px; border-color: rgba(37,99,235,0.25);">Сохранить</button>
+        <div class="flex gap-2 modal-actions">
+          <button id="noteSkip" class="ghost-btn">Пропустить</button>
+          <button id="noteSave" class="ghost-btn" style="border-color: rgba(37,99,235,0.25);">Сохранить</button>
         </div>
       </div>
 
@@ -806,6 +871,9 @@
       </div>
 
       <textarea id="noteText" class="note" placeholder="Если хочется — 1–2 слова (не обязательно)."></textarea>
+      <div class="small-muted mt-2" style="opacity:.78;">
+        Подсказка: чтобы удалить свою тему — сделай долгое нажатие на чипсе → ×.
+      </div>
     </div>
   </div>
 
@@ -814,7 +882,7 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v15"; // new: clear delete-mode on empty tap + neutral texts
+      const STORAGE = "balancecare_v16"; // v16: day note UI + chip delete + modal typography + "Шаг в сторону"
       const defaultState = () => ({
         theme: "system",
         events: [],
@@ -843,7 +911,8 @@
             };
           }
 
-          const prev = localStorage.getItem("balancecare_v14")
+          const prev = localStorage.getItem("balancecare_v15")
+                    || localStorage.getItem("balancecare_v14")
                     || localStorage.getItem("balancecare_v13")
                     || localStorage.getItem("balancecare_v12");
           if(prev){
@@ -965,7 +1034,6 @@
         renderThemeButtons();
       }
 
-      // Quotes (neutral)
       const MICRO_SHORT = [
         "Один шаг — уже движение.",
         "Можно по-доброму к себе.",
@@ -1000,7 +1068,6 @@
         $("#todayMicrocopy").textContent = state.ui.microcopyText;
       }
 
-      // Tabs
       let currentTab = "today";
       function setTab(name){
         currentTab = name;
@@ -1013,7 +1080,6 @@
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
-      // Topics
       const BASE_TOPICS = [
         { id:"food",    label:"🍽 Питание" },
         { id:"mind",    label:"🧠 Мысли" },
@@ -1026,8 +1092,8 @@
       ];
 
       function allTopics(){
-        const custom = (state.customTopics || []).map(t => ({ id: t.id, label: "🔖 " + t.label }));
-        return [...BASE_TOPICS, ...custom];
+        const custom = (state.customTopics || []).map(t => ({ id: t.id, label: "🔖 " + t.label, custom:true }));
+        return [...BASE_TOPICS.map(x=>({ ...x, custom:false })), ...custom];
       }
 
       function topicLabel(id){
@@ -1061,7 +1127,19 @@
         return id;
       }
 
-      // Modal state
+      function removeCustomTopic(topicId){
+        state.customTopics = (state.customTopics || []).filter(t => t.id !== topicId);
+
+        // аккуратно чистим события: если тема удалена, оставим note, но topic сбросим
+        state.events.forEach(e=>{
+          if(e.topic === topicId){
+            e.topic = (e.note && String(e.note).trim()) ? "other" : null;
+          }
+        });
+
+        save();
+      }
+
       let pendingEventId = null;
       let pendingEventType = "good";
       let selectedTopic = null;
@@ -1086,6 +1164,21 @@
         }
       }
 
+      function clearChipDeleteModes(){
+        $$(".chip.delete-mode").forEach(ch => ch.classList.remove("delete-mode"));
+      }
+
+      // long press helper
+      function attachLongPress(el, onLongPress, ms=520){
+        let t = null;
+        const clear = () => { if(t){ clearTimeout(t); t = null; } };
+        el.addEventListener("pointerdown", () => { clear(); t = setTimeout(() => onLongPress(), ms); }, { passive: true });
+        el.addEventListener("pointermove", () => { clear(); }, { passive: true });
+        el.addEventListener("pointerup", () => { clear(); }, { passive: true });
+        el.addEventListener("pointercancel", () => { clear(); }, { passive: true });
+        el.addEventListener("contextmenu", (e) => e.preventDefault());
+      }
+
       function renderTopicChips(){
         const wrap = $("#topicChips");
         wrap.innerHTML = "";
@@ -1096,11 +1189,42 @@
           b.type = "button";
           b.textContent = t.label;
           b.dataset.topic = t.id;
+          b.dataset.custom = t.custom ? "1" : "0";
+
+          // delete cross for custom
+          if(t.custom){
+            const x = document.createElement("span");
+            x.className = "chip-x";
+            x.textContent = "×";
+            x.title = "Удалить тему";
+            x.addEventListener("click", (evt) => {
+              evt.stopPropagation();
+              removeCustomTopic(t.id);
+              clearChipDeleteModes();
+              renderTopicChips();
+              toast("Тема удалена");
+              haptic("light");
+            });
+            b.appendChild(x);
+
+            attachLongPress(b, () => {
+              clearChipDeleteModes();
+              b.classList.add("delete-mode");
+              haptic("light");
+            });
+          }
+
           b.addEventListener("click", () => {
+            if(b.classList.contains("delete-mode")){
+              // тап по чипу в delete-mode выключает режим
+              b.classList.remove("delete-mode");
+              return;
+            }
             selectedTopic = t.id;
             showCustomTopicInput(false);
             $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
           });
+
           wrap.appendChild(b);
         });
 
@@ -1123,6 +1247,7 @@
 
         $("#noteText").value = "";
         showCustomTopicInput(false);
+        clearChipDeleteModes();
 
         const badge = $("#noteBadge");
         badge.classList.remove("good","pause");
@@ -1131,7 +1256,7 @@
           badge.textContent = "Полезное";
         }else{
           badge.classList.add("pause");
-          badge.textContent = "Пауза";
+          badge.textContent = "Шаг в сторону";
         }
 
         renderTopicChips();
@@ -1146,6 +1271,7 @@
         pendingEventId = null;
         selectedTopic = null;
         showCustomTopicInput(false);
+        clearChipDeleteModes();
       }
 
       function attachNoteToEvent(){
@@ -1168,7 +1294,6 @@
         closeNoteModal();
       }
 
-      // Data helpers
       function eventsFor(d){ return state.events.filter(e => e.date === d); }
       function countFor(d){
         const ev = eventsFor(d);
@@ -1189,37 +1314,19 @@
         }
       }
 
-      // long press helper
-      function attachLongPress(el, onLongPress, ms=520){
-        let t = null;
-        const clear = () => {
-          if(t){ clearTimeout(t); t = null; }
-        };
-        el.addEventListener("pointerdown", () => {
-          clear();
-          t = setTimeout(() => { onLongPress(); }, ms);
-        }, { passive: true });
-        el.addEventListener("pointermove", () => { clear(); }, { passive: true });
-        el.addEventListener("pointerup", () => { clear(); }, { passive: true });
-        el.addEventListener("pointercancel", () => { clear(); }, { passive: true });
-        el.addEventListener("contextmenu", (e) => e.preventDefault());
-      }
-
       function clearAllDeleteModes(){
-        const active = $$(".dot-wrap.delete-mode");
-        if(active.length === 0) return;
-        active.forEach(el => el.classList.remove("delete-mode"));
+        $$(".dot-wrap.delete-mode").forEach(el => el.classList.remove("delete-mode"));
+        clearChipDeleteModes();
       }
 
-      // NEW: tap on empty space closes delete-mode
       function installDeleteModeAutoClose(){
         document.addEventListener("pointerdown", (e) => {
-          if($$(".dot-wrap.delete-mode").length === 0) return;
+          if($$(".dot-wrap.delete-mode").length === 0 && $$(".chip.delete-mode").length === 0) return;
 
           const insideDot = e.target.closest && e.target.closest(".dot-wrap");
-          if(insideDot) return;
+          const insideChip = e.target.closest && e.target.closest(".chip");
+          if(insideDot || insideChip) return;
 
-          // allow normal UI (buttons/inputs) but still close delete mode
           clearAllDeleteModes();
         }, true);
       }
@@ -1252,13 +1359,11 @@
           });
 
           attachLongPress(wrap, () => {
-            // Only one in delete-mode feels calmer
             clearAllDeleteModes();
             wrap.classList.add("delete-mode");
             haptic("light");
           });
 
-          // Tap on dot exits delete mode (for this dot)
           wrap.addEventListener("click", () => {
             if(wrap.classList.contains("delete-mode")){
               wrap.classList.remove("delete-mode");
@@ -1319,12 +1424,11 @@
         haptic("light");
       }
 
-      // Surprise (neutral)
       const SURPRISE_LINES = [
         "Здесь уже есть устойчивость: замечать и не давить на себя.",
         "Видно движение. Даже маленькое — настоящее.",
         "Выбор ясности вместо самокритики — сильная штука.",
-        "Пауза — это не провал. Это забота о ресурсе."
+        "Шаг в сторону — не провал. Это часть реальности."
       ];
       function shouldShowSurprise(){
         const last = state.surprise?.lastShownAt ? new Date(state.surprise.lastShownAt).getTime() : 0;
@@ -1337,7 +1441,7 @@
         const { good, pause, total } = countFor(d);
         if(total === 0) return "День прошёл тихо — без отметок.\nЕсли захочется, можно вернуться позже.";
         if(good > 0 && pause === 0) return "Сегодня было несколько полезных шагов.\nПусть это останется как тёплая опора.";
-        if(pause > 0 && good === 0) return "Сегодня было больше пауз.\nЭто не про «плохо». Это про ресурс.";
+        if(pause > 0 && good === 0) return "Сегодня было больше шагов в сторону.\nЭто не про «плохо». Это про ресурс и обстоятельства.";
         if(good >= pause) return "День получился разным.\nГлавное — моменты замечены, без давления.";
         return "Сегодня было непросто, но контакт с собой сохранился.\nЭто уже много.";
       }
@@ -1366,9 +1470,9 @@
         });
         if(g+p===0) return "Неделя была очень тихой.\nМожно начать с малого: одной отметки или одной минуты дыхания.";
         const line = g>=p
-          ? "На неделе было место и для движения, и для пауз. Это похоже на живой баланс."
-          : "На неделе было больше пауз. Возможно, сейчас особенно важно беречь ресурс — и это нормально.";
-        return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
+          ? "На неделе было место и для движения, и для шагов в сторону. Это похоже на живой баланс."
+          : "На неделе было больше шагов в сторону. Возможно, сейчас особенно важно беречь ресурс — и это нормально.";
+        return `Полезное: ${g}\nШаг в сторону: ${p}\n\n${line}`;
       }
 
       function aggregateTopics(events){
@@ -1430,7 +1534,7 @@
 
           const details = document.createElement("div");
           details.className = "topic-details";
-          details.textContent = `Полезное: ${v.good} • Пауза: ${v.pause}`;
+          details.textContent = `Полезное: ${v.good} • Шаг в сторону: ${v.pause}`;
 
           btn.addEventListener("click", () => details.classList.toggle("show"));
 
@@ -1464,7 +1568,7 @@
 
         const c = countFor(d);
         $("#pillGood").textContent = `Полезное: ${c.good}`;
-        $("#pillPause").textContent = `Пауза: ${c.pause}`;
+        $("#pillPause").textContent = `Шаг в сторону: ${c.pause}`;
 
         const row = $("#summaryDots");
         if(c.total===0) row.innerHTML = ""; else renderDots(row, c.ev, false);
@@ -1528,7 +1632,6 @@
         renderTopicList($("#topicsWeek"), $("#topicsWeekEmpty"), aggWeek);
       }
 
-      // Day note (inline)
       function openDayNote(){
         const d = dateKey();
         const wrap = $("#dayNoteWrap");
@@ -1558,7 +1661,6 @@
         if(currentTab === "summary") renderSummary();
       }
 
-      // Breathing
       const breathCircle = $("#breathCircle");
       const breathLabel  = $("#breathLabel");
       const breathSub    = $("#breathSub");
