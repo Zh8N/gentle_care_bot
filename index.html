@@ -160,7 +160,6 @@
     }
     html[data-theme="dark"] .pill{ background: rgba(255,255,255,0.06); }
 
-    /* Мягкие “контекстные” pill для good/pause */
     .pill-good{
       border-color: rgba(37,99,235,0.25);
       background: rgba(37,99,235,0.10);
@@ -332,7 +331,6 @@
       box-shadow: 0 18px 50px rgba(0,0,0,0.38);
     }
 
-    /* Модалки (в стиле приложения) */
     .modal-overlay{
       position: fixed;
       inset: 0;
@@ -349,7 +347,6 @@
       padding: 14px;
     }
 
-    /* Список событий в модалке выбора */
     .event-row{
       display:flex;
       align-items:center;
@@ -369,7 +366,6 @@
     html[data-theme="dark"] .event-row{ background: rgba(255,255,255,0.06); }
     .event-row:active{ transform: translateY(1px); }
 
-    /* NEW: мягкая подсветка типа события */
     .event-row.good-bg{
       border-color: rgba(37,99,235,0.22);
       background: rgba(37,99,235,0.10);
@@ -403,7 +399,7 @@
     .event-sub{ font-size:12px; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .event-right{ flex:0 0 auto; font-size:12px; color: var(--muted); }
 
-    /* Легенда для итогов */
+    /* Легенда */
     .legend{
       display:flex; gap:10px; flex-wrap:wrap;
       margin-top: 8px;
@@ -418,6 +414,102 @@
       background: rgba(255,255,255,0.45);
     }
     html[data-theme="dark"] .legend span{ background: rgba(255,255,255,0.06); }
+
+    /* ✅ НОВОЕ: мини-полоски */
+    .areas-wrap{
+      margin-top: 10px;
+      border: 1px solid var(--stroke);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.45);
+      padding: 12px;
+    }
+    html[data-theme="dark"] .areas-wrap{
+      background: rgba(255,255,255,0.06);
+    }
+
+    .areas-title{
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: rgba(15,23,42,0.86);
+    }
+    html[data-theme="dark"] .areas-title{
+      color: rgba(255,255,255,0.88);
+    }
+
+    .area-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 10px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+    }
+    .area-row + .area-row{ margin-top: 6px; }
+
+    .area-label{
+      min-width: 0;
+      font-size: 13px;
+      color: rgba(15,23,42,0.86);
+      line-height: 1.25;
+    }
+    html[data-theme="dark"] .area-label{
+      color: rgba(255,255,255,0.88);
+    }
+
+    .bars{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+      flex: 0 0 auto;
+      min-width: 148px;
+      align-items:flex-end;
+    }
+
+    .barline{
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      justify-content:flex-end;
+    }
+
+    .barbadge{
+      font-size: 12px;
+      color: var(--muted);
+      width: 26px;
+      text-align:right;
+    }
+
+    .mini-bar{
+      display:flex;
+      gap: 4px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.40);
+    }
+    html[data-theme="dark"] .mini-bar{
+      background: rgba(255,255,255,0.06);
+    }
+
+    .sq{
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      opacity: 0.95;
+    }
+    .sq.good{ background: var(--primary); }
+    .sq.pause{ background: rgba(148,163,184,0.95); }
+    html[data-theme="dark"] .sq.pause{ background: rgba(203,213,225,0.55); }
+
+    .sq.empty{
+      background: rgba(148,163,184,0.18);
+    }
+    html[data-theme="dark"] .sq.empty{
+      background: rgba(203,213,225,0.10);
+    }
   </style>
 </head>
 
@@ -446,7 +538,6 @@
         <button id="btnPause" class="action-btn action-neutral">Сделала паузу</button>
       </div>
 
-      <!-- Постоянная вторичная кнопка -->
       <button id="btnArea" class="ghost-btn w-full mb-4" style="border-radius:18px; padding:12px 12px;">
         ✍️ Хочешь коротко отметить, про что это было?
       </button>
@@ -488,7 +579,12 @@
         <div id="surpriseBox" class="surprise" style="display:none;"></div>
 
         <div class="mt-3 small-muted whitespace-pre-wrap" id="dailyText"></div>
-        <div class="mt-3 small-muted whitespace-pre-wrap" id="dailyAreas" style="display:none;"></div>
+
+        <!-- ✅ вместо простого текста: визуальный блок -->
+        <div id="dailyAreasWrap" class="areas-wrap" style="display:none;">
+          <div class="areas-title">Области внимания сегодня</div>
+          <div id="dailyAreas"></div>
+        </div>
       </div>
 
       <div class="card p-4">
@@ -503,7 +599,11 @@
         <div id="weekGrid" class="grid gap-2 mt-3"></div>
 
         <div class="mt-3 small-muted whitespace-pre-wrap" id="weeklyText"></div>
-        <div class="mt-3 small-muted whitespace-pre-wrap" id="weeklyAreas" style="display:none;"></div>
+
+        <div id="weeklyAreasWrap" class="areas-wrap" style="display:none;">
+          <div class="areas-title">Области за 7 дней</div>
+          <div id="weeklyAreas"></div>
+        </div>
       </div>
     </section>
 
@@ -563,7 +663,7 @@
     </section>
   </div>
 
-  <!-- Модалка выбора события -->
+  <!-- Event modal -->
   <div id="eventModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="выбор события">
     <div class="card modal-card">
       <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Какой момент отметить?</div>
@@ -577,12 +677,11 @@
     </div>
   </div>
 
-  <!-- Модалка выбора области -->
+  <!-- Area modal -->
   <div id="areaModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="области">
     <div class="card modal-card">
       <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Про что это было?</div>
 
-      <!-- NEW: контекст выбранного события -->
       <div class="mt-2">
         <span id="areaContext" class="pill">Выбранный момент: —</span>
       </div>
@@ -612,8 +711,7 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      // bump storage to avoid weird old cached state
-      const STORAGE = "balancecare_v14";
+      const STORAGE = "balancecare_v15";
       const defaultState = () => ({
         theme: "system",
         events: [],
@@ -727,7 +825,6 @@
         renderThemeButtons();
       }
 
-      // Quotes
       const MICRO_SHORT = [
         "Один шаг — уже движение.",
         "Сегодня можно по-доброму к себе.",
@@ -738,7 +835,7 @@
         "Никакой гонки. Просто день.",
         "Сделала — отметила — отпустила.",
         "Честность с собой — это сила.",
-        "Можно мягко и всё равно эффективно.",
+        "Можно мягко и всё ещё эффективно.",
         "Сейчас важнее бережность, чем скорость.",
         "Немного тише в голове — уже победа."
       ];
@@ -757,11 +854,6 @@
         const useLong = Math.random() < 0.55;
         return useLong ? pick(MICRO_LONG) : pick(MICRO_SHORT);
       }
-
-      function setMicrocopy(text){
-        $("#todayMicrocopy").textContent = text;
-      }
-
       function ensureMicrocopyForToday(){
         const d = dateKey();
         if(state.ui.microcopyDate !== d || !state.ui.microcopyText){
@@ -769,10 +861,9 @@
           state.ui.microcopyText = pickQuote();
           save();
         }
-        setMicrocopy(state.ui.microcopyText);
+        $("#todayMicrocopy").textContent = state.ui.microcopyText;
       }
 
-      // Tabs
       let currentTab = "today";
       function setTab(name){
         currentTab = name;
@@ -785,7 +876,6 @@
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
-      // Data
       function eventsFor(d){ return state.events.filter(e => e.date === d); }
       function countFor(d){
         const ev = eventsFor(d);
@@ -835,7 +925,6 @@
         haptic("light");
       }
 
-      // ===== Areas =====
       const AREA_LABEL = {
         mind: "🧠 Мысли / эмоции",
         body: "🍽 Тело / еда",
@@ -845,7 +934,6 @@
 
       function closeEventModal(){ $("#eventModal").classList.remove("show"); }
       function openEventModal(){ $("#eventModal").classList.add("show"); }
-
       function closeAreaModal(){ $("#areaModal").classList.remove("show"); }
       function openAreaModal(){ $("#areaModal").classList.add("show"); }
 
@@ -865,7 +953,7 @@
             if(idx.length >= limit) break;
           }
         }
-        return idx; // newest -> oldest
+        return idx;
       }
 
       function setAreaContextPill(idx){
@@ -950,4 +1038,415 @@
         if(idx === null || idx === undefined || idx < 0 || idx >= state.events.length){
           renderEventPicker();
           closeAreaModal();
-         
+          openEventModal();
+          toast("Выбери событие");
+          haptic("light");
+          return;
+        }
+
+        if(areaKeyOrSkip === "skip"){
+          closeAreaModal();
+          toast("Ок, без области");
+          haptic("light");
+          return;
+        }
+
+        state.events[idx].area = areaKeyOrSkip;
+        save();
+        closeAreaModal();
+        toast("✓ Отмечено");
+        haptic("success");
+        if(currentTab === "summary") renderSummary();
+      }
+
+      function areasSplitForDate(d){
+        const ev = eventsFor(d);
+        const good = { mind:0, body:0, energy:0, relations:0 };
+        const pause = { mind:0, body:0, energy:0, relations:0 };
+        let total = 0;
+        ev.forEach(e=>{
+          const a = e.area;
+          if(a && (a in good)){
+            if(e.type === "good") good[a] += 1;
+            else pause[a] += 1;
+            total += 1;
+          }
+        });
+        return { good, pause, total };
+      }
+
+      // ✅ мини-полоски: maxSquares — сколько квадратиков в ряд
+      function renderMiniBar(count, maxSquares, type){
+        const wrap = document.createElement("div");
+        wrap.className = "mini-bar";
+        const filled = Math.min(count, maxSquares);
+
+        for(let i=0;i<maxSquares;i++){
+          const sq = document.createElement("span");
+          sq.className = "sq " + (i < filled ? type : "empty");
+          wrap.appendChild(sq);
+        }
+        return wrap;
+      }
+
+      function renderAreasVisual(containerEl, goodCounts, pauseCounts){
+        containerEl.innerHTML = "";
+
+        const keys = ["mind","body","energy","relations"];
+        const totals = keys.map(k => (goodCounts[k]||0) + (pauseCounts[k]||0));
+        const maxTotal = Math.max(0, ...totals);
+
+        // динамика: если данных мало — показываем меньше квадратиков, если много — больше
+        const maxSquares = maxTotal <= 4 ? 4 : (maxTotal <= 8 ? 8 : 10);
+
+        keys.forEach(k=>{
+          const g = goodCounts[k] || 0;
+          const p = pauseCounts[k] || 0;
+          if(g + p === 0) return;
+
+          const row = document.createElement("div");
+          row.className = "area-row";
+
+          const label = document.createElement("div");
+          label.className = "area-label";
+          label.textContent = AREA_LABEL[k];
+
+          const bars = document.createElement("div");
+          bars.className = "bars";
+
+          // line 1: good
+          const line1 = document.createElement("div");
+          line1.className = "barline";
+          const badge1 = document.createElement("div");
+          badge1.className = "barbadge";
+          badge1.textContent = `🟦 ${g}`;
+          line1.appendChild(badge1);
+          line1.appendChild(renderMiniBar(g, maxSquares, "good"));
+
+          // line 2: pause
+          const line2 = document.createElement("div");
+          line2.className = "barline";
+          const badge2 = document.createElement("div");
+          badge2.className = "barbadge";
+          badge2.textContent = `◻️ ${p}`;
+          line2.appendChild(badge2);
+          line2.appendChild(renderMiniBar(p, maxSquares, "pause"));
+
+          bars.appendChild(line1);
+          bars.appendChild(line2);
+
+          row.appendChild(label);
+          row.appendChild(bars);
+          containerEl.appendChild(row);
+        });
+      }
+
+      const SURPRISE_LINES = [
+        "Ты классно это ведёшь: просто, честно, без лишнего давления.",
+        "Видно движение. Даже когда оно маленькое — оно настоящее.",
+        "Мне нравится, что ты выбираешь ясность вместо самокритики.",
+        "Твоя «пауза» — это умение себя не ломать. Это ценно.",
+        "Сегодня ты заметила и отметила — и это уже забота о себе."
+      ];
+      function shouldShowSurprise(){
+        const last = state.surprise?.lastShownAt ? new Date(state.surprise.lastShownAt).getTime() : 0;
+        const sixHours = 6 * 60 * 60 * 1000;
+        return (Date.now() - last) > sixHours && Math.random() < 0.35;
+      }
+
+      function dailySummaryText(){
+        const d = dateKey();
+        const { good, pause, total } = countFor(d);
+
+        if(total === 0) return "Сегодня было тихо — без отметок.\nЕсли захочешь, вернёшься позже.";
+        if(good > 0 && pause === 0) return "Сегодня ты несколько раз выбрала полезное.\nПусть это останется внутри как тёплая уверенность: ты можешь.";
+        if(pause > 0 && good === 0) return "Сегодня было больше пауз.\nЭто не про «плохо». Это про ресурс: ты заметила, где нужен воздух.";
+        if(good >= pause) return "День получился разным — и в этом есть жизнь.\nТы делаешь главное: замечаешь и не давишь на себя.";
+        return "Сегодня было непросто, но ты всё равно осталась с собой в контакте.\nЭто сильная опора.";
+      }
+
+      function lastNDays(n){
+        const out = [];
+        const base = new Date();
+        for(let i=0;i<n;i++){
+          const d = new Date(base);
+          d.setDate(base.getDate()-i);
+          out.push(dateKey(d));
+        }
+        return out.reverse();
+      }
+      function dayName(iso){
+        const d = new Date(iso+"T00:00:00");
+        const map = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+        return map[d.getDay()];
+      }
+      function weeklySummaryText(){
+        const days = lastNDays(7);
+        let g=0,p=0;
+        days.forEach(d=>{
+          const c=countFor(d);
+          g+=c.good; p+=c.pause;
+        });
+        if(g+p===0) return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки или одной минуты дыхания.";
+        const line = g>=p
+          ? "В неделе было место и для движения, и для пауз. Это похоже на живой баланс."
+          : "В неделе было больше пауз. Возможно, тебе сейчас особенно важно беречь ресурс — и это нормально.";
+        return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
+      }
+
+      function renderSummary(){
+        $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", { weekday:"long", day:"numeric", month:"long" });
+
+        const d = dateKey();
+        const c = countFor(d);
+        $("#pillGood").textContent = `Полезное: ${c.good}`;
+        $("#pillPause").textContent = `Пауза: ${c.pause}`;
+
+        const row = $("#summaryDots");
+        if(c.total===0) row.innerHTML = ""; else renderDots(row, c.ev);
+
+        const box = $("#surpriseBox");
+        if(shouldShowSurprise()){
+          box.style.display = "block";
+          box.textContent = pick(SURPRISE_LINES);
+          state.surprise.lastShownAt = nowISO();
+          save();
+        }else{
+          box.style.display = "none";
+        }
+
+        $("#dailyText").textContent = dailySummaryText();
+
+        // ✅ Day areas visual
+        const daySplit = areasSplitForDate(d);
+        const dailyWrap = $("#dailyAreasWrap");
+        if(daySplit.total){
+          dailyWrap.style.display = "block";
+          renderAreasVisual($("#dailyAreas"), daySplit.good, daySplit.pause);
+        }else{
+          dailyWrap.style.display = "none";
+          $("#dailyAreas").innerHTML = "";
+        }
+
+        // Week grid
+        const grid = $("#weekGrid");
+        grid.innerHTML = "";
+        lastNDays(7).forEach(dd=>{
+          const cc = countFor(dd);
+          const item = document.createElement("div");
+          item.className = "p-3";
+          item.style.border = "1px solid var(--stroke)";
+          item.style.borderRadius = "16px";
+          item.style.background = (document.documentElement.getAttribute("data-theme")==="dark")
+            ? "rgba(255,255,255,0.06)"
+            : "rgba(255,255,255,0.55)";
+
+          const header = document.createElement("div");
+          header.className = "flex items-center justify-between mb-2";
+          header.innerHTML = `<div style="font-weight:650; letter-spacing:-0.02em;">${dayName(dd)}</div><div class="small-muted">${cc.good}/${cc.pause}</div>`;
+
+          const dots = document.createElement("div");
+          dots.className = "dot-row";
+          if(cc.total>0){
+            cc.ev.slice(-24).forEach(e=>{
+              const dot = document.createElement("div");
+              dot.className = "dot " + (e.type==="good" ? "good" : "pause");
+              dots.appendChild(dot);
+            });
+          }else{
+            const t=document.createElement("div");
+            t.className="small-muted";
+            t.textContent="—";
+            dots.appendChild(t);
+          }
+
+          item.appendChild(header);
+          item.appendChild(dots);
+          grid.appendChild(item);
+        });
+
+        $("#weeklyText").textContent = weeklySummaryText();
+
+        // ✅ Week areas visual
+        const days = lastNDays(7);
+        const weekGood = { mind:0, body:0, energy:0, relations:0 };
+        const weekPause = { mind:0, body:0, energy:0, relations:0 };
+        let weekTotal = 0;
+
+        days.forEach(dd=>{
+          const split = areasSplitForDate(dd);
+          Object.keys(weekGood).forEach(k=>{
+            weekGood[k] += split.good[k];
+            weekPause[k] += split.pause[k];
+          });
+          weekTotal += split.total;
+        });
+
+        const weeklyWrap = $("#weeklyAreasWrap");
+        if(weekTotal){
+          weeklyWrap.style.display = "block";
+          renderAreasVisual($("#weeklyAreas"), weekGood, weekPause);
+        }else{
+          weeklyWrap.style.display = "none";
+          $("#weeklyAreas").innerHTML = "";
+        }
+      }
+
+      // =========================
+      // BREATHING 4–4–4–4
+      // =========================
+      const breathCircle = $("#breathCircle");
+      const breathLabel  = $("#breathLabel");
+      const breathSub    = $("#breathSub");
+      const breathToggle = $("#breathToggle");
+
+      let breathTimer = null;
+      let breathElapsed = 0;
+      let phaseIndex = 0;
+      let secondInPhase = 0;
+      let running = false;
+
+      const PHASES = [
+        { label:"Вдох",  dur:4, from:0.78, to:1.00 },
+        { label:"Пауза", dur:4, from:1.00, to:1.00 },
+        { label:"Выдох", dur:4, from:1.00, to:0.78 },
+        { label:"Пауза", dur:4, from:0.78, to:0.78 }
+      ];
+
+      function setScale(scale, smooth=true, seconds=1){
+        breathCircle.style.transition = smooth ? `transform ${seconds}s linear` : "none";
+        breathCircle.style.transform = `translateZ(0) scale(${scale})`;
+      }
+
+      function countString(n){
+        const base = ["1","2","3","4"];
+        return base.slice(0, Math.max(1, Math.min(4,n))).join("-");
+      }
+
+      function runPhase(i){
+        const phase = PHASES[i];
+        phaseIndex = i;
+        secondInPhase = 0;
+
+        breathLabel.textContent = phase.label;
+        breathSub.textContent = `${phase.label} ${countString(1)}`;
+
+        setScale(phase.from, false);
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            setScale(phase.to, true, phase.dur);
+          });
+        });
+      }
+
+      function startBreathing(){
+        stopBreathing(false);
+
+        running = true;
+        breathElapsed = 0;
+        breathToggle.textContent = "Стоп";
+
+        runPhase(0);
+
+        breathTimer = setInterval(() => {
+          breathElapsed++;
+
+          const phase = PHASES[phaseIndex];
+
+          secondInPhase++;
+          if(secondInPhase < phase.dur){
+            breathSub.textContent = `${phase.label} ${countString(secondInPhase+1)}`;
+          }else{
+            const next = (phaseIndex + 1) % PHASES.length;
+            runPhase(next);
+          }
+
+          if(breathElapsed >= 60){
+            stopBreathing(true);
+          }
+        }, 1000);
+      }
+
+      function stopBreathing(auto){
+        if(breathTimer){
+          clearInterval(breathTimer);
+          breathTimer = null;
+        }
+        running = false;
+
+        breathToggle.textContent = "Начать";
+        breathLabel.textContent = "Готово";
+        breathSub.textContent = auto
+          ? "Отлично. Пару секунд просто побудь в этом ощущении."
+          : "Нажми «Начать» и просто следуй счёту.";
+
+        setScale(0.78, true, 0.6);
+
+        if(auto){
+          toast("✓ 1 минута");
+          haptic("success");
+        }
+      }
+
+      breathToggle.addEventListener("click", () => running ? stopBreathing(false) : startBreathing());
+
+      $("#btnGood").addEventListener("click", () => addEvent("good"));
+      $("#btnPause").addEventListener("click", () => addEvent("pause"));
+      $("#btnClearToday").addEventListener("click", clearToday);
+
+      $("#btnArea").addEventListener("click", onTagClick);
+
+      $("#eventClose").addEventListener("click", closeEventModal);
+      $("#eventModal").addEventListener("click", (e) => {
+        if(e.target && e.target.id === "eventModal") closeEventModal();
+      });
+
+      $("#areaClose").addEventListener("click", closeAreaModal);
+      $("#areaModal").addEventListener("click", (e) => {
+        if(e.target && e.target.id === "areaModal") closeAreaModal();
+      });
+      $$("#areaModal [data-area]").forEach(btn => {
+        btn.addEventListener("click", () => setArea(btn.dataset.area));
+      });
+
+      $$("#tab-settings [data-theme]").forEach(btn=>{
+        btn.addEventListener("click", () => {
+          state.theme = btn.dataset.theme;
+          save();
+          applyTheme();
+          toast("Тема сохранена");
+        });
+      });
+
+      $("#btnExport").addEventListener("click", () => {
+        const box = $("#exportBox");
+        box.classList.remove("hidden");
+        box.textContent = JSON.stringify(state, null, 2);
+        navigator.clipboard?.writeText(box.textContent).catch(()=>{});
+        toast("Экспорт скопирован");
+        haptic("success");
+      });
+
+      $("#btnReset").addEventListener("click", () => {
+        const ok = confirm("Стереть всю историю на этом устройстве?");
+        if(!ok) return;
+        state = defaultState();
+        save();
+        $("#exportBox").classList.add("hidden");
+        renderToday();
+        ensureMicrocopyForToday();
+        toast("Готово. Чистый лист");
+        haptic("light");
+      });
+
+      // init
+      applyTheme();
+      renderToday();
+      ensureMicrocopyForToday();
+      setAreaContextPill(null);
+      setTab("today");
+    })();
+  </script>
+</body>
+</html>
