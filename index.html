@@ -139,6 +139,17 @@
     }
 
     .dot-row{ display:flex; gap:8px; flex-wrap: wrap; padding-top: 6px; }
+
+    /* dot wrapper so we can show × */
+    .dot-wrap{
+      position: relative;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      user-select:none;
+      -webkit-user-select:none;
+    }
     .dot{
       width: 16px; height: 16px;
       border-radius: 999px;
@@ -153,8 +164,41 @@
     .dot.pause{ background: rgba(148,163,184,0.95); }
     html[data-theme="dark"] .dot.pause{ background: rgba(203,213,225,0.55); }
 
-    .small-muted{ color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .dot-wrap.delete-mode .dot{
+      outline: 2px solid rgba(239,68,68,0.70);
+      outline-offset: 2px;
+    }
+    .dot-x{
+      position:absolute;
+      top:-8px;
+      right:-8px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      font-size: 12px;
+      line-height: 1;
+      border: 1px solid rgba(239,68,68,0.35);
+      background: rgba(255,255,255,0.85);
+      color: rgba(239,68,68,0.95);
+      box-shadow: 0 10px 24px rgba(15,23,42,0.14);
+      cursor: pointer;
+      user-select:none;
+      -webkit-user-select:none;
+    }
+    html[data-theme="dark"] .dot-x{
+      background: rgba(255,255,255,0.10);
+      color: rgba(248,113,113,0.95);
+      border-color: rgba(248,113,113,0.25);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.30);
+    }
+    .dot-wrap.delete-mode .dot-x{
+      display:flex;
+    }
 
+    .small-muted{ color: var(--muted); font-size: 13px; line-height: 1.35; }
     #todayMicrocopy{
       letter-spacing: 0.005em;
       font-style: italic;
@@ -200,87 +244,6 @@
       border-color: rgba(37,99,235,0.28);
     }
 
-    .breath-wrap{
-      display:flex; flex-direction:column; align-items:center; gap: 12px;
-      padding: 10px 0 2px;
-    }
-
-    .breath-shadow{
-      filter: drop-shadow(0 22px 60px rgba(37,99,235,0.18));
-      -webkit-filter: drop-shadow(0 22px 60px rgba(37,99,235,0.18));
-    }
-    html[data-theme="dark"] .breath-shadow{
-      filter: drop-shadow(0 26px 70px rgba(0,0,0,0.45));
-      -webkit-filter: drop-shadow(0 26px 70px rgba(0,0,0,0.45));
-    }
-
-    .breath-circle{
-      position: relative;
-      width: 190px;
-      height: 190px;
-      border-radius: 9999px;
-      overflow: hidden;
-      -webkit-mask-image: radial-gradient(circle at center, #000 99.4%, transparent 100%);
-      mask-image: radial-gradient(circle at center, #000 99.4%, transparent 100%);
-      -webkit-mask-repeat: no-repeat;
-      mask-repeat: no-repeat;
-      -webkit-mask-size: cover;
-      mask-size: cover;
-      display:flex; align-items:center; justify-content:center;
-      color: white;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      transform: translateZ(0) scale(0.78);
-      will-change: transform;
-      backface-visibility: hidden;
-      border: 1px solid rgba(255,255,255,0.14);
-      user-select:none;
-      -webkit-user-select:none;
-      background: rgba(37,99,235,0.95);
-    }
-
-    .breath-circle::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      border-radius: inherit;
-      background: conic-gradient(from 180deg,
-        rgba(37,99,235,1),
-        rgba(29,78,216,1),
-        rgba(124,58,237,1),
-        rgba(37,99,235,1)
-      );
-      animation: spin 10s linear infinite;
-      opacity: 0.98;
-      transform: translateZ(0);
-    }
-
-    .breath-circle::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      border-radius: inherit;
-      background: radial-gradient(120px 120px at 30% 25%, rgba(255,255,255,0.28), transparent 60%),
-                  rgba(0,0,0,0.10);
-      mix-blend-mode: soft-light;
-      transform: translateZ(0);
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .breath-circle > span{
-      position: relative;
-      z-index: 2;
-      text-align:center;
-      padding: 0 12px;
-    }
-
-    .breath-sub{
-      font-size: 14px;
-      color: var(--muted);
-      text-align:center;
-    }
-
     .ghost-btn{
       border-radius: 16px;
       padding: 10px 12px;
@@ -294,20 +257,63 @@
     html[data-theme="dark"] .ghost-btn{ background: rgba(255,255,255,0.06); }
     .ghost-btn:active{ transform: translateY(1px); }
 
-    .icon-btn{
-      width: 38px; height: 38px;
-      display:flex; align-items:center; justify-content:center;
+    /* Note button (accent) */
+    .note-btn{
+      border-radius: 14px;
+      padding: 8px 10px;
+      font-size: 13px;
+      border: 1px solid rgba(37,99,235,0.22);
+      background: rgba(37,99,235,0.10);
+      color: rgba(37,99,235,0.95);
+      user-select:none; -webkit-user-select:none;
+      transition: transform .06s ease, filter .08s ease;
+      flex: 0 0 auto;
+    }
+    html[data-theme="dark"] .note-btn{
+      border-color: rgba(37,99,235,0.26);
+      background: rgba(37,99,235,0.16);
+      color: rgba(147,197,253,0.95);
+    }
+    .note-btn:active{ transform: translateY(1px); filter: brightness(0.98); }
+
+    .inline-note{
+      margin-top: 10px;
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.55);
+      padding: 10px;
+      display:none;
+      gap: 10px;
+      align-items: center;
+    }
+    html[data-theme="dark"] .inline-note{ background: rgba(255,255,255,0.06); }
+    .inline-note.show{ display:flex; }
+
+    .inline-input{
+      flex: 1 1 auto;
       border-radius: 14px;
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,0.55);
+      padding: 10px 12px;
+      font-size: 14px;
       color: var(--text);
-      font-size: 16px;
+      outline: none;
+    }
+    html[data-theme="dark"] .inline-input{ background: rgba(255,255,255,0.06); }
+
+    .inline-x{
+      width: 34px; height: 34px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.55);
+      color: var(--muted);
+      display:flex; align-items:center; justify-content:center;
       user-select:none; -webkit-user-select:none;
-      transition: transform .06s ease, background .16s ease;
+      transition: transform .06s ease;
       flex: 0 0 auto;
     }
-    html[data-theme="dark"] .icon-btn{ background: rgba(255,255,255,0.06); }
-    .icon-btn:active{ transform: translateY(1px); }
+    html[data-theme="dark"] .inline-x{ background: rgba(255,255,255,0.06); }
+    .inline-x:active{ transform: translateY(1px); }
 
     .export-box{
       border: 1px solid var(--stroke);
@@ -381,12 +387,10 @@
     .badge{
       display:inline-flex;
       align-items:center;
-      gap:8px;
       padding: 8px 10px;
       border-radius: 999px;
       border: 1px solid var(--stroke);
       font-size: 13px;
-      color: var(--muted);
       background: rgba(255,255,255,0.55);
       user-select: none;
     }
@@ -400,14 +404,6 @@
       background: var(--pauseTint);
       border-color: var(--pauseBorder);
       color: var(--text);
-    }
-    .badge.free{
-      background: rgba(255,255,255,0.55);
-      border-color: var(--stroke);
-      color: var(--text);
-    }
-    html[data-theme="dark"] .badge.free{
-      background: rgba(255,255,255,0.06);
     }
 
     .chips{
@@ -467,7 +463,7 @@
       font-size: 14px;
       color: var(--text);
       outline: none;
-      min-height: 72px;
+      min-height: 62px;
       resize: none;
     }
     html[data-theme="dark"] .note{ background: rgba(255,255,255,0.06); }
@@ -516,7 +512,6 @@
       text-overflow: ellipsis;
     }
 
-    /* Only delta shown in row */
     .delta-pill{
       font-size: 12px;
       border-radius: 999px;
@@ -549,6 +544,81 @@
       text-overflow: ellipsis;
     }
     .topic-details.show{ display:block; }
+
+    /* Breath */
+    .breath-wrap{
+      display:flex; flex-direction:column; align-items:center; gap: 12px;
+      padding: 10px 0 2px;
+    }
+    .breath-shadow{
+      filter: drop-shadow(0 22px 60px rgba(37,99,235,0.18));
+      -webkit-filter: drop-shadow(0 22px 60px rgba(37,99,235,0.18));
+    }
+    html[data-theme="dark"] .breath-shadow{
+      filter: drop-shadow(0 26px 70px rgba(0,0,0,0.45));
+      -webkit-filter: drop-shadow(0 26px 70px rgba(0,0,0,0.45));
+    }
+    .breath-circle{
+      position: relative;
+      width: 190px;
+      height: 190px;
+      border-radius: 9999px;
+      overflow: hidden;
+      -webkit-mask-image: radial-gradient(circle at center, #000 99.4%, transparent 100%);
+      mask-image: radial-gradient(circle at center, #000 99.4%, transparent 100%);
+      -webkit-mask-repeat: no-repeat;
+      mask-repeat: no-repeat;
+      -webkit-mask-size: cover;
+      mask-size: cover;
+      display:flex; align-items:center; justify-content:center;
+      color: white;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      transform: translateZ(0) scale(0.78);
+      will-change: transform;
+      backface-visibility: hidden;
+      border: 1px solid rgba(255,255,255,0.14);
+      user-select:none;
+      -webkit-user-select:none;
+      background: rgba(37,99,235,0.95);
+    }
+    .breath-circle::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: inherit;
+      background: conic-gradient(from 180deg,
+        rgba(37,99,235,1),
+        rgba(29,78,216,1),
+        rgba(124,58,237,1),
+        rgba(37,99,235,1)
+      );
+      animation: spin 10s linear infinite;
+      opacity: 0.98;
+      transform: translateZ(0);
+    }
+    .breath-circle::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: inherit;
+      background: radial-gradient(120px 120px at 30% 25%, rgba(255,255,255,0.28), transparent 60%),
+                  rgba(0,0,0,0.10);
+      mix-blend-mode: soft-light;
+      transform: translateZ(0);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .breath-circle > span{
+      position: relative;
+      z-index: 2;
+      text-align:center;
+      padding: 0 12px;
+    }
+    .breath-sub{
+      font-size: 14px;
+      color: var(--muted);
+      text-align:center;
+    }
   </style>
 </head>
 
@@ -568,26 +638,34 @@
           <div class="min-w-0">
             <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Отметить момент</div>
             <div class="small-muted" id="todayMicrocopy">Один шаг — уже движение.</div>
+
+            <!-- inline day note -->
+            <div id="dayNoteWrap" class="inline-note">
+              <input id="dayNoteInput" class="inline-input" maxlength="40" placeholder="Тема дня (1–2 слова)…" />
+              <button id="dayNoteClose" class="inline-x" title="Закрыть">✕</button>
+            </div>
+
+            <div id="dayNoteSaved" class="small-muted mt-2" style="display:none;"></div>
           </div>
 
-          <!-- icon-only, no confusing label -->
-          <button id="btnQuickNote" class="icon-btn" title="Быстрая заметка">✍️</button>
+          <button id="btnDayNote" class="note-btn" type="button">Заметка</button>
         </div>
       </div>
 
       <div class="grid gap-3 mb-4">
-        <button id="btnGood" class="action-btn action-primary">Сделала полезное</button>
-        <button id="btnPause" class="action-btn action-neutral">Сделала паузу</button>
+        <button id="btnGood" class="action-btn action-primary">Полезное для себя</button>
+        <button id="btnPause" class="action-btn action-neutral">Пауза / шаг в сторону</button>
       </div>
 
-      <div class="card p-4">
+      <div class="card p-4" id="todayCard">
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-semibold">Сегодня</div>
           <button id="btnClearToday" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Очистить</button>
         </div>
+        <div class="small-muted" style="margin-top:2px;">Долгое нажатие на кружочек → × → удалить. Тап по пустому месту выключает режим удаления.</div>
         <div id="todayDots" class="dot-row"></div>
         <div id="todayEmpty" class="small-muted mt-2" style="display:none;">
-          Пока здесь пусто — и это тоже нормально.
+          Пока здесь пусто — и это нормально.
         </div>
       </div>
     </section>
@@ -601,6 +679,8 @@
             <div class="small-muted" id="summaryDate"></div>
           </div>
         </div>
+
+        <div id="summaryDayNote" class="small-muted mb-2" style="display:none;"></div>
 
         <div class="flex items-center gap-2 mb-3">
           <span class="pill pill-good" id="pillGood">Полезное: 0</span>
@@ -619,7 +699,7 @@
         <div class="small-muted mb-3">Справа — только перекос (+/-). Нажми строку, чтобы увидеть детали.</div>
 
         <div id="topicsToday" class="grid gap-2"></div>
-        <div id="topicsTodayEmpty" class="small-muted" style="display:none;">Пока нет отметок по темам — и это окей.</div>
+        <div id="topicsTodayEmpty" class="small-muted" style="display:none;">Пока нет тематических отметок — и это окей.</div>
 
         <div class="mt-3 small-muted whitespace-pre-wrap" id="topicsHint"></div>
       </div>
@@ -675,17 +755,6 @@
       </div>
 
       <div class="card p-4 mb-4">
-        <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">О приложении</div>
-        <div class="small-muted whitespace-pre-wrap">
-Это мини-пространство для наблюдений.
-В течение дня ты отмечаешь маленькие шаги: «полезное» или «пауза».
-Если хочется — добавляешь короткую тему (питание, эмоции, энергия… или свою).
-К концу дня складывается картина, а потом — неделя.
-Из таких отметок становится проще понять, что просит внимания — мягко, без давления.
-        </div>
-      </div>
-
-      <div class="card p-4 mb-4">
         <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">Диагностика</div>
         <div class="small-muted">Если вдруг «ничего не кликается», тут часто видно причину.</div>
         <div class="mt-3 export-box small-muted whitespace-pre-wrap" id="debugBox" style="min-height:52px;">Ошибок пока нет.</div>
@@ -693,7 +762,7 @@
 
       <div class="card p-4">
         <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">Данные</div>
-        <div class="small-muted">Если захочешь начать с чистого листа — можно стереть локальную историю.</div>
+        <div class="small-muted">Если нужно начать с чистого листа — можно стереть локальную историю.</div>
         <div class="mt-3 flex gap-2">
           <button id="btnExport" class="ghost-btn flex-1">Экспорт</button>
           <button id="btnReset" class="ghost-btn flex-1" style="border-color: rgba(37,99,235,0.25);">Стереть</button>
@@ -708,21 +777,21 @@
     <div class="inner" id="toastInner">✓ Записано</div>
   </div>
 
-  <!-- Modal: note -->
+  <!-- Modal: note (only after good/pause) -->
   <div id="noteModal" class="modal" aria-hidden="true">
     <div class="modal-backdrop" id="noteBackdrop"></div>
 
     <div class="modal-sheet">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <div class="text-base font-semibold" style="letter-spacing:-0.02em;" id="noteTitle">Короткая отметка</div>
-          <div class="small-muted" id="noteSubtitle">Если хочешь — выбери тему или добавь свою. Можно пропустить.</div>
+          <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Короткая отметка</div>
+          <div class="small-muted" id="noteSubtitle">Можно выбрать тему. Можно пропустить.</div>
         </div>
         <button id="noteClose" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Закрыть</button>
       </div>
 
       <div class="mt-3 flex items-center justify-between gap-2">
-        <span id="noteBadge" class="badge free">Заметка</span>
+        <span id="noteBadge" class="badge good">Полезное</span>
         <div class="flex gap-2">
           <button id="noteSkip" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Пропустить</button>
           <button id="noteSave" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px; border-color: rgba(37,99,235,0.25);">Сохранить</button>
@@ -732,13 +801,11 @@
       <div class="chips" id="topicChips"></div>
 
       <div id="customTopicWrap" class="custom-wrap">
-        <input id="customTopicInput" class="custom-input" placeholder="Например: Работа / Проект / Дом" maxlength="24" />
+        <input id="customTopicInput" class="custom-input" placeholder="Своя тема…" maxlength="24" />
         <button id="customTopicAdd" class="ghost-btn" style="padding:10px 12px; border-radius:14px;">Добавить</button>
       </div>
 
       <textarea id="noteText" class="note" placeholder="Если хочется — 1–2 слова (не обязательно)."></textarea>
-
-      <div class="small-muted mt-2">Подсказка: смысл не в идеальности. Смысл — в ясности.</div>
     </div>
   </div>
 
@@ -747,11 +814,12 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v13"; // bumped for new customTopics
+      const STORAGE = "balancecare_v15"; // new: clear delete-mode on empty tap + neutral texts
       const defaultState = () => ({
         theme: "system",
         events: [],
-        customTopics: [], // [{id,label}]
+        customTopics: [],
+        dayNotes: {},
         surprise: { lastShownAt: null },
         ui: { microcopyDate: null, microcopyText: null },
         debug: { lastError: null }
@@ -770,18 +838,21 @@
               ui: { ...defaultState().ui, ...(parsed.ui||{}) },
               surprise: { ...defaultState().surprise, ...(parsed.surprise||{}) },
               debug: { ...defaultState().debug, ...(parsed.debug||{}) },
-              customTopics: Array.isArray(parsed.customTopics) ? parsed.customTopics : []
+              customTopics: Array.isArray(parsed.customTopics) ? parsed.customTopics : [],
+              dayNotes: (parsed.dayNotes && typeof parsed.dayNotes === "object") ? parsed.dayNotes : {}
             };
           }
 
-          // Migration from previous versions (v12 etc.)
-          const prev = localStorage.getItem("balancecare_v12");
+          const prev = localStorage.getItem("balancecare_v14")
+                    || localStorage.getItem("balancecare_v13")
+                    || localStorage.getItem("balancecare_v12");
           if(prev){
             const parsedPrev = JSON.parse(prev);
             const migrated = {
               ...defaultState(),
               ...parsedPrev,
-              customTopics: []
+              customTopics: Array.isArray(parsedPrev.customTopics) ? parsedPrev.customTopics : [],
+              dayNotes: (parsedPrev.dayNotes && typeof parsedPrev.dayNotes === "object") ? parsedPrev.dayNotes : {}
             };
             localStorage.setItem(STORAGE, JSON.stringify(migrated));
             return migrated;
@@ -894,33 +965,28 @@
         renderThemeButtons();
       }
 
-      // Quotes
+      // Quotes (neutral)
       const MICRO_SHORT = [
         "Один шаг — уже движение.",
-        "Сегодня можно по-доброму к себе.",
-        "Замечать — это тоже навык.",
+        "Можно по-доброму к себе.",
+        "Замечать — тоже навык.",
         "Чуть яснее — уже легче.",
         "Маленькое тоже считается.",
-        "Пауза — это не провал, а воздух.",
-        "Никакой гонки. Просто день.",
-        "Сделала — отметила — отпустила.",
-        "Честность с собой — это сила.",
-        "Можно мягко и всё равно эффективно.",
-        "Сейчас важнее бережность, чем скорость.",
-        "Немного тише в голове — уже победа."
+        "Пауза — это воздух.",
+        "Без гонки. Просто день.",
+        "Отметить — и отпустить.",
+        "Честность с собой — сила.",
+        "Мягко — тоже эффективно."
       ];
       const MICRO_LONG = [
-        "Не нужно «правильно».\nНужно так, чтобы тебе было устойчиво.",
-        "Ты отмечаешь не оценки, а факты.\nИ от этого становится спокойнее.",
-        "День не обязан быть ровным.\nВажно, что ты остаёшься в контакте с собой.",
-        "Если сегодня было сложно — окей.\nМы просто собираем картину, без давления.",
-        "Пауза — это не «сдалась».\nЭто «я заметила и выбрала не ломать себя».",
-        "С каждым нажатием ты возвращаешь себе управление.\nСпокойно, без «должна».",
-        "Важен не идеальный день.\nВажна способность заметить момент и выбрать дальше."
+        "Не нужно «идеально».\nНужно так, чтобы было устойчиво.",
+        "Здесь фиксируются факты.\nОт этого становится спокойнее.",
+        "День не обязан быть ровным.\nВажно оставаться в контакте с собой.",
+        "Если сегодня сложно — окей.\nЭто просто наблюдение, без давления."
       ];
 
       function pickQuote(){
-        const useLong = Math.random() < 0.55;
+        const useLong = Math.random() < 0.5;
         return useLong ? pick(MICRO_LONG) : pick(MICRO_SHORT);
       }
 
@@ -947,7 +1013,7 @@
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
-      // Topics (defaults)
+      // Topics
       const BASE_TOPICS = [
         { id:"food",    label:"🍽 Питание" },
         { id:"mind",    label:"🧠 Мысли" },
@@ -986,7 +1052,6 @@
         const clean = normalizeCustomLabel(label);
         if(!clean) return null;
 
-        // Prevent duplicates by label
         const exists = (state.customTopics || []).find(t => t.label.toLowerCase() === clean.toLowerCase());
         if(exists) return exists.id;
 
@@ -998,7 +1063,7 @@
 
       // Modal state
       let pendingEventId = null;
-      let pendingEventType = null; // "good" | "pause" | null for free note
+      let pendingEventType = "good";
       let selectedTopic = null;
 
       function ensureEventIds(){
@@ -1025,7 +1090,6 @@
         const wrap = $("#topicChips");
         wrap.innerHTML = "";
 
-        // Existing topics (base + custom)
         allTopics().forEach(t=>{
           const b = document.createElement("button");
           b.className = "chip";
@@ -1040,7 +1104,6 @@
           wrap.appendChild(b);
         });
 
-        // Add custom button
         const add = document.createElement("button");
         add.className = "chip add";
         add.type = "button";
@@ -1053,33 +1116,22 @@
         wrap.appendChild(add);
       }
 
-      function openNoteModal({ type, eventId, mode }){
+      function openNoteModal({ type, eventId }){
         pendingEventId = eventId || null;
-        pendingEventType = type || null;
+        pendingEventType = type || "good";
         selectedTopic = null;
 
         $("#noteText").value = "";
         showCustomTopicInput(false);
 
-        // Title + badge
         const badge = $("#noteBadge");
-        badge.classList.remove("good","pause","free");
-
-        if(mode === "free"){
-          $("#noteTitle").textContent = "Заметка";
-          $("#noteSubtitle").textContent = "Можно быстро записать свою тему дня (например: Работа / Проект).";
-          badge.classList.add("free");
-          badge.textContent = "Заметка";
-        } else {
-          $("#noteTitle").textContent = "Короткая отметка";
-          $("#noteSubtitle").textContent = "Если хочешь — выбери тему или добавь свою. Можно пропустить.";
-          if(pendingEventType === "good"){
-            badge.classList.add("good");
-            badge.textContent = "Полезное";
-          } else {
-            badge.classList.add("pause");
-            badge.textContent = "Пауза";
-          }
+        badge.classList.remove("good","pause");
+        if(pendingEventType === "good"){
+          badge.classList.add("good");
+          badge.textContent = "Полезное";
+        }else{
+          badge.classList.add("pause");
+          badge.textContent = "Пауза";
         }
 
         renderTopicChips();
@@ -1092,7 +1144,6 @@
         $("#noteModal").classList.remove("show");
         $("#noteModal").setAttribute("aria-hidden","true");
         pendingEventId = null;
-        pendingEventType = null;
         selectedTopic = null;
         showCustomTopicInput(false);
       }
@@ -1100,30 +1151,8 @@
       function attachNoteToEvent(){
         const text = ($("#noteText").value || "").trim();
 
-        // IMPORTANT: If there's text but no topic — force to "other" so it shows up.
         let topicToSave = selectedTopic;
         if(text && !topicToSave) topicToSave = "other";
-
-        // Free note (not linked to existing event)
-        if(!pendingEventId){
-          const ev = {
-            id: "e_" + Math.random().toString(16).slice(2) + "_" + Date.now(),
-            ts: nowISO(),
-            date: dateKey(),
-            type: "good",              // neutral base (doesn't affect good/pause counts in topics if no topic? it will; but ok)
-            topic: topicToSave || null,
-            note: text || null,
-            meta: { free: true }
-          };
-          state.events.push(ev);
-          save();
-          renderToday();
-          if(currentTab === "summary") renderSummary();
-          toast("✓ Сохранено");
-          haptic("success");
-          closeNoteModal();
-          return;
-        }
 
         const ev = state.events.find(x => x.id === pendingEventId);
         if(ev){
@@ -1134,7 +1163,7 @@
           toast("✓ Сохранено");
           haptic("success");
         }else{
-          toast("Не нашла событие 🤍");
+          toast("Событие не найдено 🤍");
         }
         closeNoteModal();
       }
@@ -1143,18 +1172,102 @@
       function eventsFor(d){ return state.events.filter(e => e.date === d); }
       function countFor(d){
         const ev = eventsFor(d);
-        const good = ev.filter(x => x.type === "good" && !(x.meta && x.meta.free)).length;
-        const pause = ev.filter(x => x.type === "pause" && !(x.meta && x.meta.free)).length;
-        return { good, pause, total: ev.filter(x => !(x.meta && x.meta.free)).length, ev };
+        const good = ev.filter(x => x.type === "good").length;
+        const pause = ev.filter(x => x.type === "pause").length;
+        return { good, pause, total: ev.length, ev };
       }
 
-      function renderDots(container, ev){
+      function deleteEventById(id){
+        const before = state.events.length;
+        state.events = state.events.filter(e => e.id !== id);
+        if(state.events.length !== before){
+          save();
+          renderToday();
+          if(currentTab === "summary") renderSummary();
+          toast("Удалено");
+          haptic("light");
+        }
+      }
+
+      // long press helper
+      function attachLongPress(el, onLongPress, ms=520){
+        let t = null;
+        const clear = () => {
+          if(t){ clearTimeout(t); t = null; }
+        };
+        el.addEventListener("pointerdown", () => {
+          clear();
+          t = setTimeout(() => { onLongPress(); }, ms);
+        }, { passive: true });
+        el.addEventListener("pointermove", () => { clear(); }, { passive: true });
+        el.addEventListener("pointerup", () => { clear(); }, { passive: true });
+        el.addEventListener("pointercancel", () => { clear(); }, { passive: true });
+        el.addEventListener("contextmenu", (e) => e.preventDefault());
+      }
+
+      function clearAllDeleteModes(){
+        const active = $$(".dot-wrap.delete-mode");
+        if(active.length === 0) return;
+        active.forEach(el => el.classList.remove("delete-mode"));
+      }
+
+      // NEW: tap on empty space closes delete-mode
+      function installDeleteModeAutoClose(){
+        document.addEventListener("pointerdown", (e) => {
+          if($$(".dot-wrap.delete-mode").length === 0) return;
+
+          const insideDot = e.target.closest && e.target.closest(".dot-wrap");
+          if(insideDot) return;
+
+          // allow normal UI (buttons/inputs) but still close delete mode
+          clearAllDeleteModes();
+        }, true);
+      }
+
+      function renderDots(container, ev, allowDelete=false){
         container.innerHTML = "";
-        // show only real good/pause events
-        ev.filter(x => !(x.meta && x.meta.free)).slice(-48).forEach(e => {
+        ev.slice(-48).forEach(e => {
+          if(!allowDelete){
+            const dot = document.createElement("div");
+            dot.className = "dot " + (e.type === "good" ? "good" : "pause");
+            container.appendChild(dot);
+            return;
+          }
+
+          const wrap = document.createElement("div");
+          wrap.className = "dot-wrap";
+          wrap.dataset.id = e.id;
+
           const dot = document.createElement("div");
           dot.className = "dot " + (e.type === "good" ? "good" : "pause");
-          container.appendChild(dot);
+
+          const x = document.createElement("div");
+          x.className = "dot-x";
+          x.textContent = "×";
+          x.title = "Удалить";
+
+          x.addEventListener("click", (evt) => {
+            evt.stopPropagation();
+            deleteEventById(e.id);
+          });
+
+          attachLongPress(wrap, () => {
+            // Only one in delete-mode feels calmer
+            clearAllDeleteModes();
+            wrap.classList.add("delete-mode");
+            haptic("light");
+          });
+
+          // Tap on dot exits delete mode (for this dot)
+          wrap.addEventListener("click", () => {
+            if(wrap.classList.contains("delete-mode")){
+              wrap.classList.remove("delete-mode");
+            }
+          });
+
+          wrap.appendChild(dot);
+          wrap.appendChild(x);
+          container.appendChild(wrap);
         });
       }
 
@@ -1163,12 +1276,23 @@
         const { ev, total } = countFor(d);
         const row = $("#todayDots");
         const empty = $("#todayEmpty");
+
         if(total === 0){
           row.innerHTML = "";
           empty.style.display = "block";
         }else{
           empty.style.display = "none";
-          renderDots(row, ev);
+          renderDots(row, ev, true);
+        }
+
+        const note = (state.dayNotes && state.dayNotes[d]) ? String(state.dayNotes[d]).trim() : "";
+        const saved = $("#dayNoteSaved");
+        if(note){
+          saved.style.display = "block";
+          saved.textContent = `Тема дня: ${note}`;
+        }else{
+          saved.style.display = "none";
+          saved.textContent = "";
         }
       }
 
@@ -1178,15 +1302,16 @@
         save();
         renderToday();
         if(currentTab === "summary") renderSummary();
-        toast("✓ Записано");
+        toast("✓ Отмечено");
         haptic("success");
 
-        openNoteModal({ type, eventId: id, mode: "linked" });
+        openNoteModal({ type, eventId: id });
       }
 
       function clearToday(){
         const d = dateKey();
         state.events = state.events.filter(e => e.date !== d);
+        delete state.dayNotes[d];
         save();
         renderToday();
         if(currentTab === "summary") renderSummary();
@@ -1194,13 +1319,12 @@
         haptic("light");
       }
 
-      // Surprise
+      // Surprise (neutral)
       const SURPRISE_LINES = [
-        "Ты классно это ведёшь: просто, честно, без лишнего давления.",
-        "Видно движение. Даже когда оно маленькое — оно настоящее.",
-        "Мне нравится, что ты выбираешь ясность вместо самокритики.",
-        "Твоя «пауза» — это умение себя не ломать. Это ценно.",
-        "Сегодня ты заметила и отметила — и это уже забота о себе."
+        "Здесь уже есть устойчивость: замечать и не давить на себя.",
+        "Видно движение. Даже маленькое — настоящее.",
+        "Выбор ясности вместо самокритики — сильная штука.",
+        "Пауза — это не провал. Это забота о ресурсе."
       ];
       function shouldShowSurprise(){
         const last = state.surprise?.lastShownAt ? new Date(state.surprise.lastShownAt).getTime() : 0;
@@ -1211,11 +1335,11 @@
       function dailySummaryText(){
         const d = dateKey();
         const { good, pause, total } = countFor(d);
-        if(total === 0) return "Сегодня было тихо — без отметок.\nЕсли захочешь, вернёшься позже.";
-        if(good > 0 && pause === 0) return "Сегодня ты несколько раз выбрала полезное.\nПусть это останется внутри как тёплая уверенность: ты можешь.";
-        if(pause > 0 && good === 0) return "Сегодня было больше пауз.\nЭто не про «плохо». Это про ресурс: ты заметила, где нужен воздух.";
-        if(good >= pause) return "День получился разным — и в этом есть жизнь.\nТы делаешь главное: замечаешь и не давишь на себя.";
-        return "Сегодня было непросто, но ты всё равно осталась с собой в контакте.\nЭто сильная опора.";
+        if(total === 0) return "День прошёл тихо — без отметок.\nЕсли захочется, можно вернуться позже.";
+        if(good > 0 && pause === 0) return "Сегодня было несколько полезных шагов.\nПусть это останется как тёплая опора.";
+        if(pause > 0 && good === 0) return "Сегодня было больше пауз.\nЭто не про «плохо». Это про ресурс.";
+        if(good >= pause) return "День получился разным.\nГлавное — моменты замечены, без давления.";
+        return "Сегодня было непросто, но контакт с собой сохранился.\nЭто уже много.";
       }
 
       function lastNDays(n){
@@ -1240,29 +1364,26 @@
           const c=countFor(d);
           g+=c.good; p+=c.pause;
         });
-        if(g+p===0) return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки или одной минуты дыхания.";
+        if(g+p===0) return "Неделя была очень тихой.\nМожно начать с малого: одной отметки или одной минуты дыхания.";
         const line = g>=p
-          ? "В неделе было место и для движения, и для пауз. Это похоже на живой баланс."
-          : "В неделе было больше пауз. Возможно, тебе сейчас особенно важно беречь ресурс — и это нормально.";
+          ? "На неделе было место и для движения, и для пауз. Это похоже на живой баланс."
+          : "На неделе было больше пауз. Возможно, сейчас особенно важно беречь ресурс — и это нормально.";
         return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
       }
 
-      // Aggregate topics: includes custom and other
       function aggregateTopics(events){
         const out = {};
         events.forEach(e=>{
-          // consider only entries that have topic or note
           if(!e.topic && !e.note) return;
           const t = e.topic || "other";
-          if(!out[t]) out[t] = { good:0, pause:0, notes:[] };
+          if(!out[t]) out[t] = { good:0, pause:0 };
           if(e.type === "good") out[t].good += 1;
           else if(e.type === "pause") out[t].pause += 1;
-          if(e.note) out[t].notes.push({ type:e.type, text:e.note });
         });
         return out;
       }
 
-      function renderTopicList(container, emptyEl, agg, listKey){
+      function renderTopicList(container, emptyEl, agg){
         const keys = Object.keys(agg);
         container.innerHTML = "";
         if(keys.length === 0){
@@ -1271,7 +1392,6 @@
         }
         emptyEl.style.display = "none";
 
-        // sort: focus (pause-heavy) first, then by total desc
         keys.sort((a,b)=>{
           const A = agg[a], B = agg[b];
           const da = (A.pause - A.good);
@@ -1280,19 +1400,17 @@
           return (B.good+B.pause) - (A.good+A.pause);
         });
 
-        keys.forEach((k, idx)=>{
+        keys.forEach((k)=>{
           const v = agg[k];
-          const total = v.good + v.pause;
-          const delta = v.good - v.pause; // + => more good
+          const delta = v.good - v.pause;
+
           const rowWrap = document.createElement("div");
 
           const btn = document.createElement("button");
           btn.type = "button";
           btn.className = "topic-row";
-          if(total > 0){
-            if(v.pause > v.good) btn.classList.add("pause");
-            else if(v.good > v.pause) btn.classList.add("good");
-          }
+          if(v.pause > v.good) btn.classList.add("pause");
+          else if(v.good > v.pause) btn.classList.add("good");
 
           const left = document.createElement("div");
           left.className = "topic-left";
@@ -1311,14 +1429,10 @@
           btn.appendChild(pill);
 
           const details = document.createElement("div");
-          const detailsId = `details_${listKey}_${idx}`;
-          details.id = detailsId;
           details.className = "topic-details";
           details.textContent = `Полезное: ${v.good} • Пауза: ${v.pause}`;
 
-          btn.addEventListener("click", () => {
-            details.classList.toggle("show");
-          });
+          btn.addEventListener("click", () => details.classList.toggle("show"));
 
           rowWrap.appendChild(btn);
           rowWrap.appendChild(details);
@@ -1329,21 +1443,31 @@
       function renderTopicsHint(agg){
         const entries = Object.entries(agg).map(([k,v])=>({ k, ...v, d:(v.pause - v.good), total:(v.good+v.pause) }));
         const focus = entries.filter(x=>x.d > 0).sort((a,b)=> b.d - a.d || b.total - a.total).slice(0,2);
-        if(focus.length === 0) return "Если захочешь — завтра можно добавить 1 тему, чтобы видеть «зоны внимания» ещё яснее.";
-        if(focus.length === 1) return `Сегодня «просит внимания»: ${topicLabel(focus[0].k)}. Можно очень мягко: один маленький шаг завтра.`;
-        return `Сегодня «просят внимания»: ${topicLabel(focus[0].k)} и ${topicLabel(focus[1].k)}. Выбери завтра одну — и сделай 1 маленький шаг.`;
+        if(focus.length === 0) return "Если захочется — завтра можно добавить 1 тему, чтобы видеть «зоны внимания» яснее.";
+        if(focus.length === 1) return `Сегодня «просит внимания»: ${topicLabel(focus[0].k)}. Можно мягко: один небольшой шаг завтра.`;
+        return `Сегодня «просят внимания»: ${topicLabel(focus[0].k)} и ${topicLabel(focus[1].k)}. Можно выбрать одну и сделать маленький шаг завтра.`;
       }
 
       function renderSummary(){
+        const d = dateKey();
         $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", { weekday:"long", day:"numeric", month:"long" });
 
-        const d = dateKey();
+        const note = (state.dayNotes && state.dayNotes[d]) ? String(state.dayNotes[d]).trim() : "";
+        const noteEl = $("#summaryDayNote");
+        if(note){
+          noteEl.style.display = "block";
+          noteEl.textContent = `Тема дня: ${note}`;
+        }else{
+          noteEl.style.display = "none";
+          noteEl.textContent = "";
+        }
+
         const c = countFor(d);
         $("#pillGood").textContent = `Полезное: ${c.good}`;
         $("#pillPause").textContent = `Пауза: ${c.pause}`;
 
         const row = $("#summaryDots");
-        if(c.total===0) row.innerHTML = ""; else renderDots(row, c.ev);
+        if(c.total===0) row.innerHTML = ""; else renderDots(row, c.ev, false);
 
         const box = $("#surpriseBox");
         if(shouldShowSurprise()){
@@ -1358,7 +1482,7 @@
         $("#dailyText").textContent = dailySummaryText();
 
         const aggToday = aggregateTopics(c.ev);
-        renderTopicList($("#topicsToday"), $("#topicsTodayEmpty"), aggToday, "today");
+        renderTopicList($("#topicsToday"), $("#topicsTodayEmpty"), aggToday);
         $("#topicsHint").textContent = renderTopicsHint(aggToday);
 
         const grid = $("#weekGrid");
@@ -1380,7 +1504,7 @@
           const dots = document.createElement("div");
           dots.className = "dot-row";
           if(cc.total>0){
-            cc.ev.filter(x => !(x.meta && x.meta.free)).slice(-24).forEach(e=>{
+            cc.ev.slice(-24).forEach(e=>{
               const dot = document.createElement("div");
               dot.className = "dot " + (e.type==="good" ? "good" : "pause");
               dots.appendChild(dot);
@@ -1401,7 +1525,37 @@
 
         const weekEvents = lastNDays(7).flatMap(dd => countFor(dd).ev);
         const aggWeek = aggregateTopics(weekEvents);
-        renderTopicList($("#topicsWeek"), $("#topicsWeekEmpty"), aggWeek, "week");
+        renderTopicList($("#topicsWeek"), $("#topicsWeekEmpty"), aggWeek);
+      }
+
+      // Day note (inline)
+      function openDayNote(){
+        const d = dateKey();
+        const wrap = $("#dayNoteWrap");
+        const input = $("#dayNoteInput");
+        wrap.classList.add("show");
+        input.value = (state.dayNotes && state.dayNotes[d]) ? String(state.dayNotes[d]) : "";
+        setTimeout(() => input.focus(), 0);
+      }
+      function closeDayNote(){
+        $("#dayNoteWrap").classList.remove("show");
+      }
+      function saveDayNote(){
+        const d = dateKey();
+        const val = ($("#dayNoteInput").value || "").trim();
+        if(!state.dayNotes) state.dayNotes = {};
+        if(val){
+          state.dayNotes[d] = val;
+          toast("✓ Заметка сохранена");
+          haptic("success");
+        }else{
+          delete state.dayNotes[d];
+          toast("Заметка очищена");
+          haptic("light");
+        }
+        save();
+        renderToday();
+        if(currentTab === "summary") renderSummary();
       }
 
       // Breathing
@@ -1488,7 +1642,7 @@
         breathToggle.textContent = "Начать";
         breathLabel.textContent = "Готово";
         breathSub.textContent = auto
-          ? "Отлично. Пару секунд просто побудь в этом ощущении."
+          ? "Готово. Можно пару секунд просто побыть в этом ощущении."
           : "Нажми «Начать» и просто следуй счёту.";
 
         setScale(0.78, true, 0.6);
@@ -1504,16 +1658,28 @@
         $("#btnPause").addEventListener("click", () => addEvent("pause"));
         $("#btnClearToday").addEventListener("click", clearToday);
 
-        // Free note (icon button)
-        $("#btnQuickNote").addEventListener("click", () => {
-          openNoteModal({ type: null, eventId: null, mode: "free" });
+        $("#btnDayNote").addEventListener("click", () => {
+          const wrap = $("#dayNoteWrap");
+          if(wrap.classList.contains("show")) closeDayNote();
+          else openDayNote();
+        });
+        $("#dayNoteClose").addEventListener("click", () => {
+          closeDayNote();
+          saveDayNote();
+        });
+        $("#dayNoteInput").addEventListener("blur", saveDayNote);
+        $("#dayNoteInput").addEventListener("keydown", (e) => {
+          if(e.key === "Enter"){
+            e.preventDefault();
+            saveDayNote();
+            closeDayNote();
+          }
         });
 
-        // Custom topic add
         $("#customTopicAdd").addEventListener("click", () => {
           const label = normalizeCustomLabel($("#customTopicInput").value);
           if(!label){
-            toast("Напиши название темы 🙂");
+            toast("Нужно название темы 🙂");
             return;
           }
           const id = addCustomTopic(label);
@@ -1569,14 +1735,20 @@
         $("#noteBackdrop").addEventListener("click", closeNoteModal);
         $("#noteClose").addEventListener("click", closeNoteModal);
         $("#noteSkip").addEventListener("click", () => {
-          toast("Ок, без отметки");
+          toast("Ок, без темы");
           closeNoteModal();
         });
         $("#noteSave").addEventListener("click", attachNoteToEvent);
 
         window.addEventListener("keydown", (e) => {
-          if(e.key === "Escape" && $("#noteModal").classList.contains("show")) closeNoteModal();
+          if(e.key === "Escape"){
+            if($("#noteModal").classList.contains("show")) closeNoteModal();
+            closeDayNote();
+            clearAllDeleteModes();
+          }
         });
+
+        installDeleteModeAutoClose();
       }
 
       ensureEventIds();
