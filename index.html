@@ -160,6 +160,29 @@
     }
     html[data-theme="dark"] .pill{ background: rgba(255,255,255,0.06); }
 
+    /* Мягкие “контекстные” pill для good/pause */
+    .pill-good{
+      border-color: rgba(37,99,235,0.25);
+      background: rgba(37,99,235,0.10);
+      color: rgba(15,23,42,0.82);
+    }
+    html[data-theme="dark"] .pill-good{
+      background: rgba(37,99,235,0.18);
+      color: rgba(255,255,255,0.88);
+      border-color: rgba(37,99,235,0.28);
+    }
+
+    .pill-pause{
+      border-color: rgba(148,163,184,0.30);
+      background: rgba(148,163,184,0.18);
+      color: rgba(15,23,42,0.78);
+    }
+    html[data-theme="dark"] .pill-pause{
+      background: rgba(203,213,225,0.12);
+      color: rgba(255,255,255,0.86);
+      border-color: rgba(203,213,225,0.18);
+    }
+
     .surprise{
       border-radius: 18px;
       padding: 12px 14px;
@@ -309,7 +332,7 @@
       box-shadow: 0 18px 50px rgba(0,0,0,0.38);
     }
 
-    /* ===== НОВОЕ: МОДАЛКА ОБЛАСТЕЙ (бережно, в стиле приложения) ===== */
+    /* Модалки (в стиле приложения) */
     .modal-overlay{
       position: fixed;
       inset: 0;
@@ -325,6 +348,76 @@
       width: min(92vw, 420px);
       padding: 14px;
     }
+
+    /* Список событий в модалке выбора */
+    .event-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      width:100%;
+      text-align:left;
+      border-radius: 16px;
+      padding: 10px 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.55);
+      color: var(--text);
+      font-size: 14px;
+      user-select:none; -webkit-user-select:none;
+      transition: transform .06s ease, background .16s ease;
+    }
+    html[data-theme="dark"] .event-row{ background: rgba(255,255,255,0.06); }
+    .event-row:active{ transform: translateY(1px); }
+
+    /* NEW: мягкая подсветка типа события */
+    .event-row.good-bg{
+      border-color: rgba(37,99,235,0.22);
+      background: rgba(37,99,235,0.10);
+    }
+    html[data-theme="dark"] .event-row.good-bg{
+      border-color: rgba(37,99,235,0.28);
+      background: rgba(37,99,235,0.14);
+    }
+
+    .event-row.pause-bg{
+      border-color: rgba(148,163,184,0.26);
+      background: rgba(148,163,184,0.16);
+    }
+    html[data-theme="dark"] .event-row.pause-bg{
+      border-color: rgba(203,213,225,0.16);
+      background: rgba(203,213,225,0.10);
+    }
+
+    .event-left{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .event-badge{
+      width:12px; height:12px; border-radius:999px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    html[data-theme="dark"] .event-badge{ border: 1px solid rgba(255,255,255,0.10); }
+    .event-badge.good{ background: var(--primary); }
+    .event-badge.pause{ background: rgba(148,163,184,0.95); }
+    html[data-theme="dark"] .event-badge.pause{ background: rgba(203,213,225,0.55); }
+
+    .event-title{ font-weight:650; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .event-sub{ font-size:12px; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .event-right{ flex:0 0 auto; font-size:12px; color: var(--muted); }
+
+    /* Легенда для итогов */
+    .legend{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top: 8px;
+    }
+    .legend span{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: rgba(255,255,255,0.45);
+    }
+    html[data-theme="dark"] .legend span{ background: rgba(255,255,255,0.06); }
   </style>
 </head>
 
@@ -353,7 +446,7 @@
         <button id="btnPause" class="action-btn action-neutral">Сделала паузу</button>
       </div>
 
-      <!-- ✅ НОВОЕ: постоянная “вторичная” кнопка (не давит, но всегда доступна) -->
+      <!-- Постоянная вторичная кнопка -->
       <button id="btnArea" class="ghost-btn w-full mb-4" style="border-radius:18px; padding:12px 12px;">
         ✍️ Хочешь коротко отметить, про что это было?
       </button>
@@ -380,9 +473,14 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2 mb-3">
+        <div class="flex items-center gap-2 mb-2">
           <span class="pill" id="pillGood">Полезное: 0</span>
           <span class="pill" id="pillPause">Пауза: 0</span>
+        </div>
+
+        <div class="legend">
+          <span>🟦 — в полезном</span>
+          <span>◻️ — в паузе</span>
         </div>
 
         <div id="summaryDots" class="dot-row mb-3"></div>
@@ -390,20 +488,21 @@
         <div id="surpriseBox" class="surprise" style="display:none;"></div>
 
         <div class="mt-3 small-muted whitespace-pre-wrap" id="dailyText"></div>
-
-        <!-- ✅ НОВОЕ: блок областей дня -->
         <div class="mt-3 small-muted whitespace-pre-wrap" id="dailyAreas" style="display:none;"></div>
       </div>
 
       <div class="card p-4">
         <div class="text-base font-semibold mb-1" style="letter-spacing:-0.02em;">Неделя</div>
-        <div class="small-muted mb-3">Семь дней — одна линия наблюдений.</div>
+        <div class="small-muted mb-2">Семь дней — одна линия наблюдений.</div>
 
-        <div id="weekGrid" class="grid gap-2"></div>
+        <div class="legend">
+          <span>🟦 — в полезном</span>
+          <span>◻️ — в паузе</span>
+        </div>
+
+        <div id="weekGrid" class="grid gap-2 mt-3"></div>
 
         <div class="mt-3 small-muted whitespace-pre-wrap" id="weeklyText"></div>
-
-        <!-- ✅ НОВОЕ: области за неделю -->
         <div class="mt-3 small-muted whitespace-pre-wrap" id="weeklyAreas" style="display:none;"></div>
       </div>
     </section>
@@ -464,11 +563,32 @@
     </section>
   </div>
 
-  <!-- ✅ НОВОЕ: модальное окно выбора области -->
+  <!-- Модалка выбора события -->
+  <div id="eventModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="выбор события">
+    <div class="card modal-card">
+      <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Какой момент отметить?</div>
+      <div class="small-muted mt-1">Выбери событие из сегодняшних. Можно выбрать любое.</div>
+
+      <div id="eventList" class="grid gap-2 mt-3"></div>
+
+      <div class="mt-3 flex justify-end gap-2">
+        <button id="eventClose" class="ghost-btn" style="padding:10px 12px;">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Модалка выбора области -->
   <div id="areaModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="области">
     <div class="card modal-card">
       <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Про что это было?</div>
-      <div class="small-muted mt-1">Можно выбрать один вариант или пропустить.</div>
+
+      <!-- NEW: контекст выбранного события -->
+      <div class="mt-2">
+        <span id="areaContext" class="pill">Выбранный момент: —</span>
+      </div>
+
+      <div class="small-muted mt-2">Можно выбрать один вариант или пропустить.</div>
+
       <div class="grid gap-2 mt-3">
         <button class="ghost-btn" data-area="mind">🧠 Мысли / эмоции</button>
         <button class="ghost-btn" data-area="body">🍽 Тело / еда</button>
@@ -476,6 +596,7 @@
         <button class="ghost-btn" data-area="relations">🤍 Отношения / границы</button>
         <button class="ghost-btn" data-area="skip">⏭ Пропустить</button>
       </div>
+
       <div class="mt-3 flex justify-end">
         <button id="areaClose" class="ghost-btn" style="padding:10px 12px;">Закрыть</button>
       </div>
@@ -491,12 +612,17 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v12";
+      // bump storage to avoid weird old cached state
+      const STORAGE = "balancecare_v14";
       const defaultState = () => ({
         theme: "system",
         events: [],
         surprise: { lastShownAt: null },
-        ui: { microcopyDate: null, microcopyText: null }
+        ui: {
+          microcopyDate: null,
+          microcopyText: null,
+          tagTargetIndex: null
+        }
       });
 
       let state = loadState();
@@ -515,7 +641,6 @@
               ts: e.ts,
               date: e.date,
               type: e.type,
-              // ✅ поддержка новых данных (area может отсутствовать в старых событиях)
               area: (e.area ?? null),
             })) : []
           };
@@ -602,7 +727,7 @@
         renderThemeButtons();
       }
 
-      // ===== Quotes (daily, no button) =====
+      // Quotes
       const MICRO_SHORT = [
         "Один шаг — уже движение.",
         "Сегодня можно по-доброму к себе.",
@@ -692,7 +817,6 @@
       }
 
       function addEvent(type){
-        // ✅ добавили area:null, чтобы можно было потом “пометить”
         state.events.push({ ts: nowISO(), date: dateKey(), type, area: null });
         save();
         renderToday();
@@ -711,7 +835,7 @@
         haptic("light");
       }
 
-      // ✅ НОВОЕ: логика областей
+      // ===== Areas =====
       const AREA_LABEL = {
         mind: "🧠 Мысли / эмоции",
         body: "🍽 Тело / еда",
@@ -719,373 +843,111 @@
         relations: "🤍 Отношения / границы"
       };
 
-      function lastEventTodayIndex(){
+      function closeEventModal(){ $("#eventModal").classList.remove("show"); }
+      function openEventModal(){ $("#eventModal").classList.add("show"); }
+
+      function closeAreaModal(){ $("#areaModal").classList.remove("show"); }
+      function openAreaModal(){ $("#areaModal").classList.add("show"); }
+
+      function fmtTime(iso){
+        try{
+          const d = new Date(iso);
+          return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }catch(e){ return ""; }
+      }
+
+      function listTodayIndices(limit=12){
         const d = dateKey();
+        const idx = [];
         for(let i = state.events.length - 1; i >= 0; i--){
-          if(state.events[i].date === d) return i;
+          if(state.events[i].date === d){
+            idx.push(i);
+            if(idx.length >= limit) break;
+          }
         }
-        return -1;
+        return idx; // newest -> oldest
       }
 
-      function openAreaModal(){
-        const idx = lastEventTodayIndex();
-        if(idx === -1){
-          toast("Сначала отметь момент");
-          haptic("light");
+      function setAreaContextPill(idx){
+        const el = $("#areaContext");
+        if(idx === null || idx === undefined || idx < 0 || idx >= state.events.length){
+          el.className = "pill";
+          el.textContent = "Выбранный момент: —";
           return;
         }
-        $("#areaModal").classList.add("show");
+        const e = state.events[idx];
+        const t = fmtTime(e.ts);
+        const isGood = e.type === "good";
+        el.className = "pill " + (isGood ? "pill-good" : "pill-pause");
+        el.textContent = (isGood ? "🟦 Полезное" : "◻️ Пауза") + (t ? (" • " + t) : "");
       }
-      function closeAreaModal(){
-        $("#areaModal").classList.remove("show");
+
+      function renderEventPicker(){
+        const list = $("#eventList");
+        list.innerHTML = "";
+        const indices = listTodayIndices(12);
+
+        if(indices.length === 0){
+          const t = document.createElement("div");
+          t.className = "small-muted";
+          t.textContent = "Сначала отметь момент кнопками выше 🙂";
+          list.appendChild(t);
+          return;
+        }
+
+        indices.forEach(i=>{
+          const e = state.events[i];
+          const btn = document.createElement("button");
+          btn.className = "event-row " + (e.type === "good" ? "good-bg" : "pause-bg");
+
+          const badge = document.createElement("span");
+          badge.className = "event-badge " + (e.type === "good" ? "good" : "pause");
+
+          const title = document.createElement("div");
+          title.className = "event-title";
+          title.textContent = e.type === "good" ? "Полезное" : "Пауза";
+
+          const sub = document.createElement("div");
+          sub.className = "event-sub";
+          sub.textContent = e.area ? `Область: ${AREA_LABEL[e.area] || e.area}` : "Область: не выбрана";
+
+          const left = document.createElement("div");
+          left.className = "event-left";
+          const textWrap = document.createElement("div");
+          textWrap.style.minWidth = "0";
+          textWrap.appendChild(title);
+          textWrap.appendChild(sub);
+          left.appendChild(badge);
+          left.appendChild(textWrap);
+
+          const right = document.createElement("div");
+          right.className = "event-right";
+          right.textContent = fmtTime(e.ts);
+
+          btn.appendChild(left);
+          btn.appendChild(right);
+
+          btn.addEventListener("click", () => {
+            state.ui.tagTargetIndex = i;
+            save();
+            closeEventModal();
+            setAreaContextPill(i);
+            openAreaModal();
+          });
+
+          list.appendChild(btn);
+        });
       }
+
+      function onTagClick(){
+        renderEventPicker();
+        openEventModal();
+      }
+
       function setArea(areaKeyOrSkip){
-        const idx = lastEventTodayIndex();
-        if(idx === -1){
-          toast("Сначала отметь момент");
-          haptic("light");
-          return;
-        }
-        if(areaKeyOrSkip === "skip"){
+        const idx = state.ui.tagTargetIndex;
+
+        if(idx === null || idx === undefined || idx < 0 || idx >= state.events.length){
+          renderEventPicker();
           closeAreaModal();
-          toast("Ок, без области");
-          haptic("light");
-          return;
-        }
-        state.events[idx].area = areaKeyOrSkip;
-        save();
-        closeAreaModal();
-        toast("✓ Отмечено");
-        haptic("success");
-        if(currentTab === "summary") renderSummary();
-      }
-
-      function areasForDate(d){
-        const ev = eventsFor(d);
-        const counts = { mind:0, body:0, energy:0, relations:0 };
-        let total = 0;
-        ev.forEach(e=>{
-          const a = e.area;
-          if(a && counts.hasOwnProperty(a)){
-            counts[a] += 1;
-            total += 1;
-          }
-        });
-        return { counts, total };
-      }
-
-      function formatAreasBlock(title, counts, total){
-        if(!total) return "";
-        const entries = Object.entries(counts)
-          .filter(([,v]) => v > 0)
-          .sort((a,b) => b[1]-a[1])
-          .map(([k,v]) => `• ${AREA_LABEL[k]}: ${v}`)
-          .join("\n");
-        return `${title}\n${entries}`;
-      }
-
-      // Surprise (in daily summary)
-      const SURPRISE_LINES = [
-        "Ты классно это ведёшь: просто, честно, без лишнего давления.",
-        "Видно движение. Даже когда оно маленькое — оно настоящее.",
-        "Мне нравится, что ты выбираешь ясность вместо самокритики.",
-        "Твоя «пауза» — это умение себя не ломать. Это ценно.",
-        "Сегодня ты заметила и отметила — и это уже забота о себе."
-      ];
-      function shouldShowSurprise(){
-        const last = state.surprise?.lastShownAt ? new Date(state.surprise.lastShownAt).getTime() : 0;
-        const sixHours = 6 * 60 * 60 * 1000;
-        return (Date.now() - last) > sixHours && Math.random() < 0.35;
-      }
-
-      function dailySummaryText(){
-        const d = dateKey();
-        const { good, pause, total } = countFor(d);
-
-        if(total === 0) return "Сегодня было тихо — без отметок.\nЕсли захочешь, вернёшься позже.";
-        if(good > 0 && pause === 0) return "Сегодня ты несколько раз выбрала полезное.\nПусть это останется внутри как тёплая уверенность: ты можешь.";
-        if(pause > 0 && good === 0) return "Сегодня было больше пауз.\nЭто не про «плохо». Это про ресурс: ты заметила, где нужен воздух.";
-        if(good >= pause) return "День получился разным — и в этом есть жизнь.\nТы делаешь главное: замечаешь и не давишь на себя.";
-        return "Сегодня было непросто, но ты всё равно осталась с собой в контакте.\nЭто сильная опора.";
-      }
-
-      function lastNDays(n){
-        const out = [];
-        const base = new Date();
-        for(let i=0;i<n;i++){
-          const d = new Date(base);
-          d.setDate(base.getDate()-i);
-          out.push(dateKey(d));
-        }
-        return out.reverse();
-      }
-      function dayName(iso){
-        const d = new Date(iso+"T00:00:00");
-        const map = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
-        return map[d.getDay()];
-      }
-      function weeklySummaryText(){
-        const days = lastNDays(7);
-        let g=0,p=0;
-        days.forEach(d=>{
-          const c=countFor(d);
-          g+=c.good; p+=c.pause;
-        });
-        if(g+p===0) return "Неделя была очень тихой.\nЕсли это про усталость — можно начать с малого: одной отметки или одной минуты дыхания.";
-        const line = g>=p
-          ? "В неделе было место и для движения, и для пауз. Это похоже на живой баланс."
-          : "В неделе было больше пауз. Возможно, тебе сейчас особенно важно беречь ресурс — и это нормально.";
-        return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
-      }
-
-      function renderSummary(){
-        $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", { weekday:"long", day:"numeric", month:"long" });
-
-        const d = dateKey();
-        const c = countFor(d);
-        $("#pillGood").textContent = `Полезное: ${c.good}`;
-        $("#pillPause").textContent = `Пауза: ${c.pause}`;
-
-        const row = $("#summaryDots");
-        if(c.total===0) row.innerHTML = ""; else renderDots(row, c.ev);
-
-        const box = $("#surpriseBox");
-        if(shouldShowSurprise()){
-          box.style.display = "block";
-          box.textContent = pick(SURPRISE_LINES);
-          state.surprise.lastShownAt = nowISO();
-          save();
-        }else{
-          box.style.display = "none";
-        }
-
-        $("#dailyText").textContent = dailySummaryText();
-
-        // ✅ НОВОЕ: области дня
-        const dayAreas = areasForDate(d);
-        const dailyAreasEl = $("#dailyAreas");
-        const dailyBlock = formatAreasBlock("Области внимания сегодня:", dayAreas.counts, dayAreas.total);
-        if(dailyBlock){
-          dailyAreasEl.style.display = "block";
-          dailyAreasEl.textContent = dailyBlock;
-        }else{
-          dailyAreasEl.style.display = "none";
-          dailyAreasEl.textContent = "";
-        }
-
-        const grid = $("#weekGrid");
-        grid.innerHTML = "";
-        lastNDays(7).forEach(dd=>{
-          const cc = countFor(dd);
-          const item = document.createElement("div");
-          item.className = "p-3";
-          item.style.border = "1px solid var(--stroke)";
-          item.style.borderRadius = "16px";
-          item.style.background = (document.documentElement.getAttribute("data-theme")==="dark")
-            ? "rgba(255,255,255,0.06)"
-            : "rgba(255,255,255,0.55)";
-
-          const header = document.createElement("div");
-          header.className = "flex items-center justify-between mb-2";
-          header.innerHTML = `<div style="font-weight:650; letter-spacing:-0.02em;">${dayName(dd)}</div><div class="small-muted">${cc.good}/${cc.pause}</div>`;
-
-          const dots = document.createElement("div");
-          dots.className = "dot-row";
-          if(cc.total>0){
-            cc.ev.slice(-24).forEach(e=>{
-              const dot = document.createElement("div");
-              dot.className = "dot " + (e.type==="good" ? "good" : "pause");
-              dots.appendChild(dot);
-            });
-          }else{
-            const t=document.createElement("div");
-            t.className="small-muted";
-            t.textContent="—";
-            dots.appendChild(t);
-          }
-
-          item.appendChild(header);
-          item.appendChild(dots);
-          grid.appendChild(item);
-        });
-
-        $("#weeklyText").textContent = weeklySummaryText();
-
-        // ✅ НОВОЕ: области недели
-        const days = lastNDays(7);
-        const weekCounts = { mind:0, body:0, energy:0, relations:0 };
-        let weekTotal = 0;
-        days.forEach(dd=>{
-          const a = areasForDate(dd);
-          Object.keys(weekCounts).forEach(k=>{
-            weekCounts[k] += a.counts[k];
-          });
-          weekTotal += a.total;
-        });
-
-        const weeklyAreasEl = $("#weeklyAreas");
-        const weekBlock = formatAreasBlock("Области за 7 дней:", weekCounts, weekTotal);
-        if(weekBlock){
-          weeklyAreasEl.style.display = "block";
-          weeklyAreasEl.textContent = weekBlock;
-        }else{
-          weeklyAreasEl.style.display = "none";
-          weeklyAreasEl.textContent = "";
-        }
-      }
-
-      // =========================
-      // BREATHING 4–4–4–4 (smooth start + auto stop)
-      // =========================
-      const breathCircle = $("#breathCircle");
-      const breathLabel  = $("#breathLabel");
-      const breathSub    = $("#breathSub");
-      const breathToggle = $("#breathToggle");
-
-      let breathTimer = null;
-      let breathElapsed = 0;
-      let phaseIndex = 0;
-      let secondInPhase = 0;
-      let running = false;
-
-      const PHASES = [
-        { label:"Вдох",  dur:4, from:0.78, to:1.00 },
-        { label:"Пауза", dur:4, from:1.00, to:1.00 },
-        { label:"Выдох", dur:4, from:1.00, to:0.78 },
-        { label:"Пауза", dur:4, from:0.78, to:0.78 }
-      ];
-
-      function setScale(scale, smooth=true, seconds=1){
-        breathCircle.style.transition = smooth ? `transform ${seconds}s linear` : "none";
-        breathCircle.style.transform = `translateZ(0) scale(${scale})`;
-      }
-
-      function countString(n){
-        const base = ["1","2","3","4"];
-        return base.slice(0, Math.max(1, Math.min(4,n))).join("-");
-      }
-
-      function runPhase(i){
-        const phase = PHASES[i];
-        phaseIndex = i;
-        secondInPhase = 0;
-
-        breathLabel.textContent = phase.label;
-        breathSub.textContent = `${phase.label} ${countString(1)}`;
-
-        setScale(phase.from, false);
-
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            setScale(phase.to, true, phase.dur);
-          });
-        });
-      }
-
-      function startBreathing(){
-        stopBreathing(false);
-
-        running = true;
-        breathElapsed = 0;
-        breathToggle.textContent = "Стоп";
-
-        runPhase(0);
-
-        breathTimer = setInterval(() => {
-          breathElapsed++;
-
-          const phase = PHASES[phaseIndex];
-
-          secondInPhase++;
-          if(secondInPhase < phase.dur){
-            breathSub.textContent = `${phase.label} ${countString(secondInPhase+1)}`;
-          }else{
-            const next = (phaseIndex + 1) % PHASES.length;
-            runPhase(next);
-          }
-
-          if(breathElapsed >= 60){
-            stopBreathing(true);
-          }
-        }, 1000);
-      }
-
-      function stopBreathing(auto){
-        if(breathTimer){
-          clearInterval(breathTimer);
-          breathTimer = null;
-        }
-        running = false;
-
-        breathToggle.textContent = "Начать";
-        breathLabel.textContent = "Готово";
-        breathSub.textContent = auto
-          ? "Отлично. Пару секунд просто побудь в этом ощущении."
-          : "Нажми «Начать» и просто следуй счёту.";
-
-        setScale(0.78, true, 0.6);
-
-        if(auto){
-          toast("✓ 1 минута");
-          haptic("success");
-        }
-      }
-
-      breathToggle.addEventListener("click", () => running ? stopBreathing(false) : startBreathing());
-
-      // Wire
-      $("#btnGood").addEventListener("click", () => addEvent("good"));
-      $("#btnPause").addEventListener("click", () => addEvent("pause"));
-      $("#btnClearToday").addEventListener("click", clearToday);
-
-      // ✅ НОВОЕ: кнопка “Отметить область”
-      $("#btnArea").addEventListener("click", openAreaModal);
-
-      // ✅ НОВОЕ: обработчики модалки
-      $("#areaClose").addEventListener("click", closeAreaModal);
-      $("#areaModal").addEventListener("click", (e) => {
-        if(e.target && e.target.id === "areaModal") closeAreaModal();
-      });
-      $$("#areaModal [data-area]").forEach(btn => {
-        btn.addEventListener("click", () => setArea(btn.dataset.area));
-      });
-
-      $$("#tab-settings [data-theme]").forEach(btn=>{
-        btn.addEventListener("click", () => {
-          state.theme = btn.dataset.theme;
-          save();
-          applyTheme();
-          toast("Тема сохранена");
-        });
-      });
-
-      $("#btnExport").addEventListener("click", () => {
-        const box = $("#exportBox");
-        box.classList.remove("hidden");
-        box.textContent = JSON.stringify(state, null, 2);
-        navigator.clipboard?.writeText(box.textContent).catch(()=>{});
-        toast("Экспорт скопирован");
-        haptic("success");
-      });
-
-      $("#btnReset").addEventListener("click", () => {
-        const ok = confirm("Стереть всю историю на этом устройстве?");
-        if(!ok) return;
-        state = defaultState();
-        save();
-        $("#exportBox").classList.add("hidden");
-        renderToday();
-        ensureMicrocopyForToday();
-        toast("Готово. Чистый лист");
-        haptic("light");
-      });
-
-      // Init
-      applyTheme();
-      renderToday();
-      ensureMicrocopyForToday();
-      setTab("today");
-    })();
-  </script>
-</body>
-</html>
+         
