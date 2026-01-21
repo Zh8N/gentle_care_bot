@@ -27,6 +27,11 @@
 
       --shadow: 0 14px 40px rgba(15,23,42,0.10);
       --radius: 22px;
+
+      --goodTint: rgba(37,99,235,0.10);
+      --pauseTint: rgba(148,163,184,0.14);
+      --goodBorder: rgba(37,99,235,0.18);
+      --pauseBorder: rgba(148,163,184,0.22);
     }
 
     html[data-theme="dark"]{
@@ -39,7 +44,14 @@
 
       --neutralText: rgba(255,255,255,0.88);
       --shadow: 0 18px 50px rgba(0,0,0,0.35);
+
+      --goodTint: rgba(37,99,235,0.20);
+      --pauseTint: rgba(148,163,184,0.12);
+      --goodBorder: rgba(37,99,235,0.28);
+      --pauseBorder: rgba(148,163,184,0.20);
     }
+
+    *{ -webkit-tap-highlight-color: transparent; }
 
     body{
       margin:0;
@@ -88,6 +100,7 @@
       transition: transform .06s ease, background .18s ease, color .18s ease, border-color .18s ease;
       user-select: none;
       -webkit-user-select: none;
+      flex: 0 0 auto;
     }
     .tab-btn:active{ transform: scale(0.99); }
     .tab-btn.active{
@@ -159,28 +172,6 @@
       color: var(--muted);
     }
     html[data-theme="dark"] .pill{ background: rgba(255,255,255,0.06); }
-
-    .pill-good{
-      border-color: rgba(37,99,235,0.25);
-      background: rgba(37,99,235,0.10);
-      color: rgba(15,23,42,0.82);
-    }
-    html[data-theme="dark"] .pill-good{
-      background: rgba(37,99,235,0.18);
-      color: rgba(255,255,255,0.88);
-      border-color: rgba(37,99,235,0.28);
-    }
-
-    .pill-pause{
-      border-color: rgba(148,163,184,0.30);
-      background: rgba(148,163,184,0.18);
-      color: rgba(15,23,42,0.78);
-    }
-    html[data-theme="dark"] .pill-pause{
-      background: rgba(203,213,225,0.12);
-      color: rgba(255,255,255,0.86);
-      border-color: rgba(203,213,225,0.18);
-    }
 
     .surprise{
       border-radius: 18px;
@@ -312,6 +303,7 @@
       z-index: 50;
       width: min(92vw, 420px);
       display:none;
+      pointer-events: none; /* важно: чтобы не перекрывал клики */
     }
     .toast.show{ display:block; }
     .toast .inner{
@@ -331,184 +323,164 @@
       box-shadow: 0 18px 50px rgba(0,0,0,0.38);
     }
 
-    .modal-overlay{
+    /* ===== Modal for short note ===== */
+    .modal{
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.40);
-      display: none;
-      align-items: center;
-      justify-content: center;
       z-index: 60;
-      padding: 14px;
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 14px 14px calc(14px + var(--safe-bottom));
+      pointer-events: none; /* важно: пока скрыта — не ловит клики */
     }
-    .modal-overlay.show{ display: flex; }
-    .modal-card{
-      width: min(92vw, 420px);
-      padding: 14px;
-    }
-
-    .event-row{
+    .modal.show{
       display:flex;
+      pointer-events: auto;
+    }
+    .modal-backdrop{
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,0.26);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    html[data-theme="dark"] .modal-backdrop{ background: rgba(0,0,0,0.45); }
+    .modal-sheet{
+      position: relative;
+      width: min(520px, 100%);
+      border-radius: 22px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--card), var(--card2));
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+    .badge{
+      display:inline-flex;
       align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      width:100%;
-      text-align:left;
-      border-radius: 16px;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      font-size: 13px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.55);
+      user-select: none;
+    }
+    html[data-theme="dark"] .badge{ background: rgba(255,255,255,0.06); }
+    .badge.good{
+      background: var(--goodTint);
+      border-color: var(--goodBorder);
+      color: var(--text);
+    }
+    .badge.pause{
+      background: var(--pauseTint);
+      border-color: var(--pauseBorder);
+      color: var(--text);
+    }
+    .chips{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 10px;
+    }
+    .chip{
+      border-radius: 999px;
       padding: 10px 12px;
       border: 1px solid var(--stroke);
       background: rgba(255,255,255,0.55);
       color: var(--text);
       font-size: 14px;
-      user-select:none; -webkit-user-select:none;
-      transition: transform .06s ease, background .16s ease;
+      transition: transform .06s ease, background .14s ease, border-color .14s ease;
+      user-select:none;
+      -webkit-user-select:none;
     }
-    html[data-theme="dark"] .event-row{ background: rgba(255,255,255,0.06); }
-    .event-row:active{ transform: translateY(1px); }
-
-    .event-row.good-bg{
-      border-color: rgba(37,99,235,0.22);
-      background: rgba(37,99,235,0.10);
+    html[data-theme="dark"] .chip{ background: rgba(255,255,255,0.06); }
+    .chip:active{ transform: translateY(1px); }
+    .chip.active{
+      background: var(--goodTint);
+      border-color: var(--goodBorder);
     }
-    html[data-theme="dark"] .event-row.good-bg{
-      border-color: rgba(37,99,235,0.28);
-      background: rgba(37,99,235,0.14);
-    }
-
-    .event-row.pause-bg{
-      border-color: rgba(148,163,184,0.26);
-      background: rgba(148,163,184,0.16);
-    }
-    html[data-theme="dark"] .event-row.pause-bg{
-      border-color: rgba(203,213,225,0.16);
-      background: rgba(203,213,225,0.10);
-    }
-
-    .event-left{ display:flex; align-items:center; gap:10px; min-width:0; }
-    .event-badge{
-      width:12px; height:12px; border-radius:999px;
-      flex: 0 0 auto;
-      border: 1px solid rgba(0,0,0,0.06);
-    }
-    html[data-theme="dark"] .event-badge{ border: 1px solid rgba(255,255,255,0.10); }
-    .event-badge.good{ background: var(--primary); }
-    .event-badge.pause{ background: rgba(148,163,184,0.95); }
-    html[data-theme="dark"] .event-badge.pause{ background: rgba(203,213,225,0.55); }
-
-    .event-title{ font-weight:650; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .event-sub{ font-size:12px; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .event-right{ flex:0 0 auto; font-size:12px; color: var(--muted); }
-
-    /* Легенда */
-    .legend{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin-top: 8px;
-    }
-    .legend span{
-      display:inline-flex; align-items:center; gap:6px;
-      font-size: 12px;
-      color: var(--muted);
-      border: 1px solid var(--stroke);
-      border-radius: 999px;
-      padding: 6px 10px;
-      background: rgba(255,255,255,0.45);
-    }
-    html[data-theme="dark"] .legend span{ background: rgba(255,255,255,0.06); }
-
-    /* ✅ НОВОЕ: мини-полоски */
-    .areas-wrap{
+    .note{
+      width: 100%;
       margin-top: 10px;
-      border: 1px solid var(--stroke);
-      border-radius: 18px;
-      background: rgba(255,255,255,0.45);
-      padding: 12px;
-    }
-    html[data-theme="dark"] .areas-wrap{
-      background: rgba(255,255,255,0.06);
-    }
-
-    .areas-title{
-      font-weight: 650;
-      letter-spacing: -0.01em;
-      margin-bottom: 8px;
-      font-size: 14px;
-      color: rgba(15,23,42,0.86);
-    }
-    html[data-theme="dark"] .areas-title{
-      color: rgba(255,255,255,0.88);
-    }
-
-    .area-row{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap: 10px;
-      padding: 10px 10px;
       border-radius: 16px;
-      border: 1px solid transparent;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.55);
+      padding: 12px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      min-height: 72px;
+      resize: none;
     }
-    .area-row + .area-row{ margin-top: 6px; }
+    html[data-theme="dark"] .note{ background: rgba(255,255,255,0.06); }
 
-    .area-label{
-      min-width: 0;
-      font-size: 13px;
-      color: rgba(15,23,42,0.86);
-      line-height: 1.25;
-    }
-    html[data-theme="dark"] .area-label{
-      color: rgba(255,255,255,0.88);
-    }
-
-    .bars{
-      display:flex;
-      flex-direction:column;
-      gap: 6px;
-      flex: 0 0 auto;
-      min-width: 148px;
-      align-items:flex-end;
-    }
-
-    .barline{
+    /* ===== Topic rows in summary ===== */
+    .topic-row{
+      border: 1px solid var(--stroke);
+      border-radius: 16px;
+      padding: 12px 12px;
       display:flex;
       align-items:center;
-      gap: 8px;
-      justify-content:flex-end;
+      justify-content: space-between;
+      gap: 10px;
+      background: rgba(255,255,255,0.55);
     }
-
-    .barbadge{
+    html[data-theme="dark"] .topic-row{ background: rgba(255,255,255,0.06); }
+    .topic-row.good{
+      background: var(--goodTint);
+      border-color: var(--goodBorder);
+    }
+    .topic-row.pause{
+      background: var(--pauseTint);
+      border-color: var(--pauseBorder);
+    }
+    .topic-left{
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .topic-title{
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .topic-sub{
       font-size: 12px;
       color: var(--muted);
-      width: 26px;
-      text-align:right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-
-    .mini-bar{
+    .topic-right{
       display:flex;
-      gap: 4px;
-      padding: 6px 8px;
+      gap: 8px;
+      flex: 0 0 auto;
+      align-items:center;
+    }
+    .mini-pill{
+      font-size: 12px;
       border-radius: 999px;
+      padding: 6px 9px;
       border: 1px solid var(--stroke);
-      background: rgba(255,255,255,0.40);
+      color: var(--muted);
+      background: rgba(255,255,255,0.55);
     }
-    html[data-theme="dark"] .mini-bar{
-      background: rgba(255,255,255,0.06);
+    html[data-theme="dark"] .mini-pill{ background: rgba(255,255,255,0.06); }
+    .mini-pill.good{
+      background: var(--goodTint);
+      border-color: var(--goodBorder);
+      color: var(--text);
     }
-
-    .sq{
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-      opacity: 0.95;
-    }
-    .sq.good{ background: var(--primary); }
-    .sq.pause{ background: rgba(148,163,184,0.95); }
-    html[data-theme="dark"] .sq.pause{ background: rgba(203,213,225,0.55); }
-
-    .sq.empty{
-      background: rgba(148,163,184,0.18);
-    }
-    html[data-theme="dark"] .sq.empty{
-      background: rgba(203,213,225,0.10);
+    .mini-pill.pause{
+      background: var(--pauseTint);
+      border-color: var(--pauseBorder);
+      color: var(--text);
     }
   </style>
 </head>
@@ -530,17 +502,14 @@
             <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Отметить момент</div>
             <div class="small-muted" id="todayMicrocopy">Один шаг — уже движение.</div>
           </div>
+          <button id="btnQuickNote" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">✍️ Коротко</button>
         </div>
       </div>
 
-      <div class="grid gap-3 mb-3">
+      <div class="grid gap-3 mb-4">
         <button id="btnGood" class="action-btn action-primary">Сделала полезное</button>
         <button id="btnPause" class="action-btn action-neutral">Сделала паузу</button>
       </div>
-
-      <button id="btnArea" class="ghost-btn w-full mb-4" style="border-radius:18px; padding:12px 12px;">
-        ✍️ Хочешь коротко отметить, про что это было?
-      </button>
 
       <div class="card p-4">
         <div class="flex items-center justify-between mb-2">
@@ -564,14 +533,9 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2 mb-2">
+        <div class="flex items-center gap-2 mb-3">
           <span class="pill" id="pillGood">Полезное: 0</span>
           <span class="pill" id="pillPause">Пауза: 0</span>
-        </div>
-
-        <div class="legend">
-          <span>🟦 — в полезном</span>
-          <span>◻️ — в паузе</span>
         </div>
 
         <div id="summaryDots" class="dot-row mb-3"></div>
@@ -579,30 +543,30 @@
         <div id="surpriseBox" class="surprise" style="display:none;"></div>
 
         <div class="mt-3 small-muted whitespace-pre-wrap" id="dailyText"></div>
+      </div>
 
-        <!-- ✅ вместо простого текста: визуальный блок -->
-        <div id="dailyAreasWrap" class="areas-wrap" style="display:none;">
-          <div class="areas-title">Области внимания сегодня</div>
-          <div id="dailyAreas"></div>
-        </div>
+      <div class="card p-4 mb-4">
+        <div class="text-base font-semibold mb-1" style="letter-spacing:-0.02em;">Темы дня</div>
+        <div class="small-muted mb-3">Голубое — где было больше «полезного». Серое — где больше «паузы».</div>
+
+        <div id="topicsToday" class="grid gap-2"></div>
+        <div id="topicsTodayEmpty" class="small-muted" style="display:none;">Пока нет отметок по темам — и это окей.</div>
+
+        <div class="mt-3 small-muted whitespace-pre-wrap" id="topicsHint"></div>
       </div>
 
       <div class="card p-4">
         <div class="text-base font-semibold mb-1" style="letter-spacing:-0.02em;">Неделя</div>
-        <div class="small-muted mb-2">Семь дней — одна линия наблюдений.</div>
+        <div class="small-muted mb-3">Семь дней — одна линия наблюдений.</div>
 
-        <div class="legend">
-          <span>🟦 — в полезном</span>
-          <span>◻️ — в паузе</span>
-        </div>
-
-        <div id="weekGrid" class="grid gap-2 mt-3"></div>
+        <div id="weekGrid" class="grid gap-2"></div>
 
         <div class="mt-3 small-muted whitespace-pre-wrap" id="weeklyText"></div>
 
-        <div id="weeklyAreasWrap" class="areas-wrap" style="display:none;">
-          <div class="areas-title">Области за 7 дней</div>
-          <div id="weeklyAreas"></div>
+        <div class="mt-4">
+          <div class="text-sm font-semibold mb-2">Темы недели</div>
+          <div id="topicsWeek" class="grid gap-2"></div>
+          <div id="topicsWeekEmpty" class="small-muted" style="display:none;">За неделю нет тематических отметок.</div>
         </div>
       </div>
     </section>
@@ -646,9 +610,16 @@
         <div class="small-muted whitespace-pre-wrap">
 Это мини-пространство для наблюдений.
 В течение дня ты отмечаешь маленькие шаги: «полезное» или «пауза».
+Если хочется — добавляешь короткую тему (питание, эмоции, энергия…).
 К концу дня складывается картина, а потом — неделя.
-Из таких отметок становится проще понять, что ведёт к результатам — мягко, без давления.
+Из таких отметок становится проще понять, что просит внимания — мягко, без давления.
         </div>
+      </div>
+
+      <div class="card p-4 mb-4">
+        <div class="text-base font-semibold mb-2" style="letter-spacing:-0.02em;">Диагностика</div>
+        <div class="small-muted">Если вдруг «ничего не кликается», тут часто видно причину.</div>
+        <div class="mt-3 export-box small-muted whitespace-pre-wrap" id="debugBox" style="min-height:52px;">Ошибок пока нет.</div>
       </div>
 
       <div class="card p-4">
@@ -663,47 +634,38 @@
     </section>
   </div>
 
-  <!-- Event modal -->
-  <div id="eventModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="выбор события">
-    <div class="card modal-card">
-      <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Какой момент отметить?</div>
-      <div class="small-muted mt-1">Выбери событие из сегодняшних. Можно выбрать любое.</div>
-
-      <div id="eventList" class="grid gap-2 mt-3"></div>
-
-      <div class="mt-3 flex justify-end gap-2">
-        <button id="eventClose" class="ghost-btn" style="padding:10px 12px;">Закрыть</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Area modal -->
-  <div id="areaModal" class="modal-overlay" role="dialog" aria-modal="true" aria-label="области">
-    <div class="card modal-card">
-      <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Про что это было?</div>
-
-      <div class="mt-2">
-        <span id="areaContext" class="pill">Выбранный момент: —</span>
-      </div>
-
-      <div class="small-muted mt-2">Можно выбрать один вариант или пропустить.</div>
-
-      <div class="grid gap-2 mt-3">
-        <button class="ghost-btn" data-area="mind">🧠 Мысли / эмоции</button>
-        <button class="ghost-btn" data-area="body">🍽 Тело / еда</button>
-        <button class="ghost-btn" data-area="energy">🛌 Энергия / усталость</button>
-        <button class="ghost-btn" data-area="relations">🤍 Отношения / границы</button>
-        <button class="ghost-btn" data-area="skip">⏭ Пропустить</button>
-      </div>
-
-      <div class="mt-3 flex justify-end">
-        <button id="areaClose" class="ghost-btn" style="padding:10px 12px;">Закрыть</button>
-      </div>
-    </div>
-  </div>
-
+  <!-- Toast -->
   <div id="toast" class="toast">
     <div class="inner" id="toastInner">✓ Записано</div>
+  </div>
+
+  <!-- Modal: short note -->
+  <div id="noteModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" id="noteBackdrop"></div>
+
+    <div class="modal-sheet">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Короткая отметка</div>
+          <div class="small-muted" id="noteSubtitle">Если хочешь — выбери тему. Можно пропустить.</div>
+        </div>
+        <button id="noteClose" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Закрыть</button>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between gap-2">
+        <span id="noteBadge" class="badge good">🟦 Полезное</span>
+        <div class="flex gap-2">
+          <button id="noteSkip" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px;">Пропустить</button>
+          <button id="noteSave" class="ghost-btn" style="padding:8px 10px; font-size:13px; border-radius:14px; border-color: rgba(37,99,235,0.25);">Сохранить</button>
+        </div>
+      </div>
+
+      <div class="chips" id="topicChips"></div>
+
+      <textarea id="noteText" class="note" placeholder="Если хочется — 1–2 слова (не обязательно)."></textarea>
+
+      <div class="small-muted mt-2">Подсказка: смысл не в идеальности. Смысл — в ясности.</div>
+    </div>
   </div>
 
   <script>
@@ -711,16 +673,13 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v15";
+      const STORAGE = "balancecare_v12"; // оставляем, чтобы не потерять историю
       const defaultState = () => ({
         theme: "system",
         events: [],
         surprise: { lastShownAt: null },
-        ui: {
-          microcopyDate: null,
-          microcopyText: null,
-          tagTargetIndex: null
-        }
+        ui: { microcopyDate: null, microcopyText: null },
+        debug: { lastError: null }
       });
 
       let state = loadState();
@@ -735,12 +694,7 @@
             ...parsed,
             ui: { ...defaultState().ui, ...(parsed.ui||{}) },
             surprise: { ...defaultState().surprise, ...(parsed.surprise||{}) },
-            events: Array.isArray(parsed.events) ? parsed.events.map(e => ({
-              ts: e.ts,
-              date: e.date,
-              type: e.type,
-              area: (e.area ?? null),
-            })) : []
+            debug: { ...defaultState().debug, ...(parsed.debug||{}) }
           };
         }catch(e){ return defaultState(); }
       }
@@ -781,21 +735,43 @@
       }
       function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
 
+      function setDebug(text){
+        state.debug.lastError = text;
+        save();
+        const box = $("#debugBox");
+        if(box) box.textContent = text || "Ошибок пока нет.";
+      }
+
+      // Глобальная ловушка ошибок — чтобы «ничего не кликается» не было загадкой
+      window.addEventListener("error", (e) => {
+        const msg = `Ошибка: ${e.message || "unknown"}\nФайл: ${e.filename || "-"}:${e.lineno || "-"}:${e.colno || "-"}`;
+        setDebug(msg);
+        toast("⚠️ Ошибка в коде");
+      });
+      window.addEventListener("unhandledrejection", (e) => {
+        const msg = `Promise rejection: ${String(e.reason || "unknown")}`;
+        setDebug(msg);
+        toast("⚠️ Ошибка (promise)");
+      });
+
       let systemListenerAttached = false;
 
       function renderThemeButtons(){
         const map = { light:"themeLight", dark:"themeDark", system:"themeSystem" };
         ["themeLight","themeDark","themeSystem"].forEach(id => {
           const el = document.getElementById(id);
+          if(!el) return;
           el.classList.remove("active");
           el.style.background = "transparent";
           el.style.color = "var(--muted)";
         });
         const activeId = map[state.theme] || "themeSystem";
         const activeEl = document.getElementById(activeId);
-        activeEl.classList.add("active");
-        activeEl.style.background = "linear-gradient(180deg, var(--primary), var(--primary2))";
-        activeEl.style.color = "white";
+        if(activeEl){
+          activeEl.classList.add("active");
+          activeEl.style.background = "linear-gradient(180deg, var(--primary), var(--primary2))";
+          activeEl.style.color = "white";
+        }
       }
 
       function applyTheme(){
@@ -825,6 +801,7 @@
         renderThemeButtons();
       }
 
+      // ===== Quotes (daily) =====
       const MICRO_SHORT = [
         "Один шаг — уже движение.",
         "Сегодня можно по-доброму к себе.",
@@ -835,7 +812,7 @@
         "Никакой гонки. Просто день.",
         "Сделала — отметила — отпустила.",
         "Честность с собой — это сила.",
-        "Можно мягко и всё ещё эффективно.",
+        "Можно мягко и всё равно эффективно.",
         "Сейчас важнее бережность, чем скорость.",
         "Немного тише в голове — уже победа."
       ];
@@ -854,6 +831,11 @@
         const useLong = Math.random() < 0.55;
         return useLong ? pick(MICRO_LONG) : pick(MICRO_SHORT);
       }
+
+      function setMicrocopy(text){
+        $("#todayMicrocopy").textContent = text;
+      }
+
       function ensureMicrocopyForToday(){
         const d = dateKey();
         if(state.ui.microcopyDate !== d || !state.ui.microcopyText){
@@ -861,9 +843,10 @@
           state.ui.microcopyText = pickQuote();
           save();
         }
-        $("#todayMicrocopy").textContent = state.ui.microcopyText;
+        setMicrocopy(state.ui.microcopyText);
       }
 
+      // Tabs
       let currentTab = "today";
       function setTab(name){
         currentTab = name;
@@ -876,6 +859,111 @@
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
+      // ===== Topics =====
+      const TOPICS = [
+        { id:"food",    label:"🍽 Питание" },
+        { id:"mind",    label:"🧠 Мысли" },
+        { id:"emotion", label:"❤️ Эмоции" },
+        { id:"body",    label:"💪 Тело" },
+        { id:"energy",  label:"⚡ Энергия" },
+        { id:"rel",     label:"🤝 Отношения" },
+        { id:"bound",   label:"🧱 Границы" },
+        { id:"other",   label:"🗂 Другое" }
+      ];
+      const topicLabel = (id) => (TOPICS.find(t=>t.id===id)?.label || "🗂 Другое");
+
+      // ===== Modal note state =====
+      let pendingEventId = null;     // id события, к которому привязываем тему
+      let pendingEventType = "good"; // good/pause
+      let selectedTopic = null;
+
+      function ensureEventIds(){
+        // миграция: если у старых событий нет id — добавим
+        let changed = false;
+        state.events.forEach(ev=>{
+          if(!ev.id){
+            ev.id = "e_" + Math.random().toString(16).slice(2) + "_" + Date.now();
+            changed = true;
+          }
+        });
+        if(changed) save();
+      }
+
+      function openNoteModal({ type, eventId }){
+        pendingEventId = eventId || null;
+        pendingEventType = type || "good";
+        selectedTopic = null;
+
+        $("#noteText").value = "";
+        const badge = $("#noteBadge");
+        badge.classList.remove("good","pause");
+        badge.classList.add(pendingEventType === "good" ? "good" : "pause");
+        badge.textContent = pendingEventType === "good" ? "🟦 Полезное" : "⬜️ Пауза";
+
+        // chips
+        const wrap = $("#topicChips");
+        wrap.innerHTML = "";
+        TOPICS.forEach(t=>{
+          const b = document.createElement("button");
+          b.className = "chip";
+          b.type = "button";
+          b.textContent = t.label;
+          b.dataset.topic = t.id;
+          b.addEventListener("click", () => {
+            selectedTopic = t.id;
+            $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
+          });
+          wrap.appendChild(b);
+        });
+
+        $("#noteModal").classList.add("show");
+        $("#noteModal").setAttribute("aria-hidden","false");
+      }
+
+      function closeNoteModal(){
+        $("#noteModal").classList.remove("show");
+        $("#noteModal").setAttribute("aria-hidden","true");
+        pendingEventId = null;
+        selectedTopic = null;
+      }
+
+      function attachNoteToEvent(){
+        const text = ($("#noteText").value || "").trim();
+        // если нет eventId — создадим отдельную заметку-событие (по кнопке "Коротко")
+        if(!pendingEventId){
+          const ev = {
+            id: "e_" + Math.random().toString(16).slice(2) + "_" + Date.now(),
+            ts: nowISO(),
+            date: dateKey(),
+            type: pendingEventType || "good",
+            topic: selectedTopic || null,
+            note: text || null
+          };
+          state.events.push(ev);
+          save();
+          renderToday();
+          if(currentTab === "summary") renderSummary();
+          toast("✓ Сохранено");
+          haptic("success");
+          closeNoteModal();
+          return;
+        }
+
+        const ev = state.events.find(x => x.id === pendingEventId);
+        if(ev){
+          ev.topic = selectedTopic || null;
+          ev.note = text || null;
+          save();
+          if(currentTab === "summary") renderSummary();
+          toast("✓ Сохранено");
+          haptic("success");
+        }else{
+          toast("Не нашла событие 🤍");
+        }
+        closeNoteModal();
+      }
+
+      // Data
       function eventsFor(d){ return state.events.filter(e => e.date === d); }
       function countFor(d){
         const ev = eventsFor(d);
@@ -907,12 +995,16 @@
       }
 
       function addEvent(type){
-        state.events.push({ ts: nowISO(), date: dateKey(), type, area: null });
+        const id = "e_" + Math.random().toString(16).slice(2) + "_" + Date.now();
+        state.events.push({ id, ts: nowISO(), date: dateKey(), type, topic: null, note: null });
         save();
         renderToday();
         if(currentTab === "summary") renderSummary();
         toast("✓ Записано");
         haptic("success");
+
+        // сразу предложим (мягко) добавить тему — можно пропустить
+        openNoteModal({ type, eventId: id });
       }
 
       function clearToday(){
@@ -925,222 +1017,7 @@
         haptic("light");
       }
 
-      const AREA_LABEL = {
-        mind: "🧠 Мысли / эмоции",
-        body: "🍽 Тело / еда",
-        energy: "🛌 Энергия / усталость",
-        relations: "🤍 Отношения / границы"
-      };
-
-      function closeEventModal(){ $("#eventModal").classList.remove("show"); }
-      function openEventModal(){ $("#eventModal").classList.add("show"); }
-      function closeAreaModal(){ $("#areaModal").classList.remove("show"); }
-      function openAreaModal(){ $("#areaModal").classList.add("show"); }
-
-      function fmtTime(iso){
-        try{
-          const d = new Date(iso);
-          return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-        }catch(e){ return ""; }
-      }
-
-      function listTodayIndices(limit=12){
-        const d = dateKey();
-        const idx = [];
-        for(let i = state.events.length - 1; i >= 0; i--){
-          if(state.events[i].date === d){
-            idx.push(i);
-            if(idx.length >= limit) break;
-          }
-        }
-        return idx;
-      }
-
-      function setAreaContextPill(idx){
-        const el = $("#areaContext");
-        if(idx === null || idx === undefined || idx < 0 || idx >= state.events.length){
-          el.className = "pill";
-          el.textContent = "Выбранный момент: —";
-          return;
-        }
-        const e = state.events[idx];
-        const t = fmtTime(e.ts);
-        const isGood = e.type === "good";
-        el.className = "pill " + (isGood ? "pill-good" : "pill-pause");
-        el.textContent = (isGood ? "🟦 Полезное" : "◻️ Пауза") + (t ? (" • " + t) : "");
-      }
-
-      function renderEventPicker(){
-        const list = $("#eventList");
-        list.innerHTML = "";
-        const indices = listTodayIndices(12);
-
-        if(indices.length === 0){
-          const t = document.createElement("div");
-          t.className = "small-muted";
-          t.textContent = "Сначала отметь момент кнопками выше 🙂";
-          list.appendChild(t);
-          return;
-        }
-
-        indices.forEach(i=>{
-          const e = state.events[i];
-          const btn = document.createElement("button");
-          btn.className = "event-row " + (e.type === "good" ? "good-bg" : "pause-bg");
-
-          const badge = document.createElement("span");
-          badge.className = "event-badge " + (e.type === "good" ? "good" : "pause");
-
-          const title = document.createElement("div");
-          title.className = "event-title";
-          title.textContent = e.type === "good" ? "Полезное" : "Пауза";
-
-          const sub = document.createElement("div");
-          sub.className = "event-sub";
-          sub.textContent = e.area ? `Область: ${AREA_LABEL[e.area] || e.area}` : "Область: не выбрана";
-
-          const left = document.createElement("div");
-          left.className = "event-left";
-          const textWrap = document.createElement("div");
-          textWrap.style.minWidth = "0";
-          textWrap.appendChild(title);
-          textWrap.appendChild(sub);
-          left.appendChild(badge);
-          left.appendChild(textWrap);
-
-          const right = document.createElement("div");
-          right.className = "event-right";
-          right.textContent = fmtTime(e.ts);
-
-          btn.appendChild(left);
-          btn.appendChild(right);
-
-          btn.addEventListener("click", () => {
-            state.ui.tagTargetIndex = i;
-            save();
-            closeEventModal();
-            setAreaContextPill(i);
-            openAreaModal();
-          });
-
-          list.appendChild(btn);
-        });
-      }
-
-      function onTagClick(){
-        renderEventPicker();
-        openEventModal();
-      }
-
-      function setArea(areaKeyOrSkip){
-        const idx = state.ui.tagTargetIndex;
-
-        if(idx === null || idx === undefined || idx < 0 || idx >= state.events.length){
-          renderEventPicker();
-          closeAreaModal();
-          openEventModal();
-          toast("Выбери событие");
-          haptic("light");
-          return;
-        }
-
-        if(areaKeyOrSkip === "skip"){
-          closeAreaModal();
-          toast("Ок, без области");
-          haptic("light");
-          return;
-        }
-
-        state.events[idx].area = areaKeyOrSkip;
-        save();
-        closeAreaModal();
-        toast("✓ Отмечено");
-        haptic("success");
-        if(currentTab === "summary") renderSummary();
-      }
-
-      function areasSplitForDate(d){
-        const ev = eventsFor(d);
-        const good = { mind:0, body:0, energy:0, relations:0 };
-        const pause = { mind:0, body:0, energy:0, relations:0 };
-        let total = 0;
-        ev.forEach(e=>{
-          const a = e.area;
-          if(a && (a in good)){
-            if(e.type === "good") good[a] += 1;
-            else pause[a] += 1;
-            total += 1;
-          }
-        });
-        return { good, pause, total };
-      }
-
-      // ✅ мини-полоски: maxSquares — сколько квадратиков в ряд
-      function renderMiniBar(count, maxSquares, type){
-        const wrap = document.createElement("div");
-        wrap.className = "mini-bar";
-        const filled = Math.min(count, maxSquares);
-
-        for(let i=0;i<maxSquares;i++){
-          const sq = document.createElement("span");
-          sq.className = "sq " + (i < filled ? type : "empty");
-          wrap.appendChild(sq);
-        }
-        return wrap;
-      }
-
-      function renderAreasVisual(containerEl, goodCounts, pauseCounts){
-        containerEl.innerHTML = "";
-
-        const keys = ["mind","body","energy","relations"];
-        const totals = keys.map(k => (goodCounts[k]||0) + (pauseCounts[k]||0));
-        const maxTotal = Math.max(0, ...totals);
-
-        // динамика: если данных мало — показываем меньше квадратиков, если много — больше
-        const maxSquares = maxTotal <= 4 ? 4 : (maxTotal <= 8 ? 8 : 10);
-
-        keys.forEach(k=>{
-          const g = goodCounts[k] || 0;
-          const p = pauseCounts[k] || 0;
-          if(g + p === 0) return;
-
-          const row = document.createElement("div");
-          row.className = "area-row";
-
-          const label = document.createElement("div");
-          label.className = "area-label";
-          label.textContent = AREA_LABEL[k];
-
-          const bars = document.createElement("div");
-          bars.className = "bars";
-
-          // line 1: good
-          const line1 = document.createElement("div");
-          line1.className = "barline";
-          const badge1 = document.createElement("div");
-          badge1.className = "barbadge";
-          badge1.textContent = `🟦 ${g}`;
-          line1.appendChild(badge1);
-          line1.appendChild(renderMiniBar(g, maxSquares, "good"));
-
-          // line 2: pause
-          const line2 = document.createElement("div");
-          line2.className = "barline";
-          const badge2 = document.createElement("div");
-          badge2.className = "barbadge";
-          badge2.textContent = `◻️ ${p}`;
-          line2.appendChild(badge2);
-          line2.appendChild(renderMiniBar(p, maxSquares, "pause"));
-
-          bars.appendChild(line1);
-          bars.appendChild(line2);
-
-          row.appendChild(label);
-          row.appendChild(bars);
-          containerEl.appendChild(row);
-        });
-      }
-
+      // Surprise (in daily summary)
       const SURPRISE_LINES = [
         "Ты классно это ведёшь: просто, честно, без лишнего давления.",
         "Видно движение. Даже когда оно маленькое — оно настоящее.",
@@ -1194,6 +1071,82 @@
         return `Полезное: ${g}\nПауза: ${p}\n\n${line}`;
       }
 
+      function aggregateTopics(events){
+        // вернёт map topic -> {good, pause, notes[]}
+        const out = {};
+        events.forEach(e=>{
+          if(!e.topic && !e.note) return; // учитываем только тематические/заметки
+          const t = e.topic || "other";
+          if(!out[t]) out[t] = { good:0, pause:0, notes:[] };
+          if(e.type === "good") out[t].good += 1;
+          else if(e.type === "pause") out[t].pause += 1;
+          if(e.note) out[t].notes.push({ type:e.type, text:e.note });
+        });
+        return out;
+      }
+
+      function renderTopicList(container, emptyEl, agg){
+        const keys = Object.keys(agg);
+        container.innerHTML = "";
+        if(keys.length === 0){
+          emptyEl.style.display = "block";
+          return;
+        }
+        emptyEl.style.display = "none";
+
+        // сортировка: сначала где больше “паузы”, потом по сумме
+        keys.sort((a,b)=>{
+          const A = agg[a], B = agg[b];
+          const da = (A.pause - A.good);
+          const db = (B.pause - B.good);
+          if(db !== da) return db - da;
+          return (B.good+B.pause) - (A.good+A.pause);
+        });
+
+        keys.forEach(k=>{
+          const v = agg[k];
+          const total = v.good + v.pause;
+
+          const row = document.createElement("div");
+          row.className = "topic-row";
+          if(total > 0){
+            if(v.pause > v.good) row.classList.add("pause");
+            else if(v.good > v.pause) row.classList.add("good");
+          }
+
+          const left = document.createElement("div");
+          left.className = "topic-left";
+          left.innerHTML = `
+            <div class="topic-title">${topicLabel(k)}</div>
+            <div class="topic-sub">${v.pause > v.good ? "область внимания сегодня" : (v.good > v.pause ? "сильная сторона сегодня" : "ровно, без перекоса")}</div>
+          `;
+
+          const right = document.createElement("div");
+          right.className = "topic-right";
+          const g = document.createElement("span");
+          g.className = "mini-pill good";
+          g.textContent = `🟦 ${v.good}`;
+          const p = document.createElement("span");
+          p.className = "mini-pill pause";
+          p.textContent = `⬜️ ${v.pause}`;
+          right.appendChild(g);
+          right.appendChild(p);
+
+          row.appendChild(left);
+          row.appendChild(right);
+          container.appendChild(row);
+        });
+      }
+
+      function renderTopicsHint(agg){
+        // короткая подсказка: 1–2 зоны внимания
+        const entries = Object.entries(agg).map(([k,v])=>({ k, ...v, d:(v.pause - v.good), total:(v.good+v.pause) }));
+        const focus = entries.filter(x=>x.d > 0).sort((a,b)=> b.d - a.d || b.total - a.total).slice(0,2);
+        if(focus.length === 0) return "Если захочешь — завтра можно добавить 1 тему, чтобы видеть «зоны внимания» ещё яснее.";
+        if(focus.length === 1) return `Сегодня «просит внимания»: ${topicLabel(focus[0].k)}. Можно очень мягко: один маленький шаг завтра.`;
+        return `Сегодня «просят внимания»: ${topicLabel(focus[0].k)} и ${topicLabel(focus[1].k)}. Выбери завтра одну — и сделай 1 маленький шаг.`;
+      }
+
       function renderSummary(){
         $("#summaryDate").textContent = new Date().toLocaleDateString("ru-RU", { weekday:"long", day:"numeric", month:"long" });
 
@@ -1217,16 +1170,10 @@
 
         $("#dailyText").textContent = dailySummaryText();
 
-        // ✅ Day areas visual
-        const daySplit = areasSplitForDate(d);
-        const dailyWrap = $("#dailyAreasWrap");
-        if(daySplit.total){
-          dailyWrap.style.display = "block";
-          renderAreasVisual($("#dailyAreas"), daySplit.good, daySplit.pause);
-        }else{
-          dailyWrap.style.display = "none";
-          $("#dailyAreas").innerHTML = "";
-        }
+        // Topics today
+        const aggToday = aggregateTopics(c.ev);
+        renderTopicList($("#topicsToday"), $("#topicsTodayEmpty"), aggToday);
+        $("#topicsHint").textContent = renderTopicsHint(aggToday);
 
         // Week grid
         const grid = $("#weekGrid");
@@ -1267,33 +1214,14 @@
 
         $("#weeklyText").textContent = weeklySummaryText();
 
-        // ✅ Week areas visual
-        const days = lastNDays(7);
-        const weekGood = { mind:0, body:0, energy:0, relations:0 };
-        const weekPause = { mind:0, body:0, energy:0, relations:0 };
-        let weekTotal = 0;
-
-        days.forEach(dd=>{
-          const split = areasSplitForDate(dd);
-          Object.keys(weekGood).forEach(k=>{
-            weekGood[k] += split.good[k];
-            weekPause[k] += split.pause[k];
-          });
-          weekTotal += split.total;
-        });
-
-        const weeklyWrap = $("#weeklyAreasWrap");
-        if(weekTotal){
-          weeklyWrap.style.display = "block";
-          renderAreasVisual($("#weeklyAreas"), weekGood, weekPause);
-        }else{
-          weeklyWrap.style.display = "none";
-          $("#weeklyAreas").innerHTML = "";
-        }
+        // Topics week
+        const weekEvents = lastNDays(7).flatMap(dd => countFor(dd).ev);
+        const aggWeek = aggregateTopics(weekEvents);
+        renderTopicList($("#topicsWeek"), $("#topicsWeekEmpty"), aggWeek);
       }
 
       // =========================
-      // BREATHING 4–4–4–4
+      // BREATHING 4–4–4–4 (smooth start + auto stop)
       // =========================
       const breathCircle = $("#breathCircle");
       const breathLabel  = $("#breathLabel");
@@ -1389,62 +1317,72 @@
         }
       }
 
-      breathToggle.addEventListener("click", () => running ? stopBreathing(false) : startBreathing());
+      // ===== Wire (важно: если где-то здесь ошибка — клики “умирают”) =====
+      function wire(){
+        $("#btnGood").addEventListener("click", () => addEvent("good"));
+        $("#btnPause").addEventListener("click", () => addEvent("pause"));
+        $("#btnClearToday").addEventListener("click", clearToday);
 
-      $("#btnGood").addEventListener("click", () => addEvent("good"));
-      $("#btnPause").addEventListener("click", () => addEvent("pause"));
-      $("#btnClearToday").addEventListener("click", clearToday);
-
-      $("#btnArea").addEventListener("click", onTagClick);
-
-      $("#eventClose").addEventListener("click", closeEventModal);
-      $("#eventModal").addEventListener("click", (e) => {
-        if(e.target && e.target.id === "eventModal") closeEventModal();
-      });
-
-      $("#areaClose").addEventListener("click", closeAreaModal);
-      $("#areaModal").addEventListener("click", (e) => {
-        if(e.target && e.target.id === "areaModal") closeAreaModal();
-      });
-      $$("#areaModal [data-area]").forEach(btn => {
-        btn.addEventListener("click", () => setArea(btn.dataset.area));
-      });
-
-      $$("#tab-settings [data-theme]").forEach(btn=>{
-        btn.addEventListener("click", () => {
-          state.theme = btn.dataset.theme;
-          save();
-          applyTheme();
-          toast("Тема сохранена");
+        $("#btnQuickNote").addEventListener("click", () => {
+          // “всегда доступная кнопка”: отдельная заметка (по умолчанию как “полезное”)
+          openNoteModal({ type: "good", eventId: null });
         });
-      });
 
-      $("#btnExport").addEventListener("click", () => {
-        const box = $("#exportBox");
-        box.classList.remove("hidden");
-        box.textContent = JSON.stringify(state, null, 2);
-        navigator.clipboard?.writeText(box.textContent).catch(()=>{});
-        toast("Экспорт скопирован");
-        haptic("success");
-      });
+        breathToggle.addEventListener("click", () => running ? stopBreathing(false) : startBreathing());
 
-      $("#btnReset").addEventListener("click", () => {
-        const ok = confirm("Стереть всю историю на этом устройстве?");
-        if(!ok) return;
-        state = defaultState();
-        save();
-        $("#exportBox").classList.add("hidden");
-        renderToday();
-        ensureMicrocopyForToday();
-        toast("Готово. Чистый лист");
-        haptic("light");
-      });
+        $$("#tab-settings [data-theme]").forEach(btn=>{
+          btn.addEventListener("click", () => {
+            state.theme = btn.dataset.theme;
+            save();
+            applyTheme();
+            toast("Тема сохранена");
+          });
+        });
 
-      // init
+        $("#btnExport").addEventListener("click", () => {
+          const box = $("#exportBox");
+          box.classList.remove("hidden");
+          box.textContent = JSON.stringify(state, null, 2);
+          navigator.clipboard?.writeText(box.textContent).catch(()=>{});
+          toast("Экспорт скопирован");
+          haptic("success");
+        });
+
+        $("#btnReset").addEventListener("click", () => {
+          const ok = confirm("Стереть всю историю на этом устройстве?");
+          if(!ok) return;
+          state = defaultState();
+          save();
+          $("#exportBox").classList.add("hidden");
+          renderToday();
+          ensureMicrocopyForToday();
+          setDebug(null);
+          toast("Готово. Чистый лист");
+          haptic("light");
+        });
+
+        // Modal events
+        $("#noteBackdrop").addEventListener("click", closeNoteModal);
+        $("#noteClose").addEventListener("click", closeNoteModal);
+        $("#noteSkip").addEventListener("click", () => {
+          toast("Ок, без отметки");
+          closeNoteModal();
+        });
+        $("#noteSave").addEventListener("click", attachNoteToEvent);
+
+        // ESC support (desktop)
+        window.addEventListener("keydown", (e) => {
+          if(e.key === "Escape" && $("#noteModal").classList.contains("show")) closeNoteModal();
+        });
+      }
+
+      // Init
+      ensureEventIds();
       applyTheme();
       renderToday();
       ensureMicrocopyForToday();
-      setAreaContextPill(null);
+      setDebug(state.debug?.lastError || null);
+      wire();
       setTab("today");
     })();
   </script>
