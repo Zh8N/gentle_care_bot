@@ -340,6 +340,7 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       font-size: 14px;
+      pointer-events: auto;
     }
     html[data-theme="dark"] .toast .inner{
       background: rgba(255,255,255,0.08);
@@ -456,21 +457,6 @@
       outline: none;
     }
     html[data-theme="dark"] .custom-input{ background: rgba(255,255,255,0.06); }
-
-    .note{
-      width: 100%;
-      margin-top: 10px;
-      border-radius: 16px;
-      border: 1px solid var(--stroke);
-      background: rgba(255,255,255,0.55);
-      padding: 12px;
-      font-size: 14px;
-      color: var(--text);
-      outline: none;
-      min-height: 62px;
-      resize: none;
-    }
-    html[data-theme="dark"] .note{ background: rgba(255,255,255,0.06); }
 
     .topic-row{
       border: 1px solid var(--stroke);
@@ -808,7 +794,7 @@
     <div class="inner" id="toastInner">✓ Записано</div>
   </div>
 
-  <!-- Modal -->
+  <!-- Modal (Только темы — без текстового поля) -->
   <div id="noteModal" class="modal" aria-hidden="true">
     <div class="modal-backdrop" id="noteBackdrop"></div>
 
@@ -816,7 +802,7 @@
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <div class="text-base font-semibold" style="letter-spacing:-0.02em;" id="noteTitle">Полезное для себя</div>
-          <div class="small-muted" id="noteSubtitle">Выбери тему (1 тап — и готово) или напиши пару слов (не обязательно).</div>
+          <div class="small-muted" id="noteSubtitle">Выбери тему (1 тап — и готово) или добавь свою.</div>
         </div>
         <button id="noteClose" class="icon-close" title="Закрыть" aria-label="Закрыть">✕</button>
       </div>
@@ -828,8 +814,7 @@
         <button id="customTopicAdd" class="ghost-btn" style="padding:10px 12px; border-radius:14px;">Добавить</button>
       </div>
 
-      <textarea id="noteText" class="note" placeholder="Если хочется — 1–2 слова (не обязательно)."></textarea>
-      <div class="small-muted mt-2" style="opacity:.78;">
+      <div class="small-muted mt-3" style="opacity:.78;">
         Чтобы удалить свою тему — долгое нажатие на чипсе → ×.
       </div>
     </div>
@@ -840,7 +825,7 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v18"; // v18: auto-close on topic pick, base topics reduced
+      const STORAGE = "balancecare_v19"; // v19: modal WITHOUT text field
       const defaultState = () => ({
         theme: "system",
         events: [],
@@ -869,7 +854,8 @@
             };
           }
 
-          const prev = localStorage.getItem("balancecare_v17")
+          const prev = localStorage.getItem("balancecare_v18")
+                    || localStorage.getItem("balancecare_v17")
                     || localStorage.getItem("balancecare_v16")
                     || localStorage.getItem("balancecare_v15")
                     || localStorage.getItem("balancecare_v14")
@@ -1040,8 +1026,7 @@
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
-      // ✅ Базовые темы оставили только самые понятные.
-      // Всё остальное — пользователь добавит сам через "Своя тема".
+      // ✅ Базовые темы: минимум. Остальное — пользователь добавит сам.
       const BASE_TOPICS = [
         { id:"food", label:"🍽 Питание" },
         { id:"body", label:"💪 Тело" },
@@ -1056,7 +1041,6 @@
       function topicLabel(id){
         const found = allTopics().find(t => t.id === id);
         if(found) return found.label;
-        // Если по старым данным встречается незнакомая тема — показываем мягко:
         return "🔖 Своя тема";
       }
 
@@ -1088,9 +1072,10 @@
       function removeCustomTopic(topicId){
         state.customTopics = (state.customTopics || []).filter(t => t.id !== topicId);
 
+        // отцепляем тему у событий, где она была
         state.events.forEach(e=>{
           if(e.topic === topicId){
-            e.topic = null; // не подставляем "другое"
+            e.topic = null;
           }
         });
 
@@ -1140,18 +1125,10 @@
         return state.events.find(x => x.id === pendingEventId) || null;
       }
 
-      function autosavePendingEvent({ topic = undefined, note = undefined } = {}){
+      function autosavePendingEventTopic(topic){
         const ev = getPendingEvent();
         if(!ev) return;
-
-        if(topic !== undefined){
-          ev.topic = topic;
-        }
-        if(note !== undefined){
-          const txt = (note || "").trim();
-          ev.note = txt ? txt : null;
-        }
-
+        ev.topic = topic || null;
         save();
         if(currentTab === "summary") renderSummary();
       }
@@ -1200,7 +1177,7 @@
             showCustomTopicInput(false);
             $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
 
-            autosavePendingEvent({ topic: selectedTopic });
+            autosavePendingEventTopic(selectedTopic);
             toast("✓ Тема отмечена");
             haptic("success");
 
@@ -1228,16 +1205,13 @@
         pendingEventType = type || "good";
         selectedTopic = null;
 
-        const title = $("#noteTitle");
-        title.textContent = (pendingEventType === "good") ? "Полезное для себя" : "Шаг в сторону";
-
-        const ev = getPendingEvent();
-        $("#noteText").value = ev?.note ? String(ev.note) : "";
+        $("#noteTitle").textContent = (pendingEventType === "good") ? "Полезное для себя" : "Шаг в сторону";
 
         showCustomTopicInput(false);
         clearChipDeleteModes();
         renderTopicChips();
 
+        const ev = getPendingEvent();
         if(ev?.topic){
           selectedTopic = ev.topic;
           $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
@@ -1245,8 +1219,6 @@
 
         $("#noteModal").classList.add("show");
         $("#noteModal").setAttribute("aria-hidden","false");
-
-        setTimeout(() => $("#noteText").focus(), 0);
       }
 
       function closeNoteModal(){
@@ -1367,7 +1339,7 @@
 
       function addEvent(type){
         const id = "e_" + Math.random().toString(16).slice(2) + "_" + Date.now();
-        state.events.push({ id, ts: nowISO(), date: dateKey(), type, topic: null, note: null });
+        state.events.push({ id, ts: nowISO(), date: dateKey(), type, topic: null });
         save();
         renderToday();
         if(currentTab === "summary") renderSummary();
@@ -1443,7 +1415,6 @@
       function aggregateTopics(events){
         const out = {};
         events.forEach(e=>{
-          // учитываем только те, где выбран topic
           if(!e.topic) return;
           if(!out[e.topic]) out[e.topic] = { good:0, pause:0 };
           if(e.type === "good") out[e.topic].good += 1;
@@ -1720,14 +1691,6 @@
         }
       }
 
-      let noteDebounce = null;
-      function scheduleNoteAutosave(){
-        clearTimeout(noteDebounce);
-        noteDebounce = setTimeout(() => {
-          autosavePendingEvent({ note: $("#noteText").value });
-        }, 220);
-      }
-
       function wire(){
         $("#btnGood").addEventListener("click", () => addEvent("good"));
         $("#btnPause").addEventListener("click", () => addEvent("pause"));
@@ -1764,7 +1727,7 @@
             $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
             showCustomTopicInput(false);
 
-            autosavePendingEvent({ topic: selectedTopic });
+            autosavePendingEventTopic(selectedTopic);
             toast("✓ Тема добавлена");
             haptic("success");
             setTimeout(() => closeNoteModal(), 120);
@@ -1776,9 +1739,6 @@
             $("#customTopicAdd").click();
           }
         });
-
-        $("#noteText").addEventListener("input", scheduleNoteAutosave);
-        $("#noteText").addEventListener("blur", () => autosavePendingEvent({ note: $("#noteText").value }));
 
         breathToggle.addEventListener("click", () => running ? stopBreathing(false) : startBreathing());
 
