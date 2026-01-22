@@ -32,6 +32,14 @@
       --pauseTint: rgba(148,163,184,0.14);
       --goodBorder: rgba(37,99,235,0.24);
       --pauseBorder: rgba(148,163,184,0.28);
+
+      /* chip base bg for consistent animations */
+      --chipBg: rgba(255,255,255,0.55);
+      --chipBgSoft: rgba(255,255,255,0.40);
+
+      /* flash vars (will be overridden by modal action) */
+      --flashBgStart: rgba(37,99,235,0.30);
+      --flashBorderStart: rgba(37,99,235,0.45);
     }
 
     html[data-theme="dark"]{
@@ -49,6 +57,12 @@
       --pauseTint: rgba(148,163,184,0.12);
       --goodBorder: rgba(37,99,235,0.34);
       --pauseBorder: rgba(148,163,184,0.26);
+
+      --chipBg: rgba(255,255,255,0.06);
+      --chipBgSoft: rgba(255,255,255,0.05);
+
+      --flashBgStart: rgba(37,99,235,0.28);
+      --flashBorderStart: rgba(37,99,235,0.42);
     }
 
     *{ -webkit-tap-highlight-color: transparent; }
@@ -154,6 +168,7 @@
       border-radius: 999px;
       border: 1px solid rgba(0,0,0,0.06);
       box-shadow: 0 8px 20px rgba(15,23,42,0.06);
+      transform-origin: center;
     }
     html[data-theme="dark"] .dot{
       border: 1px solid rgba(255,255,255,0.10);
@@ -348,28 +363,39 @@
       box-shadow: 0 18px 50px rgba(0,0,0,0.38);
     }
 
-    /* ====== Modal: compact one-screen sheet ====== */
+    /* ====== Modal: animated (B) ====== */
     .modal{
       position: fixed;
       inset: 0;
       z-index: 60;
-      display: none;
+
+      display: flex;
       align-items: flex-end;
       justify-content: center;
       padding: 12px 12px calc(12px + var(--safe-bottom));
+
+      opacity: 0;
+      visibility: hidden;
       pointer-events: none;
+
+      transition: opacity 180ms ease, visibility 180ms ease;
     }
     .modal.show{
-      display:flex;
+      opacity: 1;
+      visibility: visible;
       pointer-events: auto;
     }
+
     .modal-backdrop{
       position:absolute;
       inset:0;
       background: rgba(0,0,0,0.26);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
+      opacity: 0;
+      transition: opacity 180ms ease;
     }
+    .modal.show .modal-backdrop{ opacity: 1; }
     html[data-theme="dark"] .modal-backdrop{ background: rgba(0,0,0,0.45); }
 
     .modal-sheet{
@@ -380,7 +406,22 @@
       background: linear-gradient(180deg, var(--card), var(--card2));
       box-shadow: var(--shadow);
       padding: 12px;
+
+      transform: translateY(18px) scale(0.98);
+      opacity: 0.98;
+      transition: transform 200ms ease, opacity 200ms ease;
+      will-change: transform;
+
+      /* flash vars (overridden by action) */
+      --flashBgStart: rgba(37,99,235,0.30);
+      --flashBorderStart: rgba(37,99,235,0.45);
     }
+
+    .modal.show .modal-sheet{
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+
     .sheet-top{
       display:flex;
       align-items:flex-start;
@@ -433,7 +474,7 @@
       border-radius: 999px;
       padding: 9px 11px;
       border: 1px solid var(--stroke);
-      background: rgba(255,255,255,0.55);
+      background: var(--chipBg);
       color: var(--text);
       font-size: 13px;
       transition: transform .06s ease, background .14s ease, border-color .14s ease;
@@ -442,7 +483,6 @@
       position: relative;
       line-height: 1;
     }
-    html[data-theme="dark"] .chip{ background: rgba(255,255,255,0.06); }
     .chip:active{ transform: translateY(1px); }
     .chip.active{
       background: var(--goodTint);
@@ -453,11 +493,7 @@
       border-color: rgba(37,99,235,0.28);
     }
     .chip.soft{
-      background: rgba(255,255,255,0.40);
-      color: var(--muted);
-    }
-    html[data-theme="dark"] .chip.soft{
-      background: rgba(255,255,255,0.05);
+      background: var(--chipBgSoft);
       color: var(--muted);
     }
 
@@ -699,6 +735,52 @@
       color: var(--muted);
       text-align:center;
     }
+
+    /* --- A) Dot pop animation --- */
+    @keyframes dotPop {
+      0%   { transform: scale(0.82); }
+      60%  { transform: scale(1.12); }
+      100% { transform: scale(1.00); }
+    }
+    .dot.pop {
+      animation: dotPop 220ms ease-out;
+    }
+
+    /* --- D) Modal badge --- */
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      line-height: 1;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.55);
+      color: var(--muted);
+      user-select:none;
+      -webkit-user-select:none;
+    }
+    html[data-theme="dark"] .badge{ background: rgba(255,255,255,0.06); }
+
+    .badge-good{
+      background: var(--goodTint);
+      border-color: var(--goodBorder);
+      color: var(--text);
+    }
+    .badge-pause{
+      background: var(--pauseTint);
+      border-color: var(--pauseBorder);
+      color: var(--text);
+    }
+
+    /* --- Topic flash highlight (tap) --- */
+    @keyframes chipFlash {
+      0%   { background: var(--flashBgStart); border-color: var(--flashBorderStart); }
+      100% { background: var(--chipBg);      border-color: var(--stroke); }
+    }
+    .modal-sheet .chip.flash{
+      animation: chipFlash 160ms ease-out;
+    }
   </style>
 </head>
 
@@ -864,10 +946,13 @@
   <div id="noteModal" class="modal" aria-hidden="true">
     <div class="modal-backdrop" id="noteBackdrop"></div>
 
-    <div class="modal-sheet">
+    <div class="modal-sheet" id="noteSheet">
       <div class="sheet-top">
         <div class="min-w-0">
-          <div class="sheet-title" id="noteTitle">Полезное для себя</div>
+          <div class="flex items-center gap-2">
+            <div class="sheet-title" id="noteTitle">Полезное для себя</div>
+            <span id="noteBadge" class="badge badge-good">Полезное</span>
+          </div>
           <div class="sheet-sub" id="sheetSub">Выбери тему — 1 тап, и готово.</div>
         </div>
         <button id="noteClose" class="icon-close" title="Закрыть" aria-label="Закрыть">✕</button>
@@ -881,7 +966,6 @@
         <button id="customTopicCancel" class="mini-icon" title="Отмена" aria-label="Отмена">✕</button>
       </div>
 
-      <!-- NEW: modal hint -->
       <div id="modalHint" class="today-hint" style="margin-top:10px;"></div>
     </div>
   </div>
@@ -891,13 +975,13 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v21"; // v21: modal shows only 4 frequent topics by default
+      const STORAGE = "balancecare_v23"; // A+B+D+flash + fixed keyframes
       const defaultState = () => ({
         theme: "system",
         events: [],
         customTopics: [],
         dayNotes: {},
-        topicStats: {},     // topicId -> count
+        topicStats: {},
         surprise: { lastShownAt: null },
         ui: { microcopyDate: null, microcopyText: null },
         debug: { lastError: null }
@@ -922,27 +1006,25 @@
             };
           }
 
-          const prev = localStorage.getItem("balancecare_v20")
-                    || localStorage.getItem("balancecare_v19")
-                    || localStorage.getItem("balancecare_v18")
-                    || localStorage.getItem("balancecare_v17")
-                    || localStorage.getItem("balancecare_v16")
-                    || localStorage.getItem("balancecare_v15")
-                    || localStorage.getItem("balancecare_v14")
-                    || localStorage.getItem("balancecare_v13")
-                    || localStorage.getItem("balancecare_v12");
-
-          if(prev){
-            const p = JSON.parse(prev);
-            const migrated = {
-              ...defaultState(),
-              ...p,
-              customTopics: Array.isArray(p.customTopics) ? p.customTopics : [],
-              dayNotes: (p.dayNotes && typeof p.dayNotes === "object") ? p.dayNotes : {},
-              topicStats: (p.topicStats && typeof p.topicStats === "object") ? p.topicStats : {}
-            };
-            localStorage.setItem(STORAGE, JSON.stringify(migrated));
-            return migrated;
+          // try migrate from previous versions
+          const prevKeys = [
+            "balancecare_v22","balancecare_v21","balancecare_v20","balancecare_v19","balancecare_v18",
+            "balancecare_v17","balancecare_v16","balancecare_v15","balancecare_v14","balancecare_v13","balancecare_v12"
+          ];
+          for(const k of prevKeys){
+            const prev = localStorage.getItem(k);
+            if(prev){
+              const p = JSON.parse(prev);
+              const migrated = {
+                ...defaultState(),
+                ...p,
+                customTopics: Array.isArray(p.customTopics) ? p.customTopics : [],
+                dayNotes: (p.dayNotes && typeof p.dayNotes === "object") ? p.dayNotes : {},
+                topicStats: (p.topicStats && typeof p.topicStats === "object") ? p.topicStats : {}
+              };
+              localStorage.setItem(STORAGE, JSON.stringify(migrated));
+              return migrated;
+            }
           }
           return defaultState();
         }catch(e){
@@ -1096,7 +1178,6 @@
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
-      // Base topics (user can add their own)
       const BASE_TOPICS = [
         { id:"food", label:"🍽 Питание" },
         { id:"body", label:"💪 Тело" },
@@ -1167,7 +1248,6 @@
         return topics;
       }
 
-      // frequent topics (4)
       function getFrequentTopics(limit=4){
         const topics = allTopics();
         const stats = state.topicStats || {};
@@ -1206,6 +1286,9 @@
       let pendingEventId = null;
       let pendingEventType = "good";
       let selectedTopic = null;
+
+      // A) remember last added event to animate dot
+      let lastAddedEventId = null;
 
       function ensureEventIds(){
         let changed = false;
@@ -1255,7 +1338,6 @@
         if(currentTab === "summary") renderSummary();
       }
 
-      // modal mode quick/all
       let modalMode = "quick"; // "quick" | "all"
 
       function setModalMode(mode){
@@ -1275,6 +1357,13 @@
         showCustomTopicInput(false);
         clearChipDeleteModes();
         renderTopicChips();
+      }
+
+      function flashChip(el){
+        el.classList.remove("flash");
+        void el.offsetWidth; // restart animation
+        el.classList.add("flash");
+        setTimeout(() => el.classList.remove("flash"), 220);
       }
 
       function renderTopicChips(){
@@ -1315,6 +1404,9 @@
               b.classList.remove("delete-mode");
               return;
             }
+
+            flashChip(b);
+
             selectedTopic = t.id;
             showCustomTopicInput(false);
             $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
@@ -1322,7 +1414,7 @@
             autosavePendingEventTopic(selectedTopic);
             toast("✓ Тема отмечена");
             haptic("success");
-            setTimeout(() => closeNoteModal(), 120);
+            setTimeout(() => closeNoteModal(), 140);
           });
 
           return b;
@@ -1381,9 +1473,34 @@
         selectedTopic = null;
         modalMode = "quick";
 
+        const sheet = $("#noteSheet");
+        if(sheet){
+          // set flash tint based on action
+          if(pendingEventType === "good"){
+            sheet.style.setProperty("--flashBgStart", "rgba(37,99,235,0.30)");
+            sheet.style.setProperty("--flashBorderStart", "rgba(37,99,235,0.45)");
+          }else{
+            sheet.style.setProperty("--flashBgStart", "rgba(148,163,184,0.26)");
+            sheet.style.setProperty("--flashBorderStart", "rgba(148,163,184,0.40)");
+          }
+          // adapt for dark theme via CSS vars already (chipBg changes), start is ok in both
+        }
+
         $("#noteTitle").textContent = (pendingEventType === "good") ? "Полезное для себя" : "Шаг в сторону";
 
-        // set initial texts + hint
+        const badge = $("#noteBadge");
+        if(badge){
+          if(pendingEventType === "good"){
+            badge.textContent = "Полезное";
+            badge.classList.add("badge-good");
+            badge.classList.remove("badge-pause");
+          }else{
+            badge.textContent = "Шаг в сторону";
+            badge.classList.add("badge-pause");
+            badge.classList.remove("badge-good");
+          }
+        }
+
         const hint = $("#modalHint");
         $("#sheetSub").textContent = "Выбери тему — 1 тап, и готово.";
         if(hint) hint.textContent = "Нужны другие темы? Нажми «Показать все» или добавь свою.";
@@ -1440,11 +1557,9 @@
       function installDeleteModeAutoClose(){
         document.addEventListener("pointerdown", (e) => {
           if($$(".dot-wrap.delete-mode").length === 0 && $$(".chip.delete-mode").length === 0) return;
-
           const insideDot = e.target.closest && e.target.closest(".dot-wrap");
           const insideChip = e.target.closest && e.target.closest(".chip");
           if(insideDot || insideChip) return;
-
           clearAllDeleteModes();
         }, true);
       }
@@ -1506,6 +1621,17 @@
         }else{
           empty.style.display = "none";
           renderDots(row, ev, true);
+
+          // A) pop animation for the last added dot
+          if(lastAddedEventId){
+            const wrap = row.querySelector(`[data-id="${lastAddedEventId}"]`);
+            const dot = wrap ? wrap.querySelector(".dot") : null;
+            if(dot){
+              dot.classList.add("pop");
+              setTimeout(() => dot.classList.remove("pop"), 260);
+            }
+            lastAddedEventId = null;
+          }
         }
 
         const note = (state.dayNotes && state.dayNotes[d]) ? String(state.dayNotes[d]).trim() : "";
@@ -1521,6 +1647,8 @@
 
       function addEvent(type){
         const id = "e_" + Math.random().toString(16).slice(2) + "_" + Date.now();
+        lastAddedEventId = id;
+
         state.events.push({ id, ts: nowISO(), date: dateKey(), type, topic: null });
         save();
         renderToday();
@@ -1645,7 +1773,7 @@
           pill.className = "delta-pill";
           if(delta > 0) pill.classList.add("good");
           else if(delta < 0) pill.classList.add("pause");
-          pill.textContent = delta > 0 ? `+${delta}` : `${delta}`;
+          pill.textContent = delta > 0 ? \`+\${delta}\` : \`\${delta}\`;
 
           btn.appendChild(left);
           btn.appendChild(pill);
@@ -1883,10 +2011,13 @@
         selectedTopic = id;
         showCustomTopicInput(false);
 
+        const chip = $$("#topicChips .chip").find(x => x.dataset.topic === selectedTopic);
+        if(chip) flashChip(chip);
+
         autosavePendingEventTopic(selectedTopic);
         toast("✓ Тема добавлена");
         haptic("success");
-        setTimeout(() => closeNoteModal(), 120);
+        setTimeout(() => closeNoteModal(), 160);
       }
 
       function wire(){
