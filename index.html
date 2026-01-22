@@ -815,14 +815,12 @@
     <div class="modal-sheet">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <!-- ✅ Заголовок теперь по действию -->
           <div class="text-base font-semibold" style="letter-spacing:-0.02em;" id="noteTitle">Полезное для себя</div>
-          <div class="small-muted" id="noteSubtitle">Можно выбрать тему и/или написать пару слов (не обязательно).</div>
+          <div class="small-muted" id="noteSubtitle">Выбери тему (1 тап — и готово) или напиши пару слов (не обязательно).</div>
         </div>
         <button id="noteClose" class="icon-close" title="Закрыть" aria-label="Закрыть">✕</button>
       </div>
 
-      <!-- ✅ Убрали бейдж и кнопки -->
       <div class="chips" id="topicChips"></div>
 
       <div id="customTopicWrap" class="custom-wrap">
@@ -842,7 +840,7 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v17"; // v17: modal = autosave, no skip/save, title = action
+      const STORAGE = "balancecare_v18"; // v18: auto-close on topic pick, base topics reduced
       const defaultState = () => ({
         theme: "system",
         events: [],
@@ -871,7 +869,8 @@
             };
           }
 
-          const prev = localStorage.getItem("balancecare_v16")
+          const prev = localStorage.getItem("balancecare_v17")
+                    || localStorage.getItem("balancecare_v16")
                     || localStorage.getItem("balancecare_v15")
                     || localStorage.getItem("balancecare_v14")
                     || localStorage.getItem("balancecare_v13")
@@ -918,7 +917,7 @@
         $("#toastInner").textContent = msg;
         t.classList.add("show");
         clearTimeout(toast._t);
-        toast._t = setTimeout(() => t.classList.remove("show"), 1400);
+        toast._t = setTimeout(() => t.classList.remove("show"), 1200);
       }
       function haptic(kind="light"){
         try{
@@ -1041,15 +1040,12 @@
       }
       $$(".tab-btn[data-tab]").forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
+      // ✅ Базовые темы оставили только самые понятные.
+      // Всё остальное — пользователь добавит сам через "Своя тема".
       const BASE_TOPICS = [
-        { id:"food",    label:"🍽 Питание" },
-        { id:"mind",    label:"🧠 Мысли" },
-        { id:"emotion", label:"❤️ Эмоции" },
-        { id:"body",    label:"💪 Тело" },
-        { id:"energy",  label:"⚡ Энергия" },
-        { id:"rel",     label:"🤝 Отношения" },
-        { id:"bound",   label:"🧱 Границы" },
-        { id:"other",   label:"🗂 Другое" }
+        { id:"food", label:"🍽 Питание" },
+        { id:"body", label:"💪 Тело" },
+        { id:"rel",  label:"🤝 Отношения" }
       ];
 
       function allTopics(){
@@ -1060,7 +1056,8 @@
       function topicLabel(id){
         const found = allTopics().find(t => t.id === id);
         if(found) return found.label;
-        return "🗂 Другое";
+        // Если по старым данным встречается незнакомая тема — показываем мягко:
+        return "🔖 Своя тема";
       }
 
       function normalizeCustomLabel(s){
@@ -1093,7 +1090,7 @@
 
         state.events.forEach(e=>{
           if(e.topic === topicId){
-            e.topic = (e.note && String(e.note).trim()) ? "other" : null;
+            e.topic = null; // не подставляем "другое"
           }
         });
 
@@ -1138,24 +1135,21 @@
         el.addEventListener("contextmenu", (e) => e.preventDefault());
       }
 
-      // ✅ autosave helper for modal
       function getPendingEvent(){
         if(!pendingEventId) return null;
         return state.events.find(x => x.id === pendingEventId) || null;
       }
+
       function autosavePendingEvent({ topic = undefined, note = undefined } = {}){
         const ev = getPendingEvent();
         if(!ev) return;
 
         if(topic !== undefined){
           ev.topic = topic;
-          // если появилась заметка или тема — пустой topic не оставляем, но тут topic уже задан
         }
         if(note !== undefined){
           const txt = (note || "").trim();
           ev.note = txt ? txt : null;
-          if(ev.note && !ev.topic) ev.topic = "other";
-          if(!ev.note && ev.topic === "other") ev.topic = null; // мягко: если удалили единственное, вернем к null
         }
 
         save();
@@ -1201,14 +1195,17 @@
               b.classList.remove("delete-mode");
               return;
             }
+
             selectedTopic = t.id;
             showCustomTopicInput(false);
             $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
 
-            // ✅ autosave immediately on topic pick
             autosavePendingEvent({ topic: selectedTopic });
             toast("✓ Тема отмечена");
             haptic("success");
+
+            // ✅ Автозакрытие после выбора темы
+            setTimeout(() => closeNoteModal(), 120);
           });
 
           wrap.appendChild(b);
@@ -1232,13 +1229,8 @@
         selectedTopic = null;
 
         const title = $("#noteTitle");
-        if(pendingEventType === "good"){
-          title.textContent = "Полезное для себя";
-        }else{
-          title.textContent = "Шаг в сторону";
-        }
+        title.textContent = (pendingEventType === "good") ? "Полезное для себя" : "Шаг в сторону";
 
-        // preload existing saved (if any)
         const ev = getPendingEvent();
         $("#noteText").value = ev?.note ? String(ev.note) : "";
 
@@ -1246,7 +1238,6 @@
         clearChipDeleteModes();
         renderTopicChips();
 
-        // highlight saved topic if exists
         if(ev?.topic){
           selectedTopic = ev.topic;
           $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
@@ -1255,7 +1246,6 @@
         $("#noteModal").classList.add("show");
         $("#noteModal").setAttribute("aria-hidden","false");
 
-        // focus note lightly (optional, but nice)
         setTimeout(() => $("#noteText").focus(), 0);
       }
 
@@ -1435,6 +1425,7 @@
         const map = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
         return map[d.getDay()];
       }
+
       function weeklySummaryText(){
         const days = lastNDays(7);
         let g=0,p=0;
@@ -1452,11 +1443,11 @@
       function aggregateTopics(events){
         const out = {};
         events.forEach(e=>{
-          if(!e.topic && !e.note) return;
-          const t = e.topic || "other";
-          if(!out[t]) out[t] = { good:0, pause:0 };
-          if(e.type === "good") out[t].good += 1;
-          else if(e.type === "pause") out[t].pause += 1;
+          // учитываем только те, где выбран topic
+          if(!e.topic) return;
+          if(!out[e.topic]) out[e.topic] = { good:0, pause:0 };
+          if(e.type === "good") out[e.topic].good += 1;
+          else if(e.type === "pause") out[e.topic].pause += 1;
         });
         return out;
       }
@@ -1729,7 +1720,6 @@
         }
       }
 
-      // ✅ note autosave debounce
       let noteDebounce = null;
       function scheduleNoteAutosave(){
         clearTimeout(noteDebounce);
@@ -1774,10 +1764,10 @@
             $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
             showCustomTopicInput(false);
 
-            // ✅ autosave immediately for new topic
             autosavePendingEvent({ topic: selectedTopic });
             toast("✓ Тема добавлена");
             haptic("success");
+            setTimeout(() => closeNoteModal(), 120);
           }
         });
         $("#customTopicInput").addEventListener("keydown", (e) => {
@@ -1787,7 +1777,6 @@
           }
         });
 
-        // ✅ autosave note while typing
         $("#noteText").addEventListener("input", scheduleNoteAutosave);
         $("#noteText").addEventListener("blur", () => autosavePendingEvent({ note: $("#noteText").value }));
 
@@ -1824,7 +1813,6 @@
           haptic("light");
         });
 
-        // ✅ modal close only
         $("#noteBackdrop").addEventListener("click", closeNoteModal);
         $("#noteClose").addEventListener("click", closeNoteModal);
 
