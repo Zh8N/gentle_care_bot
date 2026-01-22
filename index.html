@@ -138,7 +138,7 @@
       background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06));
     }
 
-    .dot-row{ display:flex; gap:10px; flex-wrap: wrap; padding-top: 6px; } /* чуть больше воздуха */
+    .dot-row{ display:flex; gap:10px; flex-wrap: wrap; padding-top: 6px; }
 
     .dot-wrap{
       position: relative;
@@ -271,7 +271,6 @@
     }
     .note-btn:active{ transform: translateY(1px); filter: brightness(0.98); }
 
-    /* ✅ Day note: clean, full width, no "field in field", X inside */
     .inline-note{
       margin-top: 10px;
       width: 100%;
@@ -290,7 +289,7 @@
     .inline-input{
       flex: 1 1 auto;
       min-width: 0;
-      border: none;              /* убрали "внутреннее поле" */
+      border: none;
       background: transparent;
       padding: 8px 6px;
       font-size: 14px;
@@ -380,28 +379,6 @@
       padding: 14px;
     }
 
-    .badge{
-      display:inline-flex;
-      align-items:center;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--stroke);
-      font-size: 13px;
-      background: rgba(255,255,255,0.55);
-      user-select: none;
-    }
-    html[data-theme="dark"] .badge{ background: rgba(255,255,255,0.06); }
-    .badge.good{
-      background: var(--goodTint);
-      border-color: var(--goodBorder);
-      color: var(--text);
-    }
-    .badge.pause{
-      background: var(--pauseTint);
-      border-color: var(--pauseBorder);
-      color: var(--text);
-    }
-
     .chips{
       display:flex;
       flex-wrap: wrap;
@@ -409,7 +386,6 @@
       padding-top: 10px;
     }
 
-    /* ✅ chips smaller + less dominant */
     .chip{
       border-radius: 999px;
       padding: 8px 10px;
@@ -433,7 +409,6 @@
       border-color: rgba(37,99,235,0.28);
     }
 
-    /* ✅ chip delete mode */
     .chip.delete-mode{
       outline: 2px solid rgba(239,68,68,0.70);
       outline-offset: 2px;
@@ -647,7 +622,6 @@
       text-align:center;
     }
 
-    /* ✅ modal header close icon */
     .icon-close{
       width: 36px;
       height: 36px;
@@ -666,14 +640,6 @@
     html[data-theme="dark"] .icon-close{ background: rgba(255,255,255,0.06); }
     .icon-close:active{ transform: translateY(1px); }
 
-    /* ✅ modal action buttons bigger than chips */
-    .modal-actions .ghost-btn{
-      padding: 10px 12px;
-      font-size: 15px;
-      border-radius: 14px;
-    }
-
-    /* ✅ today hint under dots, softer */
     .today-hint{
       margin-top: 12px;
       font-size: 12px;
@@ -849,20 +815,14 @@
     <div class="modal-sheet">
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <div class="text-base font-semibold" style="letter-spacing:-0.02em;">Короткая отметка</div>
-          <div class="small-muted" id="noteSubtitle">Можно выбрать тему. Можно пропустить.</div>
+          <!-- ✅ Заголовок теперь по действию -->
+          <div class="text-base font-semibold" style="letter-spacing:-0.02em;" id="noteTitle">Полезное для себя</div>
+          <div class="small-muted" id="noteSubtitle">Можно выбрать тему и/или написать пару слов (не обязательно).</div>
         </div>
         <button id="noteClose" class="icon-close" title="Закрыть" aria-label="Закрыть">✕</button>
       </div>
 
-      <div class="mt-3 flex items-center justify-between gap-2">
-        <span id="noteBadge" class="badge good">Полезное</span>
-        <div class="flex gap-2 modal-actions">
-          <button id="noteSkip" class="ghost-btn">Пропустить</button>
-          <button id="noteSave" class="ghost-btn" style="border-color: rgba(37,99,235,0.25);">Сохранить</button>
-        </div>
-      </div>
-
+      <!-- ✅ Убрали бейдж и кнопки -->
       <div class="chips" id="topicChips"></div>
 
       <div id="customTopicWrap" class="custom-wrap">
@@ -872,7 +832,7 @@
 
       <textarea id="noteText" class="note" placeholder="Если хочется — 1–2 слова (не обязательно)."></textarea>
       <div class="small-muted mt-2" style="opacity:.78;">
-        Подсказка: чтобы удалить свою тему — сделай долгое нажатие на чипсе → ×.
+        Чтобы удалить свою тему — долгое нажатие на чипсе → ×.
       </div>
     </div>
   </div>
@@ -882,7 +842,7 @@
       const tg = window.Telegram?.WebApp || null;
       try{ tg?.ready?.(); tg?.expand?.(); }catch(e){}
 
-      const STORAGE = "balancecare_v16"; // v16: day note UI + chip delete + modal typography + "Шаг в сторону"
+      const STORAGE = "balancecare_v17"; // v17: modal = autosave, no skip/save, title = action
       const defaultState = () => ({
         theme: "system",
         events: [],
@@ -911,7 +871,8 @@
             };
           }
 
-          const prev = localStorage.getItem("balancecare_v15")
+          const prev = localStorage.getItem("balancecare_v16")
+                    || localStorage.getItem("balancecare_v15")
                     || localStorage.getItem("balancecare_v14")
                     || localStorage.getItem("balancecare_v13")
                     || localStorage.getItem("balancecare_v12");
@@ -1130,7 +1091,6 @@
       function removeCustomTopic(topicId){
         state.customTopics = (state.customTopics || []).filter(t => t.id !== topicId);
 
-        // аккуратно чистим события: если тема удалена, оставим note, но topic сбросим
         state.events.forEach(e=>{
           if(e.topic === topicId){
             e.topic = (e.note && String(e.note).trim()) ? "other" : null;
@@ -1168,7 +1128,6 @@
         $$(".chip.delete-mode").forEach(ch => ch.classList.remove("delete-mode"));
       }
 
-      // long press helper
       function attachLongPress(el, onLongPress, ms=520){
         let t = null;
         const clear = () => { if(t){ clearTimeout(t); t = null; } };
@@ -1177,6 +1136,30 @@
         el.addEventListener("pointerup", () => { clear(); }, { passive: true });
         el.addEventListener("pointercancel", () => { clear(); }, { passive: true });
         el.addEventListener("contextmenu", (e) => e.preventDefault());
+      }
+
+      // ✅ autosave helper for modal
+      function getPendingEvent(){
+        if(!pendingEventId) return null;
+        return state.events.find(x => x.id === pendingEventId) || null;
+      }
+      function autosavePendingEvent({ topic = undefined, note = undefined } = {}){
+        const ev = getPendingEvent();
+        if(!ev) return;
+
+        if(topic !== undefined){
+          ev.topic = topic;
+          // если появилась заметка или тема — пустой topic не оставляем, но тут topic уже задан
+        }
+        if(note !== undefined){
+          const txt = (note || "").trim();
+          ev.note = txt ? txt : null;
+          if(ev.note && !ev.topic) ev.topic = "other";
+          if(!ev.note && ev.topic === "other") ev.topic = null; // мягко: если удалили единственное, вернем к null
+        }
+
+        save();
+        if(currentTab === "summary") renderSummary();
       }
 
       function renderTopicChips(){
@@ -1191,7 +1174,6 @@
           b.dataset.topic = t.id;
           b.dataset.custom = t.custom ? "1" : "0";
 
-          // delete cross for custom
           if(t.custom){
             const x = document.createElement("span");
             x.className = "chip-x";
@@ -1216,13 +1198,17 @@
 
           b.addEventListener("click", () => {
             if(b.classList.contains("delete-mode")){
-              // тап по чипу в delete-mode выключает режим
               b.classList.remove("delete-mode");
               return;
             }
             selectedTopic = t.id;
             showCustomTopicInput(false);
             $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
+
+            // ✅ autosave immediately on topic pick
+            autosavePendingEvent({ topic: selectedTopic });
+            toast("✓ Тема отмечена");
+            haptic("success");
           });
 
           wrap.appendChild(b);
@@ -1245,24 +1231,32 @@
         pendingEventType = type || "good";
         selectedTopic = null;
 
-        $("#noteText").value = "";
-        showCustomTopicInput(false);
-        clearChipDeleteModes();
-
-        const badge = $("#noteBadge");
-        badge.classList.remove("good","pause");
+        const title = $("#noteTitle");
         if(pendingEventType === "good"){
-          badge.classList.add("good");
-          badge.textContent = "Полезное";
+          title.textContent = "Полезное для себя";
         }else{
-          badge.classList.add("pause");
-          badge.textContent = "Шаг в сторону";
+          title.textContent = "Шаг в сторону";
         }
 
+        // preload existing saved (if any)
+        const ev = getPendingEvent();
+        $("#noteText").value = ev?.note ? String(ev.note) : "";
+
+        showCustomTopicInput(false);
+        clearChipDeleteModes();
         renderTopicChips();
+
+        // highlight saved topic if exists
+        if(ev?.topic){
+          selectedTopic = ev.topic;
+          $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
+        }
 
         $("#noteModal").classList.add("show");
         $("#noteModal").setAttribute("aria-hidden","false");
+
+        // focus note lightly (optional, but nice)
+        setTimeout(() => $("#noteText").focus(), 0);
       }
 
       function closeNoteModal(){
@@ -1272,26 +1266,6 @@
         selectedTopic = null;
         showCustomTopicInput(false);
         clearChipDeleteModes();
-      }
-
-      function attachNoteToEvent(){
-        const text = ($("#noteText").value || "").trim();
-
-        let topicToSave = selectedTopic;
-        if(text && !topicToSave) topicToSave = "other";
-
-        const ev = state.events.find(x => x.id === pendingEventId);
-        if(ev){
-          ev.topic = topicToSave || null;
-          ev.note = text || null;
-          save();
-          if(currentTab === "summary") renderSummary();
-          toast("✓ Сохранено");
-          haptic("success");
-        }else{
-          toast("Событие не найдено 🤍");
-        }
-        closeNoteModal();
       }
 
       function eventsFor(d){ return state.events.filter(e => e.date === d); }
@@ -1755,6 +1729,15 @@
         }
       }
 
+      // ✅ note autosave debounce
+      let noteDebounce = null;
+      function scheduleNoteAutosave(){
+        clearTimeout(noteDebounce);
+        noteDebounce = setTimeout(() => {
+          autosavePendingEvent({ note: $("#noteText").value });
+        }, 220);
+      }
+
       function wire(){
         $("#btnGood").addEventListener("click", () => addEvent("good"));
         $("#btnPause").addEventListener("click", () => addEvent("pause"));
@@ -1790,7 +1773,10 @@
             selectedTopic = id;
             $$("#topicChips .chip").forEach(x=>x.classList.toggle("active", x.dataset.topic === selectedTopic));
             showCustomTopicInput(false);
-            toast("Тема добавлена");
+
+            // ✅ autosave immediately for new topic
+            autosavePendingEvent({ topic: selectedTopic });
+            toast("✓ Тема добавлена");
             haptic("success");
           }
         });
@@ -1800,6 +1786,10 @@
             $("#customTopicAdd").click();
           }
         });
+
+        // ✅ autosave note while typing
+        $("#noteText").addEventListener("input", scheduleNoteAutosave);
+        $("#noteText").addEventListener("blur", () => autosavePendingEvent({ note: $("#noteText").value }));
 
         breathToggle.addEventListener("click", () => running ? stopBreathing(false) : startBreathing());
 
@@ -1834,13 +1824,9 @@
           haptic("light");
         });
 
+        // ✅ modal close only
         $("#noteBackdrop").addEventListener("click", closeNoteModal);
         $("#noteClose").addEventListener("click", closeNoteModal);
-        $("#noteSkip").addEventListener("click", () => {
-          toast("Ок, без темы");
-          closeNoteModal();
-        });
-        $("#noteSave").addEventListener("click", attachNoteToEvent);
 
         window.addEventListener("keydown", (e) => {
           if(e.key === "Escape"){
